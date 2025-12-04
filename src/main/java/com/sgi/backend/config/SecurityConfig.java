@@ -40,11 +40,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos (sin autenticación)
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // 🔓 Endpoints públicos
+                        .requestMatchers(
+                                "/api/auth/**",     // login y register
+                                "/error",           // necesario para gestión de errores
+
+                                // Swagger
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // 🔓 OPTIONS (CORS preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Todos los demás endpoints requieren autenticación
+                        // 🔒 Todo lo demás protegido
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -56,9 +68,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
