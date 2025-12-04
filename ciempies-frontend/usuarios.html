@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Usuarios - Sistema Ciempiés</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+    }
+
+    body {
+        background: #f5f7fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .navbar-custom {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar-brand img {
+        width: 45px;
+        height: 45px;
+        object-fit: contain;
+        background: white;
+        border-radius: 50%;
+        padding: 5px;
+    }
+
+    .sidebar {
+        background: white;
+        min-height: calc(100vh - 56px);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .sidebar .nav-link {
+        color: #333;
+        padding: 12px 20px;
+        margin: 5px 10px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .sidebar .nav-link:hover {
+        background: #f0f0f0;
+        color: var(--primary-color);
+    }
+
+    .sidebar .nav-link.active {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+    }
+
+    .sidebar .nav-link i {
+        font-size: 20px;
+        margin-right: 10px;
+        width: 25px;
+        text-align: center;
+    }
+
+    .main-content {
+        padding: 30px;
+    }
+
+    .card-custom {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .card-custom .card-header {
+        background: white;
+        border-bottom: 2px solid #f0f0f0;
+        font-weight: 600;
+        color: #333;
+        padding: 20px;
+        border-radius: 15px 15px 0 0 !important;
+    }
+
+    .table-responsive {
+        border-radius: 10px;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        font-weight: 500;
+    }
+
+    .btn-action {
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .required::after {
+        content: " *";
+        color: red;
+    }
+  </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+      <img src="images/logo.jpeg" alt="Logo" class="me-2" onerror="this.style.display='none'">
+      <span class="fw-bold">Sistema Ciempiés</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle me-1"></i>
+            <span id="navUserName">Usuario</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><h6 class="dropdown-header" id="navUserRole">Rol</h6></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="logout()">
+              <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+            </a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+      <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html">
+              <i class="bi bi-speedometer2"></i>
+              Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="usuarios.html">
+              <i class="bi bi-people-fill"></i>
+              Usuarios
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="rutas.html">
+              <i class="bi bi-map-fill"></i>
+              Rutas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="vehiculos.html">
+              <i class="bi bi-bus-front-fill"></i>
+              Vehículos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="estudiantes.html">
+              <i class="bi bi-mortarboard-fill"></i>
+              Estudiantes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reportes.html">
+              <i class="bi bi-file-earmark-bar-graph-fill"></i>
+              Reportes
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2><i class="bi bi-people-fill me-2"></i>Gestión de Usuarios</h2>
+          <p class="text-muted mb-0">Administra los usuarios del sistema</p>
+        </div>
+        <button class="btn btn-primary" onclick="mostrarModalCrear()">
+          <i class="bi bi-person-plus-fill me-2"></i>Nuevo Usuario
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card card-custom">
+        <div class="card-header">
+          <i class="bi bi-funnel-fill me-2"></i>Filtros
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Rol</label>
+              <select class="form-select" id="filtroRol" onchange="filtrarUsuarios()">
+                <option value="">Todos</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+                <option value="ENCARGADO">Encargado</option>
+                <option value="MONITOR">Monitor</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Estado</label>
+              <select class="form-select" id="filtroEstado" onchange="filtrarUsuarios()">
+                <option value="">Todos</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Buscar</label>
+              <input type="text" class="form-control" id="busqueda" placeholder="Buscar por nombre, email o identificación..." onkeyup="buscarUsuarios()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Usuarios -->
+      <div class="card card-custom">
+        <div class="card-header">
+          <i class="bi bi-table me-2"></i>Listado de Usuarios
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+              <tr>
+                <th>ID</th>
+                <th>Identificación</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+              </thead>
+              <tbody id="tableBody">
+              <tr>
+                <td colspan="7" class="text-center py-4">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                  <p class="mt-2 mb-0">Cargando usuarios...</p>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Usuario -->
+<div class="modal fade" id="modalUsuario" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">
+          <i class="bi bi-person-plus-fill me-2"></i>Crear Usuario
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formUsuario">
+          <input type="hidden" id="usuarioId">
+          <input type="hidden" id="modoEdicion" value="false">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label required">Tipo de Identificación</label>
+              <select class="form-select" id="tipoId" required>
+                <option value="">Seleccione...</option>
+                <option value="RC">Registro Civil</option>
+                <option value="TI">Tarjeta de Identidad</option>
+                <option value="CC">Cédula de Ciudadanía</option>
+                <option value="CE">Cédula de Extranjería</option>
+                <option value="PA">Pasaporte</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required">Número de Identificación</label>
+              <input type="text" class="form-control" id="numId" required maxlength="50">
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label class="form-label required">Primer Nombre</label>
+              <input type="text" class="form-control" id="primerNombre" required maxlength="100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Segundo Nombre</label>
+              <input type="text" class="form-control" id="segundoNombre" maxlength="100">
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label class="form-label required">Primer Apellido</label>
+              <input type="text" class="form-control" id="primerApellido" required maxlength="100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Segundo Apellido</label>
+              <input type="text" class="form-control" id="segundoApellido" maxlength="100">
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label class="form-label required">Email</label>
+              <input type="email" class="form-control" id="email" required maxlength="150">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required">Rol</label>
+              <select class="form-select" id="rol" required>
+                <option value="">Seleccione...</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+                <option value="ENCARGADO">Encargado</option>
+                <option value="MONITOR">Monitor</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-12" id="campoContrasena">
+              <label class="form-label" id="labelContrasena">Contraseña</label>
+              <input type="password" class="form-control" id="contrasena" minlength="6">
+              <small class="text-muted" id="helpContrasena">Mínimo 6 caracteres</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
+          <i class="bi bi-save-fill me-2"></i>Guardar
+
+          <!-- Bootstrap JS -->
+          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+          <!-- Archivos JS del proyecto -->
+          <script src="js/config.js"></script>
+          <script src="js/auth.js"></script>
+          <script src="js/utils.js"></script>
+          <script src="js/usuarios.js"></script>
+</body>
+</html>

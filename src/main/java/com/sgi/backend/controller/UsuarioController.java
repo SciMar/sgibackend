@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class UsuarioController {
     // ==========================================
     // CREAR
     // ==========================================
-
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping
     public ResponseEntity<UsuarioResponseDTO> crear(@Valid @RequestBody CrearUsuarioDTO dto) {
         try {
@@ -40,24 +41,28 @@ public class UsuarioController {
     // LISTAR
     // ==========================================
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
         List<UsuarioResponseDTO> usuarios = usuarioService.listarTodos();
         return ResponseEntity.ok(usuarios);
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/activos")
     public ResponseEntity<List<UsuarioResponseDTO>> listarActivos() {
         List<UsuarioResponseDTO> usuarios = usuarioService.listarActivos();
         return ResponseEntity.ok(usuarios);
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/rol/{rol}")
     public ResponseEntity<List<UsuarioResponseDTO>> listarPorRol(@PathVariable Rol rol) {
         List<UsuarioResponseDTO> usuarios = usuarioService.listarPorRol(rol);
         return ResponseEntity.ok(usuarios);
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/rol/{rol}/activos")
     public ResponseEntity<List<UsuarioResponseDTO>> listarActivosPorRol(@PathVariable Rol rol) {
         List<UsuarioResponseDTO> usuarios = usuarioService.listarActivosPorRol(rol);
@@ -68,6 +73,7 @@ public class UsuarioController {
     // BUSCAR
     // ==========================================
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorId(@PathVariable Long id) {
         try {
@@ -78,6 +84,7 @@ public class UsuarioController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/email/{email}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorEmail(@PathVariable String email) {
         try {
@@ -88,6 +95,7 @@ public class UsuarioController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/documento/{numId}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorNumId(@PathVariable String numId) {
         try {
@@ -98,6 +106,7 @@ public class UsuarioController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/buscar")
     public ResponseEntity<List<UsuarioResponseDTO>> buscarPorNombre(@RequestParam String nombre) {
         List<UsuarioResponseDTO> usuarios = usuarioService.buscarPorNombre(nombre);
@@ -108,6 +117,7 @@ public class UsuarioController {
     // ACTUALIZAR
     // ==========================================
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> actualizar(
             @PathVariable Long id,
@@ -124,6 +134,7 @@ public class UsuarioController {
     // CAMBIAR CONTRASEÑA
     // ==========================================
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping("/{id}/cambiar-contrasena")
     public ResponseEntity<Void> cambiarContrasena(
             @PathVariable Long id,
@@ -142,6 +153,7 @@ public class UsuarioController {
     // ACTIVAR / DESACTIVAR
     // ==========================================
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PatchMapping("/{id}/activar")
     public ResponseEntity<UsuarioResponseDTO> activar(@PathVariable Long id) {
         try {
@@ -152,6 +164,7 @@ public class UsuarioController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<UsuarioResponseDTO> desactivar(@PathVariable Long id) {
         try {
@@ -166,6 +179,7 @@ public class UsuarioController {
     // ELIMINAR
     // ==========================================
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         try {
@@ -180,6 +194,7 @@ public class UsuarioController {
     // ESTADÍSTICAS
     // ==========================================
 
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENCARGADO')")
     @GetMapping("/estadisticas/rol/{rol}")
     public ResponseEntity<Map<String, Long>> contarPorRol(@PathVariable Rol rol) {
         Long total = usuarioService.contarPorRol(rol);

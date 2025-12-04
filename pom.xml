@@ -5,9 +5,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<!-- CAMBIA ESTA VERSIÓN: Spring Boot 4.0.0 NO EXISTE -->
-		<version>3.2.5</version> <!-- o 3.3.0 para la más reciente -->
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.2.5</version>
+		<relativePath/>
 	</parent>
 	<groupId>com.sgi</groupId>
 	<artifactId>backend</artifactId>
@@ -37,7 +36,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId> <!-- Cambia webmvc por web -->
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<!-- DEPENDENCIAS DE DESARROLLO -->
@@ -81,7 +80,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- TEST (corrige estas dependencias) -->
+		<!-- TEST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -135,13 +134,7 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
+			<!-- Plugin de Spring Boot -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -150,9 +143,31 @@
 						<exclude>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+
+			<!-- Plugin de compilación -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<source>21</source>
+					<target>21</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
+			<!-- Plugin de recursos - ESTE ES EL QUE ARREGLA TU PROBLEMA -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<propertiesEncoding>ISO-8859-1</propertiesEncoding>
 				</configuration>
 			</plugin>
 		</plugins>

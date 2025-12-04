@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Estudiantes - Sistema Ciempiés</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            background: white;
+            border-radius: 50%;
+            padding: 5px;
+        }
+
+        .sidebar {
+            background: white;
+            min-height: calc(100vh - 56px);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-link:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            font-size: 20px;
+            margin-right: 10px;
+            width: 25px;
+            text-align: center;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .card-custom {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card-custom .card-header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
+            padding: 20px;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .required::after {
+            content: " *";
+            color: red;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin: 20px 0 15px 0;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+            <img src="images/logo.jpeg" alt="Logo" class="me-2" onerror="this.style.display='none'">
+            <span class="fw-bold">Sistema Ciempiés</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span id="navUserName">Usuario</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header" id="navUserRole">Rol</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="logout()">
+                            <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuUsuarios" style="display: none;">
+                        <a class="nav-link" href="usuarios.html">
+                            <i class="bi bi-people-fill"></i>
+                            Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="estudiantes.html">
+                            <i class="bi bi-mortarboard-fill"></i>
+                            Estudiantes
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuRutas" style="display: none;">
+                        <a class="nav-link" href="rutas.html">
+                            <i class="bi bi-map-fill"></i>
+                            Rutas
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuColegios" style="display: none;">
+                        <a class="nav-link" href="colegios.html">
+                            <i class="bi bi-building-fill"></i>
+                            Colegios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="asistencias.html">
+                            <i class="bi bi-clipboard-check-fill"></i>
+                            Asistencias
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuReportes" style="display: none;">
+                        <a class="nav-link" href="reportes.html">
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                            Reportes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-mortarboard-fill me-2"></i>Gestión de Estudiantes</h2>
+                    <p class="text-muted mb-0">Administra los estudiantes del sistema</p>
+                </div>
+                <button class="btn btn-primary" onclick="mostrarModalCrear()" id="btnCrear">
+                    <i class="bi bi-person-plus-fill me-2"></i>Nuevo Estudiante
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card card-custom">
+                <div class="card-header">
+                    <i class="bi bi-funnel-fill me-2"></i>Filtros
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Colegio</label>
+                            <select class="form-select" id="filtroColegio" onchange="cargarJornadasFiltro(); filtrarEstudiantes();">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Jornada</label>
+                            <select class="form-select" id="filtroJornada" onchange="filtrarEstudiantes()">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="filtroEstado" onchange="filtrarEstudiantes()">
+                                <option value="">Todos</option>
+                                <option value="ACTIVA">Activa</option>
+                                <option value="SUSPENDIDA">Suspendida</option>
+                                <option value="FINALIZADA">Finalizada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Buscar</label>
+                            <input type="text" class="form-select" id="busqueda" placeholder="Nombre o documento..." onkeyup="buscarEstudiantes()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Estudiantes -->
+            <div class="card card-custom">
+                <div class="card-header">
+                    <i class="bi bi-table me-2"></i>Listado de Estudiantes
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Documento</th>
+                                <th>Nombre Completo</th>
+                                <th>Curso</th>
+                                <th>Colegio</th>
+                                <th>Jornada</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="mt-2 mb-0">Cargando estudiantes...</p>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal Crear/Editar Estudiante -->
+<div class="modal fade" id="modalEstudiante" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">
+                    <i class="bi bi-person-plus-fill me-2"></i>Crear Estudiante
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEstudiante">
+                    <input type="hidden" id="estudianteId">
+                    <input type="hidden" id="modoEdicion" value="false">
+
+                    <!-- Datos del Estudiante -->
+                    <div class="section-title">📋 Datos del Estudiante</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label required">Tipo de ID</label>
+                            <select class="form-select" id="tipoId" required>
+                                <option value="">Seleccione...</option>
+                                <option value="RC">Registro Civil</option>
+                                <option value="TI">Tarjeta de Identidad</option>
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="PA">Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label required">Núm. Identificación</label>
+                            <input type="text" class="form-control" id="numId" required maxlength="50">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="fechaNacimiento">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sexo</label>
+                            <select class="form-select" id="sexo">
+                                <option value="">Seleccione...</option>
+                                <option value="MASCULINO">Masculino</option>
+                                <option value="FEMENINO">Femenino</option>
+                                <option value="OTRO">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-3">
+                            <label class="form-label required">Primer Nombre</label>
+                            <input type="text" class="form-control" id="primerNombre" required maxlength="100">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Segundo Nombre</label>
+                            <input type="text" class="form-control" id="segundoNombre" maxlength="100">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label required">Primer Apellido</label>
+                            <input type="text" class="form-control" id="primerApellido" required maxlength="100">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Segundo Apellido</label>
+                            <input type="text" class="form-control" id="segundoApellido" maxlength="100">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="direccion" maxlength="200">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Curso</label>
+                            <input type="text" class="form-control" id="curso" maxlength="50">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">EPS</label>
+                            <input type="text" class="form-control" id="eps" maxlength="100">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Discapacidad</label>
+                            <input type="text" class="form-control" id="discapacidad" maxlength="200">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Etnia</label>
+                            <input type="text" class="form-control" id="etnia" maxlength="100">
+                        </div>
+                    </div>
+
+                    <!-- Datos del Acudiente -->
+                    <div class="section-title">👤 Datos del Acudiente</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label required">Nombre Completo</label>
+                            <input type="text" class="form-control" id="nombreAcudiente" required maxlength="300">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefonoAcudiente" required maxlength="20">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="direccionAcudiente" maxlength="300">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="emailAcudiente" maxlength="150">
+                        </div>
+                    </div>
+
+                    <!-- Datos de Inscripción -->
+                    <div class="section-title">🏫 Datos de Inscripción</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label required">Colegio</label>
+                            <select class="form-select" id="colegioId" required onchange="cargarJornadas()">
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label required">Jornada</label>
+                            <select class="form-select" id="jornadaId" required>
+                                <option value="">Primero seleccione un colegio</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ruta</label>
+                            <select class="form-select" id="rutaId">
+                                <option value="">Ninguna</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-12">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observacionesInscripcion" rows="2" maxlength="500"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarEstudiante()">
+                    <i class="bi bi-save-fill me-2"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Archivos JS del proyecto -->
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/estudiantes.js"></script>
+</body>
+</html>
