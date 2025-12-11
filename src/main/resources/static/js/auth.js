@@ -15,18 +15,27 @@ const Auth = {
     saveSession(token, user) {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+        // ✅ También guardar como 'userData' para compatibilidad
+        localStorage.setItem('userData', JSON.stringify(user));
     },
 
     // Cerrar sesión
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('userData');
         window.location.href = 'login.html';
     },
 
     // Verificar si está autenticado
     isAuthenticated() {
         return !!this.getToken();
+    },
+
+    // ✅ Verificar si es primer ingreso
+    isPrimerIngreso() {
+        const user = this.getUser();
+        return user && user.primerIngreso === true;
     },
 
     // Verificar rol
@@ -49,17 +58,31 @@ const Auth = {
         };
     },
 
-    // Redirigir si no está autenticado
+    // ✅ Redirigir si no está autenticado O si es primer ingreso
     requireAuth() {
         if (!this.isAuthenticated()) {
             window.location.href = 'login.html';
+            return;
+        }
+
+        // ✅ Si es primer ingreso, redirigir a cambiar contraseña
+        if (this.isPrimerIngreso()) {
+            // Solo redirigir si NO estamos ya en la página de cambiar contraseña
+            if (!window.location.href.includes('cambiar-contrasena.html')) {
+                window.location.href = 'cambiar-contrasena.html';
+            }
         }
     },
 
     // Redirigir si ya está autenticado
     redirectIfAuthenticated() {
         if (this.isAuthenticated()) {
-            window.location.href = 'dashboard.html';
+            // ✅ Si es primer ingreso, ir a cambiar contraseña
+            if (this.isPrimerIngreso()) {
+                window.location.href = 'cambiar-contrasena.html';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
         }
     },
 
@@ -69,12 +92,21 @@ const Auth = {
             alert('No tiene permisos para acceder a esta página');
             window.location.href = 'dashboard.html';
         }
+    },
+
+    // ✅ Actualizar estado de primer ingreso después de cambiar contraseña
+    updatePrimerIngreso(value) {
+        const user = this.getUser();
+        if (user) {
+            user.primerIngreso = value;
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('userData', JSON.stringify(user));
+        }
     }
 };
 
 /**
  * Cargar información del usuario en el navbar
- * (Función usada por dashboard y otros módulos)
  */
 function loadNavbarUser() {
     const user = Auth.getUser();
@@ -83,7 +115,6 @@ function loadNavbarUser() {
     const navUserName = document.getElementById('navUserName');
     const navUserRole = document.getElementById('navUserRole');
 
-    // Construir nombre completo
     const nombreCompleto = user.primerNombre && user.primerApellido
         ? `${user.primerNombre} ${user.primerApellido}`
         : user.nombre || user.username || 'Usuario';
@@ -99,7 +130,6 @@ function loadNavbarUser() {
 
 /**
  * Actualiza la visibilidad del menú según el rol del usuario
- * (Función legacy - mantenida por compatibilidad)
  */
 function updateMenuByRole() {
     const user = Auth.getUser();
@@ -107,7 +137,6 @@ function updateMenuByRole() {
 
     const rol = user.rol;
 
-    // Elementos del menú
     const menuUsuarios = document.getElementById('menuUsuarios');
     const menuEstudiantes = document.getElementById('menuEstudiantes');
     const menuRutas = document.getElementById('menuRutas');
@@ -116,7 +145,6 @@ function updateMenuByRole() {
     const menuNotificaciones = document.getElementById('menuNotificaciones');
     const menuReportes = document.getElementById('menuReportes');
 
-    // ADMINISTRADOR - Ve TODO
     if (rol === 'ADMINISTRADOR') {
         if (menuUsuarios) menuUsuarios.style.display = 'block';
         if (menuEstudiantes) menuEstudiantes.style.display = 'block';
@@ -126,7 +154,6 @@ function updateMenuByRole() {
         if (menuNotificaciones) menuNotificaciones.style.display = 'block';
         if (menuReportes) menuReportes.style.display = 'block';
     }
-    // ENCARGADO - Ve todo menos Usuarios
     else if (rol === 'ENCARGADO') {
         if (menuEstudiantes) menuEstudiantes.style.display = 'block';
         if (menuRutas) menuRutas.style.display = 'block';
@@ -135,7 +162,6 @@ function updateMenuByRole() {
         if (menuNotificaciones) menuNotificaciones.style.display = 'block';
         if (menuReportes) menuReportes.style.display = 'block';
     }
-    // MONITOR - Solo estudiantes y asistencias
     else if (rol === 'MONITOR') {
         if (menuEstudiantes) menuEstudiantes.style.display = 'block';
         if (menuAsistencias) menuAsistencias.style.display = 'block';
@@ -144,7 +170,6 @@ function updateMenuByRole() {
 
 /**
  * Actualiza la información del usuario en el navbar
- * (Función legacy - mantenida por compatibilidad)
  */
 function updateNavbarUserInfo() {
     loadNavbarUser();

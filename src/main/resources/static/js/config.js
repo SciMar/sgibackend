@@ -44,3 +44,9 @@ const ESTADO_INSCRIPCION_BADGE_CLASS = {
     'SUSPENDIDA': 'bg-warning',
     'FINALIZADA': 'bg-secondary'
 };
+
+const JORNADA_LABELS = {
+    'MANANA': 'Mañana',
+    'TARDE': 'Tarde',
+    'UNICA': 'Única'
+};

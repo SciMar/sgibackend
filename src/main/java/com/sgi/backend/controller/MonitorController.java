@@ -89,6 +89,7 @@ public class MonitorController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENCARGADO', 'MONITOR')")
     public ResponseEntity<MonitorResponseDTO> obtenerPorUsuarioId(@PathVariable Long usuarioId) {
         try {
             MonitorResponseDTO monitor = monitorService.obtenerPorUsuarioId(usuarioId);

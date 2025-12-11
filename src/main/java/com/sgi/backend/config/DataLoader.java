@@ -4,6 +4,7 @@ import com.sgi.backend.model.*;
 import com.sgi.backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -36,6 +37,13 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private EstudianteRepository estudianteRepository;
 
+    // ✅ Inyectar el PasswordEncoder para encriptar la contraseña
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // ✅ Contraseña genérica para todos los usuarios nuevos
+    private static final String CONTRASENA_GENERICA = "Ciempies2024!";
+
     @Override
     public void run(String... args) throws Exception {
 
@@ -47,8 +55,9 @@ public class DataLoader implements CommandLineRunner {
 
         System.out.println("📦 Cargando datos iniciales...");
 
-        // Hash para contraseña "admin123"
-        String passwordHash = "$2a$10$UB5trHg7K/IWB3.Rg5tnyeagnQUrGgdD8epXkCLbqtQpMvGz4DKbG";
+        // ✅ Encriptar la contraseña genérica
+        String passwordHash = passwordEncoder.encode(CONTRASENA_GENERICA);
+        System.out.println("🔐 Contraseña genérica para todos los usuarios: " + CONTRASENA_GENERICA);
 
         // ==========================================
         // 1. ZONAS
@@ -96,49 +105,49 @@ public class DataLoader implements CommandLineRunner {
         // ==========================================
         // 3. USUARIOS
         // ==========================================
-        // ADMINISTRADOR
+        // ✅ ADMINISTRADOR (primerIngreso = false para que pueda entrar directamente)
         Usuario admin = crearUsuario("CC", "1000000001", "Juan", "Carlos", "Administrador", "Sistema",
-                "admin@ciempies.com", passwordHash, Rol.ADMINISTRADOR);
+                "admin@ciempies.com", passwordHash, Rol.ADMINISTRADOR, false); // ← Admin NO requiere cambio
 
-        // ENCARGADOS (uno por zona)
+        // ✅ ENCARGADOS (primerIngreso = true, deben cambiar contraseña)
         Usuario enc1 = crearUsuario("CC", "1000000002", "Maria", "Isabel", "Rodriguez", "Gomez",
-                "propositocorreo@gmail.com", passwordHash, Rol.ENCARGADO);
+                "propositocorreo@gmail.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc2 = crearUsuario("CC", "1000000003", "Pedro", "Luis", "Martinez", "Lopez",
-                "patriciacc2074@gmail.com", passwordHash, Rol.ENCARGADO);
+                "patriciacc2074@gmail.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc3 = crearUsuario("CC", "1000000004", "Ana", "Patricia", "Garcia", "Diaz",
-                "encargado.sancristobal@ciempies.com", passwordHash, Rol.ENCARGADO);
+                "encargado.sancristobal@ciempies.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc4 = crearUsuario("CC", "1000000005", "Carlos", "Eduardo", "Hernandez", "Silva",
-                "encargado.kennedy@ciempies.com", passwordHash, Rol.ENCARGADO);
+                "encargado.kennedy@ciempies.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc5 = crearUsuario("CC", "1000000006", "Laura", "Andrea", "Ramirez", "Castro",
-                "encargado.bosa@ciempies.com", passwordHash, Rol.ENCARGADO);
+                "encargado.bosa@ciempies.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc6 = crearUsuario("CC", "1000000007", "Jorge", "Enrique", "Vargas", "Torres",
-                "encargado.bolivar@ciempies.com", passwordHash, Rol.ENCARGADO);
+                "encargado.bolivar@ciempies.com", passwordHash, Rol.ENCARGADO, true);
 
-        // MONITORES (2 por zona = 12 monitores)
+        // ✅ MONITORES (primerIngreso = true, deben cambiar contraseña)
         Usuario mon1 = crearUsuario("CC", "1000000010", "Carlos", "Andres", "Monitor", "Perez",
-                "cmramireza29@gmail.com", passwordHash, Rol.MONITOR);
+                "cmramireza29@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon2 = crearUsuario("CC", "1000000011", "Ana", "Maria", "Supervisora", "Garcia",
-                "santiagorioscajamarca@gmail.com", passwordHash, Rol.MONITOR);
+                "santiagorioscajamarca@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon3 = crearUsuario("CC", "1000000012", "Luis", "Fernando", "Acompanante", "Diaz",
-                "kritho0311@gmail.com", passwordHash, Rol.MONITOR);
+                "kritho0311@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon4 = crearUsuario("CC", "1000000013", "Diana", "Carolina", "Ruiz", "Moreno",
-                "alarconpaula992@gmail.com", passwordHash, Rol.MONITOR);
+                "alarconpaula992@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon5 = crearUsuario("CC", "1000000014", "Ricardo", "Alberto", "Castro", "Lopez",
-                "monitor.sancristobal1@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.sancristobal1@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon6 = crearUsuario("CC", "1000000015", "Sandra", "Milena", "Gomez", "Martinez",
-                "monitor.sancristobal2@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.sancristobal2@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon7 = crearUsuario("CC", "1000000016", "Miguel", "Angel", "Torres", "Ramirez",
-                "monitor.kennedy1@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.kennedy1@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon8 = crearUsuario("CC", "1000000017", "Patricia", "Elena", "Mendez", "Silva",
-                "monitor.kennedy2@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.kennedy2@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon9 = crearUsuario("CC", "1000000018", "Andres", "Felipe", "Herrera", "Gutierrez",
-                "monitor.bosa1@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.bosa1@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon10 = crearUsuario("CC", "1000000019", "Monica", "Alejandra", "Jimenez", "Ortiz",
-                "monitor.bosa2@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.bosa2@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon11 = crearUsuario("CC", "1000000020", "Javier", "Eduardo", "Morales", "Castro",
-                "monitor.bolivar1@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.bolivar1@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon12 = crearUsuario("CC", "1000000021", "Claudia", "Marcela", "Rojas", "Vargas",
-                "monitor.bolivar2@ciempies.com", passwordHash, Rol.MONITOR);
+                "monitor.bolivar2@ciempies.com", passwordHash, Rol.MONITOR, true);
 
         // ==========================================
         // 4. COLEGIOS (3 por zona = 18 colegios)
@@ -358,25 +367,26 @@ public class DataLoader implements CommandLineRunner {
 
         int totalEstudiantes = estudianteId - 1100000001;
 
-        System.out.println("======================================================");
-        System.out.println("✅ DATOS INICIALES CARGADOS CORRECTAMENTE");
-        System.out.println("======================================================");
-        System.out.println("   ✓ 6 Zonas");
-        System.out.println("   ✓ 18 Jornadas (3 por zona)");
-        System.out.println("   ✓ 19 Usuarios (1 Admin + 6 Encargados + 12 Monitores)");
-        System.out.println("   ✓ 18 Colegios (3 por zona)");
-        System.out.println("   ✓ 36 Asignaciones colegio-jornada");
-        System.out.println("   ✓ 60 Rutas (IDA y REGRESO para cada colegio-jornada)");
-        System.out.println("   ✓ 12 Monitores asignados (2 por zona)");
-        System.out.println("   ✓ " + totalEstudiantes + " Estudiantes (30-45 por colegio-jornada)");
         System.out.println("");
-        System.out.println("📊 DISTRIBUCIÓN DE ESTUDIANTES:");
-        System.out.println("   • Colegios con doble jornada: ~70-80 estudiantes");
-        System.out.println("   • Colegios con jornada única: ~40-45 estudiantes");
+        System.out.println("═══════════════════════════════════════════════════════════");
+        System.out.println("🚀 SISTEMA CIEMPIÉS - SERVIDOR INICIADO");
+        System.out.println("═══════════════════════════════════════════════════════════");
         System.out.println("");
-        System.out.println("🔐 CREDENCIALES DE ACCESO:");
-        System.out.println("   Email: admin@ciempies.com");
-        System.out.println("   Contraseña: admin123");
+        System.out.println("🌐 Acceder al sistema:");
+        System.out.println("   → http://localhost:8080");
+        System.out.println("");
+        System.out.println("📖 Documentación API (Swagger):");
+        System.out.println("   → http://localhost:8080/swagger-ui.html");
+        System.out.println("");
+        System.out.println("✅ Datos iniciales cargados correctamente!");
+        System.out.println("📋 Resumen:");
+        System.out.println("   - Zonas: " + zonaRepository.count());
+        System.out.println("   - Jornadas: " + jornadaRepository.count());
+        System.out.println("   - Usuarios: " + usuarioRepository.count());
+        System.out.println("");
+        System.out.println("🔑 CREDENCIALES DE ACCESO:");
+        System.out.println("   Admin: admin@ciempies.com / " + CONTRASENA_GENERICA + " (no requiere cambio)");
+        System.out.println("   Otros usuarios: [email] / " + CONTRASENA_GENERICA + " (deben cambiar contraseña)");
         System.out.println("");
         System.out.println("🚀 ¡PUEDES HACER LOGIN AHORA!");
         System.out.println("======================================================");
@@ -404,9 +414,10 @@ public class DataLoader implements CommandLineRunner {
         return jornadaRepository.save(jornada);
     }
 
+    // ✅ Método CON primerIngreso (10 parámetros)
     private Usuario crearUsuario(String tipoId, String numId, String primerNombre, String segundoNombre,
                                  String primerApellido, String segundoApellido, String email,
-                                 String passwordHash, Rol rol) {
+                                 String passwordHash, Rol rol, boolean primerIngreso) {
         Usuario usuario = new Usuario();
         usuario.setTipoId(TipoId.valueOf(tipoId));
         usuario.setNumId(numId);
@@ -418,8 +429,17 @@ public class DataLoader implements CommandLineRunner {
         usuario.setContrasena(passwordHash);
         usuario.setRol(rol);
         usuario.setActivo(true);
+        usuario.setPrimerIngreso(primerIngreso);  // ✅ NUEVO
         usuario.setFechaCreacion(LocalDateTime.now());
         return usuarioRepository.save(usuario);
+    }
+
+    // ✅ Método SIN primerIngreso (9 parámetros) - compatibilidad
+    private Usuario crearUsuario(String tipoId, String numId, String primerNombre, String segundoNombre,
+                                 String primerApellido, String segundoApellido, String email,
+                                 String passwordHash, Rol rol) {
+        return crearUsuario(tipoId, numId, primerNombre, segundoNombre, primerApellido,
+                segundoApellido, email, passwordHash, rol, true);
     }
 
     private Colegio crearColegio(String nombre, Zona zona) {

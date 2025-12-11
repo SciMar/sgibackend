@@ -40,7 +40,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 Endpoints públicos
+                        // 🌐 Frontend - Archivos estáticos públicos
+                        .requestMatchers(
+                                "/",
+                                "/*.html",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/assets/**"
+                        ).permitAll()
+
+                        // 🔓 Endpoints públicos de la API
                         .requestMatchers(
                                 "/api/auth/**",     // login y register
                                 "/error",           // necesario para gestión de errores

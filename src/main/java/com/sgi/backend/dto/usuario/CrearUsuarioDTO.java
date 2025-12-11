@@ -2,6 +2,7 @@ package com.sgi.backend.dto.usuario;
 
 import com.sgi.backend.model.Rol;
 import com.sgi.backend.model.TipoId;
+import com.sgi.backend.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,8 +37,17 @@ public class CrearUsuarioDTO {
     @Size(max = 150)
     private String email;
 
+    /**
+     * Contraseña con validación robusta:
+     * - Mínimo 8 caracteres
+     * - Al menos una mayúscula (A-Z)
+     * - Al menos una minúscula (a-z)
+     * - Al menos un número (0-9)
+     * - Al menos un carácter especial (@#$%^&+=!.*_-)
+     * - Sin espacios en blanco
+     */
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    @ValidPassword
     private String contrasena;
 
     @NotNull(message = "El rol es obligatorio")

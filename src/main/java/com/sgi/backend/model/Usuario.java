@@ -36,7 +36,7 @@ public class Usuario {
     private String email;
 
     @Column(nullable = false, length = 255)
-    private String contrasena; // Encriptada con BCrypt
+    private String contrasena;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -44,6 +44,14 @@ public class Usuario {
 
     @Column(nullable = false)
     private Boolean activo = true;
+
+    /**
+     * Indica si es el primer ingreso del usuario.
+     * TRUE = Debe cambiar la contraseña genérica
+     * FALSE = Ya cambió su contraseña
+     */
+    @Column(name = "primer_ingreso")
+    private Boolean primerIngreso = true;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
@@ -55,7 +63,6 @@ public class Usuario {
         }
     }
 
-    // Relación con Monitor
     @OneToOne(mappedBy = "usuario")
     private Monitor monitor;
 }

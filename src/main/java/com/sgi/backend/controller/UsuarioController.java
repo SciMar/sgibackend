@@ -40,45 +40,38 @@ public class UsuarioController {
     // ==========================================
     // LISTAR
     // ==========================================
-
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
-        List<UsuarioResponseDTO> usuarios = usuarioService.listarTodos();
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/activos")
     public ResponseEntity<List<UsuarioResponseDTO>> listarActivos() {
-        List<UsuarioResponseDTO> usuarios = usuarioService.listarActivos();
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.listarActivos());
     }
 
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/rol/{rol}")
     public ResponseEntity<List<UsuarioResponseDTO>> listarPorRol(@PathVariable Rol rol) {
-        List<UsuarioResponseDTO> usuarios = usuarioService.listarPorRol(rol);
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.listarPorRol(rol));
     }
 
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/rol/{rol}/activos")
     public ResponseEntity<List<UsuarioResponseDTO>> listarActivosPorRol(@PathVariable Rol rol) {
-        List<UsuarioResponseDTO> usuarios = usuarioService.listarActivosPorRol(rol);
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.listarActivosPorRol(rol));
     }
 
     // ==========================================
     // BUSCAR
     // ==========================================
-
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorId(@PathVariable Long id) {
         try {
-            UsuarioResponseDTO usuario = usuarioService.obtenerPorId(id);
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(usuarioService.obtenerPorId(id));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -88,8 +81,7 @@ public class UsuarioController {
     @GetMapping("/email/{email}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorEmail(@PathVariable String email) {
         try {
-            UsuarioResponseDTO usuario = usuarioService.obtenerPorEmail(email);
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(usuarioService.obtenerPorEmail(email));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -99,8 +91,7 @@ public class UsuarioController {
     @GetMapping("/documento/{numId}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorNumId(@PathVariable String numId) {
         try {
-            UsuarioResponseDTO usuario = usuarioService.obtenerPorNumId(numId);
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(usuarioService.obtenerPorNumId(numId));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -109,22 +100,19 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/buscar")
     public ResponseEntity<List<UsuarioResponseDTO>> buscarPorNombre(@RequestParam String nombre) {
-        List<UsuarioResponseDTO> usuarios = usuarioService.buscarPorNombre(nombre);
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.buscarPorNombre(nombre));
     }
 
     // ==========================================
     // ACTUALIZAR
     // ==========================================
-
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarUsuarioDTO dto) {
         try {
-            UsuarioResponseDTO usuario = usuarioService.actualizar(id, dto);
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(usuarioService.actualizar(id, dto));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -133,16 +121,17 @@ public class UsuarioController {
     // ==========================================
     // CAMBIAR CONTRASEÑA
     // ==========================================
-
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping("/{id}/cambiar-contrasena")
     public ResponseEntity<Void> cambiarContrasena(
             @PathVariable Long id,
             @RequestBody Map<String, String> passwords) {
         try {
-            String contrasenaActual = passwords.get("contrasenaActual");
-            String contrasenaNueva = passwords.get("contrasenaNueva");
-            usuarioService.cambiarContrasena(id, contrasenaActual, contrasenaNueva);
+            usuarioService.cambiarContrasena(
+                    id,
+                    passwords.get("contrasenaActual"),
+                    passwords.get("contrasenaNueva")
+            );
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -150,15 +139,69 @@ public class UsuarioController {
     }
 
     // ==========================================
+    // CAMBIO DE CONTRASEÑA PRIMER INGRESO
+    // ==========================================
+    @PostMapping("/{id}/cambiar-contrasena-primer-ingreso")
+    public ResponseEntity<?> cambiarContrasenaPrimerIngreso(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        try {
+            String contrasenaNueva = body.get("contrasenaNueva");
+            String confirmarContrasena = body.get("confirmarContrasena");
+
+            if (!contrasenaNueva.equals(confirmarContrasena)) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Las contraseñas no coinciden"));
+            }
+
+            usuarioService.cambiarContrasenaPrimerIngreso(id, contrasenaNueva);
+
+            return ResponseEntity.ok(Map.of("mensaje", "Contraseña actualizada exitosamente"));
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ==========================================
+    // RESETEAR CONTRASEÑA (ADMIN)
+    // ==========================================
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PostMapping("/{id}/resetear-contrasena")
+    public ResponseEntity<?> resetearContrasena(@PathVariable Long id) {
+        try {
+            usuarioService.resetearContrasena(id);
+
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Contraseña reseteada exitosamente",
+                    "contrasenaGenerica", usuarioService.obtenerContrasenaGenerica()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ==========================================
+    // CONSULTAR CONTRASEÑA GENÉRICA (ADMIN)
+    // ==========================================
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @GetMapping("/contrasena-generica")
+    public ResponseEntity<?> obtenerContrasenaGenerica() {
+        return ResponseEntity.ok(Map.of(
+                "contrasenaGenerica", usuarioService.obtenerContrasenaGenerica()
+        ));
+    }
+
+    // ==========================================
     // ACTIVAR / DESACTIVAR
     // ==========================================
-
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PatchMapping("/{id}/activar")
     public ResponseEntity<UsuarioResponseDTO> activar(@PathVariable Long id) {
         try {
-            UsuarioResponseDTO usuario = usuarioService.activar(id);
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(usuarioService.activar(id));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -168,8 +211,7 @@ public class UsuarioController {
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<UsuarioResponseDTO> desactivar(@PathVariable Long id) {
         try {
-            UsuarioResponseDTO usuario = usuarioService.desactivar(id);
-            return ResponseEntity.ok(usuario);
+            return ResponseEntity.ok(usuarioService.desactivar(id));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -178,7 +220,6 @@ public class UsuarioController {
     // ==========================================
     // ELIMINAR
     // ==========================================
-
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
@@ -193,15 +234,14 @@ public class UsuarioController {
     // ==========================================
     // ESTADÍSTICAS
     // ==========================================
-
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENCARGADO')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','ENCARGADO')")
     @GetMapping("/estadisticas/rol/{rol}")
     public ResponseEntity<Map<String, Long>> contarPorRol(@PathVariable Rol rol) {
         Long total = usuarioService.contarPorRol(rol);
         Long activos = usuarioService.contarActivosPorRol(rol);
-        return ResponseEntity.ok(Map.of(
-                "total", total,
-                "activos", activos
-        ));
+
+        return ResponseEntity.ok(
+                Map.of("total", total, "activos", activos)
+        );
     }
 }

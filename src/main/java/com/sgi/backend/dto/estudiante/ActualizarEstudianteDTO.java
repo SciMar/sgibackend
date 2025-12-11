@@ -68,6 +68,9 @@ public class ActualizarEstudianteDTO {
     // Ruta (puede cambiar)
     private Long rutaId;
 
+    // ✅ Estado de inscripción (para edición)
+    private String estadoInscripcion;
+
     @Size(max = 500)
     private String observacionesInscripcion;
 }

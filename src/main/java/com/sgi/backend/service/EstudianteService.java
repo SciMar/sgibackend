@@ -3,10 +3,7 @@ package com.sgi.backend.service;
 import com.sgi.backend.dto.estudiante.CrearEstudianteDTO;
 import com.sgi.backend.dto.estudiante.ActualizarEstudianteDTO;
 import com.sgi.backend.dto.estudiante.EstudianteResponseDTO;
-import com.sgi.backend.model.Estudiante;
-import com.sgi.backend.model.Colegio;
-import com.sgi.backend.model.Jornada;
-import com.sgi.backend.model.Ruta;
+import com.sgi.backend.model.*;
 import com.sgi.backend.repository.EstudianteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -67,6 +64,7 @@ public class EstudianteService {
         estudiante.setEps(dto.getEps());
         estudiante.setDiscapacidad(dto.getDiscapacidad());
         estudiante.setEtnia(dto.getEtnia());
+
 
         // Datos del acudiente
         estudiante.setNombreAcudiente(dto.getNombreAcudiente());
@@ -151,6 +149,10 @@ public class EstudianteService {
             estudiante.setRuta(null);
         }
 
+        // ✅ Actualizar estado de inscripción si se envió
+        if (dto.getEstadoInscripcion() != null) {
+            estudiante.setEstadoInscripcion(dto.getEstadoInscripcion());
+        }
         estudiante.setObservacionesInscripcion(dto.getObservacionesInscripcion());
 
         Estudiante estudianteActualizado = estudianteRepository.save(estudiante);
@@ -490,7 +492,8 @@ public class EstudianteService {
         // Datos de jornada
         if (estudiante.getJornada() != null) {
             dto.setJornadaId(estudiante.getJornada().getId());
-            dto.setNombreJornada(estudiante.getJornada().getNombreJornada().toString());
+            dto.setNombreJornada(estudiante.getJornada().getNombreJornada().getDisplayName());  // "Mañana"
+            dto.setTipoJornada(estudiante.getJornada().getNombreJornada().name());              // "MANANA"
         }
 
         // Datos de ruta

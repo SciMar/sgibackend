@@ -44,13 +44,22 @@ loginForm.addEventListener('submit', async (e) => {
             // Guardar token y usuario
             Auth.saveSession(data.token, data.usuario);
 
-            // Mostrar éxito
-            showAlert('alertContainer', 'success', '¡Bienvenido! Redirigiendo...', false);
+            // ✅ VERIFICAR SI ES PRIMER INGRESO
+            if (data.usuario.primerIngreso) {
+                showAlert('alertContainer', 'warning', 'Debe cambiar su contraseña. Redirigiendo...', false);
 
-            // Redirigir al dashboard
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 1000);
+                setTimeout(() => {
+                    window.location.href = 'cambiar-contrasena.html';
+                }, 1500);
+            } else {
+                // Mostrar éxito
+                showAlert('alertContainer', 'success', '¡Bienvenido! Redirigiendo...', false);
+
+                // Redirigir según el rol
+                setTimeout(() => {
+                    redirigirSegunRol(data.usuario.rol);
+                }, 1000);
+            }
         } else {
             // Error de autenticación
             const errorText = response.status === 401
@@ -65,6 +74,23 @@ loginForm.addEventListener('submit', async (e) => {
         setButtonLoading(btnSubmit, false);
     }
 });
+
+// ✅ FUNCIÓN PARA REDIRIGIR SEGÚN ROL
+function redirigirSegunRol(rol) {
+    switch(rol) {
+        case 'ADMINISTRADOR':
+            window.location.href = 'dashboard.html';
+            break;
+        case 'ENCARGADO':
+            window.location.href = 'dashboard.html';
+            break;
+        case 'MONITOR':
+            window.location.href = 'dashboard.html'; // O 'monitor-dashboard.html' si tienes uno específico
+            break;
+        default:
+            window.location.href = 'dashboard.html';
+    }
+}
 
 // Limpiar alertas al escribir
 document.getElementById('email').addEventListener('input', () => {

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión - Sistema Ciempiés</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+        --primary-color: #6B5DD3;
+        --secondary-color: #8B7DE8;
+        --accent-color: #A89AF0;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Elementos decorativos de fondo */
+    body::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 30s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Botón de regreso */
+    .back-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .back-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateX(-5px);
+    }
+
+    .back-button i {
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .back-button:hover i {
+        transform: translateX(-3px);
+    }
+
+    /* Card de login */
+    .login-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        max-width: 440px;
+        width: 90%;
+        position: relative;
+        z-index: 10;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Header del card */
+    .login-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .login-header::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 50%;
+    }
+
+    .logo-container {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .logo-container img {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+    }
+
+    .login-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .login-header p {
+        font-size: 0.95rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    /* Body del card */
+    .login-body {
+        padding: 50px 40px 40px;
+    }
+
+    .welcome-text {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .welcome-text h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .welcome-text p {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* Formulario */
+    .form-floating {
+        margin-bottom: 20px;
+    }
+
+    .form-floating .form-control {
+        border-radius: 12px;
+        border: 2px solid #e8e8e8;
+        padding: 1rem 1rem 1rem 3rem;
+        height: 60px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(107, 93, 211, 0.15);
+    }
+
+    .form-floating label {
+        padding-left: 3rem;
+        color: #999;
+    }
+
+    .form-floating .form-control:focus ~ label,
+    .form-floating .form-control:not(:placeholder-shown) ~ label {
+        color: var(--primary-color);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+        font-size: 1.2rem;
+        z-index: 5;
+        transition: color 0.3s ease;
+    }
+
+    .form-floating:focus-within .input-icon {
+        color: var(--primary-color);
+    }
+
+    /* Botón de login */
+    .btn-login {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border: none;
+        padding: 16px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border-radius: 12px;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-login:hover::before {
+        left: 100%;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(107, 93, 211, 0.4);
+    }
+
+    .btn-login:active {
+        transform: translateY(-1px);
+    }
+
+    .btn-login:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Alertas */
+    .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    .login-footer {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
+    }
+
+    .login-footer p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .login-footer .version {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-top: 5px;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .login-card {
+            width: 95%;
+            border-radius: 20px;
+        }
+
+        .login-header {
+            padding: 30px 20px;
+        }
+
+        .login-body {
+            padding: 40px 25px 30px;
+        }
+
+        .back-button {
+            top: 10px;
+            left: 10px;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Password toggle */
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        z-index: 5;
+        padding: 5px;
+        transition: color 0.3s ease;
+    }
+
+    .password-toggle:hover {
+        color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Botón de regreso al inicio -->
+<a href="index.html" class="back-button">
+  <i class="bi bi-arrow-left"></i>
+  Volver al inicio
+</a>
+
+<div class="login-card">
+  <div class="login-header">
+    <div class="logo-container">
+      <img src="images/logo.jpeg" alt="Logo Sistema Ciempiés" onerror="this.src='https://via.placeholder.com/80/6B5DD3/FFFFFF?text=🐛'">
+    </div>
+    <h1>Sistema Ciempiés</h1>
+    <p>Gestión de Transporte Escolar</p>
+  </div>
+
+  <div class="login-body">
+    <div class="welcome-text">
+      <h2>¡Bienvenido!</h2>
+      <p>Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <form id="loginForm">
+      <div class="form-floating position-relative">
+        <i class="bi bi-envelope-fill input-icon"></i>
+        <input type="email" class="form-control" id="email" placeholder="correo@ejemplo.com" required>
+        <label for="email">Correo electrónico</label>
+      </div>
+
+      <div class="form-floating position-relative">
+        <i class="bi bi-lock-fill input-icon"></i>
+        <input type="password" class="form-control" id="contrasena" placeholder="Contraseña" required>
+        <label for="contrasena">Contraseña</label>
+        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+          <i class="bi bi-eye" id="togglePasswordIcon"></i>
+        </button>
+      </div>
+
+      <button type="submit" class="btn btn-login">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+      </button>
+    </form>
+  </div>
+
+  <div class="login-footer">
+    <p>Sistema de Gestión de Transporte Escolar</p>
+    <span class="version">v1.0</span>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Archivos JS del proyecto -->
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/login.js"></script>
+
+<script>
+  // Toggle para mostrar/ocultar contraseña
+  function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('contrasena');
+      const toggleIcon = document.getElementById('togglePasswordIcon');
+
+      if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          toggleIcon.classList.remove('bi-eye');
+          toggleIcon.classList.add('bi-eye-slash');
+      } else {
+          passwordInput.type = 'password';
+          toggleIcon.classList.remove('bi-eye-slash');
+          toggleIcon.classList.add('bi-eye');
+      }
+  }
+</script>
+</body>
+</html>

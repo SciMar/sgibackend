@@ -3,10 +3,12 @@ package com.sgi.backend.dto.usuario;
 import com.sgi.backend.model.Rol;
 import com.sgi.backend.model.TipoId;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
 public class UsuarioResponseDTO {
+
     private Long id;
     private TipoId tipoId;
     private String numId;
@@ -19,5 +21,10 @@ public class UsuarioResponseDTO {
     private Boolean activo;
     private LocalDateTime fechaCreacion;
 
-    // SIN contraseña (seguridad)
+    /**
+     * Indica si el usuario debe cambiar su contraseña.
+     * El frontend usa este campo para redirigir al cambio de contraseña.
+     */
+    private Boolean primerIngreso;
 }
+

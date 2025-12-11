@@ -7,9 +7,11 @@ Auth.requireRoles(['ADMINISTRADOR', 'ENCARGADO', 'MONITOR']);
 // Variables globales
 let estudiantesOriginales = [];
 let estudiantesFiltrados = [];
+let zonas = [];      // ✅ Agregar zonas
 let colegios = [];
 let jornadas = [];
 let rutas = [];
+let monitorData = null;
 let modalInstance;
 const currentUser = Auth.getUser();
 
@@ -43,11 +45,20 @@ function configurarMenuSegunRol() {
 
 // Cargar datos iniciales
 async function cargarDatosIniciales() {
+    // Si es MONITOR, primero obtener sus datos (zona, jornada)
+    if (currentUser.rol === 'MONITOR') {
+        monitorData = await obtenerDatosMonitor();
+    }
+
     await Promise.all([
         cargarEstudiantes(),
+        cargarZonas(),      // ✅ Cargar zonas para el formulario
         cargarColegios(),
         cargarRutas()
     ]);
+
+    // Después de cargar estudiantes, llenar filtros dinámicamente
+    llenarFiltrosSegunEstudiantes();
 }
 
 // Cargar estudiantes
@@ -57,12 +68,9 @@ async function cargarEstudiantes() {
     try {
         let url = `${API_URL}/estudiantes`;
 
-        // Si es MONITOR, primero obtener su zona y jornada
-        if (currentUser.rol === 'MONITOR') {
-            const monitorData = await obtenerDatosMonitor();
-            if (monitorData && monitorData.zonaId && monitorData.jornadaId) {
-                url = `${API_URL}/estudiantes/monitor/zona/${monitorData.zonaId}/jornada/${monitorData.jornadaId}`;
-            }
+        // ✅ Si es MONITOR, usar su zona y jornada
+        if (currentUser.rol === 'MONITOR' && monitorData && monitorData.zonaId && monitorData.jornadaId) {
+            url = `${API_URL}/estudiantes/monitor/zona/${monitorData.zonaId}/jornada/${monitorData.jornadaId}`;
         }
 
         const response = await fetch(url, {
@@ -73,11 +81,6 @@ async function cargarEstudiantes() {
             estudiantesOriginales = await response.json();
             estudiantesFiltrados = [...estudiantesOriginales];
             mostrarEstudiantes(estudiantesFiltrados);
-
-            // Si es MONITOR y no hay colegios cargados, llenar filtros desde estudiantes
-            if (currentUser.rol === 'MONITOR' && colegios.length === 0) {
-                llenarFiltrosDesdeEstudiantes();
-            }
         } else if (response.status === 401) {
             alert('Sesión expirada. Por favor inicie sesión nuevamente.');
             Auth.logout();
@@ -107,7 +110,7 @@ async function obtenerDatosMonitor() {
     }
 }
 
-// Cargar colegios
+// Cargar colegios (para el formulario de crear/editar)
 async function cargarColegios() {
     try {
         const response = await fetch(`${API_URL}/colegios`, {
@@ -116,11 +119,103 @@ async function cargarColegios() {
 
         if (response.ok) {
             colegios = await response.json();
-            llenarSelectColegios();
         }
     } catch (error) {
         console.error('Error al cargar colegios:', error);
     }
+}
+
+// ✅ Cargar zonas para el formulario
+async function cargarZonas() {
+    try {
+        const response = await fetch(`${API_URL}/zonas`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (response.ok) {
+            zonas = await response.json();
+            llenarSelectZonas();
+        }
+    } catch (error) {
+        console.error('Error al cargar zonas:', error);
+    }
+}
+
+// ✅ Llenar select de zonas en el formulario
+function llenarSelectZonas() {
+    const selectZona = document.getElementById('zonaId');
+    if (!selectZona) return;
+
+    selectZona.innerHTML = '<option value="">Seleccione zona...</option>';
+    zonas.forEach(zona => {
+        if (zona.activa) {
+            selectZona.innerHTML += `<option value="${zona.id}">${zona.nombreZona}</option>`;
+        }
+    });
+}
+
+// ✅ Cargar colegios filtrados por zona seleccionada
+async function cargarColegiosPorZona() {
+    const zonaId = document.getElementById('zonaId').value;
+    const selectColegio = document.getElementById('colegioId');
+    const selectJornada = document.getElementById('jornadaId');
+
+    // Resetear selects dependientes
+    selectColegio.innerHTML = '<option value="">Seleccione colegio...</option>';
+    selectJornada.innerHTML = '<option value="">Primero seleccione colegio</option>';
+
+    if (!zonaId) return;
+
+    try {
+        const response = await fetch(`${API_URL}/colegios/zona/${zonaId}`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (response.ok) {
+            const colegiosZona = await response.json();
+            colegiosZona.forEach(colegio => {
+                if (colegio.activo) {
+                    selectColegio.innerHTML += `<option value="${colegio.id}">${colegio.nombreColegio}</option>`;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar colegios por zona:', error);
+    }
+}
+
+// ✅ Cargar jornadas del colegio seleccionado
+async function cargarJornadasPorColegio() {
+    const colegioId = document.getElementById('colegioId').value;
+    const selectJornada = document.getElementById('jornadaId');
+
+    selectJornada.innerHTML = '<option value="">Seleccione jornada...</option>';
+
+    if (!colegioId) {
+        selectJornada.innerHTML = '<option value="">Primero seleccione colegio</option>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (response.ok) {
+            const jornadasColegio = await response.json();
+            jornadasColegio.forEach(cj => {
+                selectJornada.innerHTML += `<option value="${cj.jornadaId}">${cj.nombreJornada || JORNADA_LABELS[cj.tipoJornada] || cj.tipoJornada}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar jornadas:', error);
+        selectJornada.innerHTML = '<option value="">Error al cargar jornadas</option>';
+    }
+}
+
+// Función legacy para compatibilidad
+async function cargarJornadas() {
+    await cargarJornadasPorColegio();
 }
 
 // Cargar rutas
@@ -139,50 +234,75 @@ async function cargarRutas() {
     }
 }
 
-// Llenar select de colegios
-function llenarSelectColegios() {
-    const selectColegio = document.getElementById('colegioId');
+// ✅ Llenar filtros basándose en los estudiantes disponibles
+function llenarFiltrosSegunEstudiantes() {
     const selectFiltroColegio = document.getElementById('filtroColegio');
-
-    selectColegio.innerHTML = '<option value="">Seleccione...</option>';
-    selectFiltroColegio.innerHTML = '<option value="">Todos</option>';
-
-    colegios.forEach(colegio => {
-        const option = `<option value="${colegio.id}">${colegio.nombreColegio}</option>`;
-        selectColegio.innerHTML += option;
-        selectFiltroColegio.innerHTML += option;
-    });
-
-    // Si es MONITOR y no hay colegios (sin permisos), llenar desde estudiantes
-    if (currentUser.rol === 'MONITOR' && colegios.length === 0 && estudiantesOriginales.length > 0) {
-        llenarFiltrosDesdeEstudiantes();
-    }
-}
-
-// Llenar filtros desde los estudiantes (para MONITOR)
-function llenarFiltrosDesdeEstudiantes() {
-    const selectFiltroColegio = document.getElementById('filtroColegio');
+    const selectFiltroJornada = document.getElementById('filtroJornada');
 
     // Extraer colegios únicos de los estudiantes
     const colegiosUnicos = {};
     estudiantesOriginales.forEach(e => {
-        if (e.colegioId && !colegiosUnicos[e.colegioId]) {
+        if (e.colegioId && e.nombreColegio && !colegiosUnicos[e.colegioId]) {
             colegiosUnicos[e.colegioId] = e.nombreColegio;
         }
     });
 
-    // Llenar select de filtro
-    selectFiltroColegio.innerHTML = '<option value="">Todos</option>';
+    // Llenar filtro de colegios solo con los que tienen estudiantes
+    selectFiltroColegio.innerHTML = '<option value="">Todos los colegios</option>';
     Object.keys(colegiosUnicos).forEach(colegioId => {
         selectFiltroColegio.innerHTML += `<option value="${colegioId}">${colegiosUnicos[colegioId]}</option>`;
     });
 
-    console.log('Filtros cargados desde estudiantes para MONITOR');
+    // Extraer jornadas únicas de los estudiantes
+    const jornadasUnicas = new Set();
+    estudiantesOriginales.forEach(e => {
+        if (e.tipoJornada) {
+            jornadasUnicas.add(e.tipoJornada);
+        }
+    });
+
+    // Llenar filtro de jornadas solo con las que tienen estudiantes
+    selectFiltroJornada.innerHTML = '<option value="">Todas</option>';
+    jornadasUnicas.forEach(tipoJornada => {
+        selectFiltroJornada.innerHTML += `<option value="${tipoJornada}">${JORNADA_LABELS[tipoJornada] || tipoJornada}</option>`;
+    });
+
+    console.log(`Filtros cargados: ${Object.keys(colegiosUnicos).length} colegios, ${jornadasUnicas.size} jornadas`);
+}
+
+// ✅ Actualizar jornadas cuando se selecciona un colegio en el filtro
+function actualizarJornadasPorColegio() {
+    const colegioId = document.getElementById('filtroColegio').value;
+    const selectFiltroJornada = document.getElementById('filtroJornada');
+
+    // Si no hay colegio seleccionado, mostrar todas las jornadas disponibles
+    let estudiantesAFiltrar = estudiantesOriginales;
+
+    // Si hay colegio seleccionado, filtrar solo estudiantes de ese colegio
+    if (colegioId) {
+        estudiantesAFiltrar = estudiantesOriginales.filter(e => e.colegioId == colegioId);
+    }
+
+    // Extraer jornadas únicas
+    const jornadasUnicas = new Set();
+    estudiantesAFiltrar.forEach(e => {
+        if (e.tipoJornada) {
+            jornadasUnicas.add(e.tipoJornada);
+        }
+    });
+
+    // Llenar select
+    selectFiltroJornada.innerHTML = '<option value="">Todas</option>';
+    jornadasUnicas.forEach(tipoJornada => {
+        selectFiltroJornada.innerHTML += `<option value="${tipoJornada}">${JORNADA_LABELS[tipoJornada] || tipoJornada}</option>`;
+    });
 }
 
 // Llenar select de rutas
 function llenarSelectRutas() {
     const selectRuta = document.getElementById('rutaId');
+    if (!selectRuta) return;
+
     selectRuta.innerHTML = '<option value="">Ninguna</option>';
 
     rutas.forEach(ruta => {
@@ -190,7 +310,7 @@ function llenarSelectRutas() {
     });
 }
 
-// Cargar jornadas del colegio seleccionado
+// Cargar jornadas del colegio seleccionado (para el formulario de crear/editar)
 async function cargarJornadas() {
     const colegioId = document.getElementById('colegioId').value;
     const selectJornada = document.getElementById('jornadaId');
@@ -220,60 +340,7 @@ async function cargarJornadas() {
     }
 }
 
-// Cargar jornadas para filtro
-async function cargarJornadasFiltro() {
-    const colegioId = document.getElementById('filtroColegio').value;
-    const selectJornada = document.getElementById('filtroJornada');
-
-    selectJornada.innerHTML = '<option value="">Todas</option>';
-
-    if (!colegioId) {
-        // Si no hay colegio seleccionado, mostrar todas las jornadas únicas de los estudiantes
-        const jornadasUnicas = [...new Set(estudiantesOriginales.map(e => e.jornadaId))];
-        const jornadasInfo = estudiantesOriginales
-            .filter(e => jornadasUnicas.includes(e.jornadaId))
-            .reduce((acc, e) => {
-                if (!acc[e.jornadaId]) {
-                    acc[e.jornadaId] = e.nombreJornada;
-                }
-                return acc;
-            }, {});
-
-        Object.keys(jornadasInfo).forEach(jornadaId => {
-            selectJornada.innerHTML += `<option value="${jornadaId}">${jornadasInfo[jornadaId]}</option>`;
-        });
-        return;
-    }
-
-    // Usar el endpoint real del backend
-    try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
-            headers: Auth.getHeaders()
-        });
-
-        if (response.ok) {
-            const jornadasColegio = await response.json();
-            jornadasColegio.forEach(cj => {
-                selectJornada.innerHTML += `<option value="${cj.jornadaId}">${cj.nombreJornada}</option>`;
-            });
-        }
-    } catch (error) {
-        console.error('Error al cargar jornadas:', error);
-        // Fallback: usar jornadas de estudiantes
-        const jornadasDelColegio = estudiantesOriginales
-            .filter(e => e.colegioId == colegioId)
-            .reduce((acc, e) => {
-                if (!acc[e.jornadaId]) {
-                    acc[e.jornadaId] = e.nombreJornada;
-                }
-                return acc;
-            }, {});
-
-        Object.keys(jornadasDelColegio).forEach(jornadaId => {
-            selectJornada.innerHTML += `<option value="${jornadaId}">${jornadasDelColegio[jornadaId]}</option>`;
-        });
-    }
-}
+// ✅ Ya no necesitamos cargarJornadasFiltro() porque usamos tipos fijos
 
 // Mostrar estudiantes en la tabla
 function mostrarEstudiantes(estudiantes) {
@@ -281,6 +348,7 @@ function mostrarEstudiantes(estudiantes) {
 
     if (estudiantes.length === 0) {
         showTableEmpty('tableBody', 8, 'No se encontraron estudiantes');
+        actualizarContador();
         return;
     }
 
@@ -294,7 +362,7 @@ function mostrarEstudiantes(estudiantes) {
             <td>${e.nombreCompleto || `${e.primerNombre} ${e.primerApellido}`}</td>
             <td>${e.curso || '-'}</td>
             <td>${e.nombreColegio || '-'}</td>
-            <td>${e.nombreJornada || '-'}</td>
+            <td><span class="badge bg-info">${JORNADA_LABELS[e.tipoJornada] || e.tipoJornada || '-'}</span></td>
             <td><span class="badge ${ESTADO_INSCRIPCION_BADGE_CLASS[e.estadoInscripcion]}">${ESTADO_INSCRIPCION_LABELS[e.estadoInscripcion] || e.estadoInscripcion}</span></td>
             <td>
                 <div class="btn-group btn-group-sm">
@@ -315,6 +383,8 @@ function mostrarEstudiantes(estudiantes) {
             </td>
         </tr>
     `).join('');
+
+    actualizarContador();
 }
 
 // Verificar permisos
@@ -326,38 +396,74 @@ function puedeEliminar() {
     return currentUser.rol === 'ADMINISTRADOR';
 }
 
-// Filtrar estudiantes
-function filtrarEstudiantes() {
+// ✅ Aplicar filtros (llamado por el botón Filtrar)
+function aplicarFiltros() {
     const colegio = document.getElementById('filtroColegio').value;
-    const jornada = document.getElementById('filtroJornada').value;
+    const tipoJornada = document.getElementById('filtroJornada').value;
     const estado = document.getElementById('filtroEstado').value;
+    const busqueda = document.getElementById('busqueda').value.toLowerCase().trim();
 
     estudiantesFiltrados = estudiantesOriginales.filter(e => {
+        // Filtrar por colegio
         const coincideColegio = !colegio || e.colegioId == colegio;
-        const coincideJornada = !jornada || e.jornadaId == jornada;
+
+        // Filtrar por tipo de jornada
+        const coincideJornada = !tipoJornada || e.tipoJornada === tipoJornada;
+
+        // Filtrar por estado
         const coincideEstado = !estado || e.estadoInscripcion === estado;
-        return coincideColegio && coincideJornada && coincideEstado;
+
+        // Filtrar por búsqueda (nombre o documento)
+        let coincideBusqueda = true;
+        if (busqueda) {
+            const nombreCompleto = `${e.primerNombre} ${e.segundoNombre || ''} ${e.primerApellido} ${e.segundoApellido || ''}`.toLowerCase();
+            coincideBusqueda = nombreCompleto.includes(busqueda) || (e.numId && e.numId.toLowerCase().includes(busqueda));
+        }
+
+        return coincideColegio && coincideJornada && coincideEstado && coincideBusqueda;
     });
 
-    buscarEstudiantes();
+    mostrarEstudiantes(estudiantesFiltrados);
+    actualizarContador();
 }
 
-// Buscar estudiantes
-function buscarEstudiantes() {
-    const busqueda = document.getElementById('busqueda').value.toLowerCase();
+// ✅ Limpiar todos los filtros
+function limpiarFiltros() {
+    document.getElementById('filtroColegio').value = '';
+    document.getElementById('filtroJornada').value = '';
+    document.getElementById('filtroEstado').value = '';
+    document.getElementById('busqueda').value = '';
 
-    if (!busqueda) {
-        mostrarEstudiantes(estudiantesFiltrados);
-        return;
+    estudiantesFiltrados = [...estudiantesOriginales];
+    mostrarEstudiantes(estudiantesFiltrados);
+    actualizarContador();
+}
+
+// ✅ Actualizar contador de resultados
+function actualizarContador() {
+    const contador = document.getElementById('resultsCount');
+    if (contador) {
+        const total = estudiantesFiltrados.length;
+        contador.textContent = `${total} estudiante${total !== 1 ? 's' : ''}`;
     }
-
-    const resultados = estudiantesFiltrados.filter(e => {
-        const nombreCompleto = `${e.primerNombre} ${e.segundoNombre || ''} ${e.primerApellido} ${e.segundoApellido || ''}`.toLowerCase();
-        return nombreCompleto.includes(busqueda) || e.numId.includes(busqueda);
-    });
-
-    mostrarEstudiantes(resultados);
 }
+
+// Función legacy para compatibilidad
+function filtrarEstudiantes() {
+    aplicarFiltros();
+}
+
+// Búsqueda por tecla Enter
+document.addEventListener('DOMContentLoaded', () => {
+    const busquedaInput = document.getElementById('busqueda');
+    if (busquedaInput) {
+        busquedaInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                aplicarFiltros();
+            }
+        });
+    }
+});
 
 // Mostrar modal para crear
 function mostrarModalCrear() {
@@ -370,6 +476,15 @@ function mostrarModalCrear() {
     document.getElementById('formEstudiante').reset();
     document.getElementById('estudianteId').value = '';
     document.getElementById('modoEdicion').value = 'false';
+
+    // Ocultar campo de estado en modo crear
+    document.getElementById('estadoContainer').style.display = 'none';
+
+    // Resetear selects en cascada
+    document.getElementById('zonaId').value = '';
+    document.getElementById('colegioId').innerHTML = '<option value="">Primero seleccione zona</option>';
+    document.getElementById('jornadaId').innerHTML = '<option value="">Primero seleccione colegio</option>';
+
     modalInstance.show();
 }
 
@@ -392,7 +507,7 @@ async function editarEstudiante(id) {
             document.getElementById('estudianteId').value = estudiante.id;
             document.getElementById('modoEdicion').value = 'true';
 
-            // Llenar formulario
+            // Llenar datos del estudiante
             document.getElementById('tipoId').value = estudiante.tipoId || '';
             document.getElementById('numId').value = estudiante.numId;
             document.getElementById('primerNombre').value = estudiante.primerNombre;
@@ -413,11 +528,38 @@ async function editarEstudiante(id) {
             document.getElementById('direccionAcudiente').value = estudiante.direccionAcudiente || '';
             document.getElementById('emailAcudiente').value = estudiante.emailAcudiente || '';
 
-            // Datos de inscripción
-            document.getElementById('colegioId').value = estudiante.colegioId;
-            await cargarJornadas();
-            document.getElementById('jornadaId').value = estudiante.jornadaId;
-            document.getElementById('rutaId').value = estudiante.rutaId || '';
+            // ✅ Mostrar campo de estado en modo edición
+            document.getElementById('estadoContainer').style.display = 'block';
+            document.getElementById('estadoInscripcion').value = estudiante.estadoInscripcion || 'ACTIVA';
+
+            // ✅ Cargar datos de inscripción en cascada
+            // Primero necesitamos obtener la zona del colegio
+            if (estudiante.colegioId) {
+                // Buscar la zona del colegio
+                const colegioResponse = await fetch(`${API_URL}/colegios/${estudiante.colegioId}`, {
+                    headers: Auth.getHeaders()
+                });
+
+                if (colegioResponse.ok) {
+                    const colegio = await colegioResponse.json();
+
+                    // Establecer zona
+                    document.getElementById('zonaId').value = colegio.zonaId || '';
+
+                    // Cargar colegios de esa zona
+                    await cargarColegiosPorZona();
+
+                    // Establecer colegio
+                    document.getElementById('colegioId').value = estudiante.colegioId;
+
+                    // Cargar jornadas del colegio
+                    await cargarJornadasPorColegio();
+
+                    // Establecer jornada
+                    document.getElementById('jornadaId').value = estudiante.jornadaId || '';
+                }
+            }
+
             document.getElementById('observacionesInscripcion').value = estudiante.observacionesInscripcion || '';
 
             modalInstance.show();
@@ -462,9 +604,13 @@ async function guardarEstudiante() {
         emailAcudiente: document.getElementById('emailAcudiente').value.trim() || null,
         colegioId: parseInt(document.getElementById('colegioId').value),
         jornadaId: parseInt(document.getElementById('jornadaId').value),
-        rutaId: document.getElementById('rutaId').value ? parseInt(document.getElementById('rutaId').value) : null,
         observacionesInscripcion: document.getElementById('observacionesInscripcion').value.trim() || null
     };
+
+    // ✅ Agregar estado solo en modo edición
+    if (modoEdicion) {
+        dto.estadoInscripcion = document.getElementById('estadoInscripcion').value;
+    }
 
     try {
         const url = modoEdicion ? `${API_URL}/estudiantes/${estudianteId}` : `${API_URL}/estudiantes`;

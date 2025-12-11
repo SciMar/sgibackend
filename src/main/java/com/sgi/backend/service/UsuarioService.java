@@ -7,8 +7,8 @@ import com.sgi.backend.dto.usuario.UsuarioResponseDTO;
 import com.sgi.backend.model.Usuario;
 import com.sgi.backend.model.Rol;
 import com.sgi.backend.repository.UsuarioRepository;
+import com.sgi.backend.validation.PasswordValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +26,9 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    // ✅ Contraseña genérica para nuevos usuarios
+    private static final String CONTRASENA_GENERICA = "Ciempies2024!";
 
     // ==========================================
     // CREAR
@@ -51,8 +54,50 @@ public class UsuarioService {
         usuario.setSegundoApellido(dto.getSegundoApellido());
         usuario.setEmail(dto.getEmail());
 
-        // Encriptar contraseña
-        usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        // ✅ Si se proporciona contraseña, validarla. Si no, usar la genérica.
+        String contrasena = dto.getContrasena();
+        if (contrasena == null || contrasena.isEmpty()) {
+            contrasena = CONTRASENA_GENERICA;
+            usuario.setPrimerIngreso(true);  // ✅ Debe cambiar contraseña
+        } else {
+            validarContrasena(contrasena);
+            usuario.setPrimerIngreso(false); // Ya tiene contraseña personalizada
+        }
+
+        usuario.setContrasena(passwordEncoder.encode(contrasena));
+        usuario.setRol(dto.getRol());
+        usuario.setActivo(true);
+        usuario.setFechaCreacion(LocalDateTime.now());
+
+        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        return convertirAResponseDTO(usuarioGuardado);
+    }
+
+    /**
+     * ✅ Crear usuario con contraseña genérica (método alternativo).
+     * Ideal para cuando el admin crea usuarios desde el panel.
+     */
+    public UsuarioResponseDTO crearConContrasenaGenerica(CrearUsuarioDTO dto) {
+        // Validaciones
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Ya existe un usuario con el email: " + dto.getEmail());
+        }
+        if (usuarioRepository.existsByNumId(dto.getNumId())) {
+            throw new RuntimeException("Ya existe un usuario con el número de identificación: " + dto.getNumId());
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setTipoId(dto.getTipoId());
+        usuario.setNumId(dto.getNumId());
+        usuario.setPrimerNombre(dto.getPrimerNombre());
+        usuario.setSegundoNombre(dto.getSegundoNombre());
+        usuario.setPrimerApellido(dto.getPrimerApellido());
+        usuario.setSegundoApellido(dto.getSegundoApellido());
+        usuario.setEmail(dto.getEmail());
+
+        // ✅ Siempre usa contraseña genérica
+        usuario.setContrasena(passwordEncoder.encode(CONTRASENA_GENERICA));
+        usuario.setPrimerIngreso(true);  // ✅ DEBE cambiar contraseña
 
         usuario.setRol(dto.getRol());
         usuario.setActivo(true);
@@ -94,6 +139,7 @@ public class UsuarioService {
 
         // Actualizar contraseña solo si se proporciona una nueva
         if (dto.getContrasena() != null && !dto.getContrasena().isEmpty()) {
+            validarContrasena(dto.getContrasena());
             usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
         }
 
@@ -185,7 +231,6 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
 
-        // Verificar si es un monitor (tiene relación con tabla monitores)
         if (usuario.getRol() == Rol.MONITOR && usuario.getMonitor() != null) {
             throw new RuntimeException("No se puede eliminar el usuario porque está asignado como monitor. " +
                     "Primero elimine la asignación de monitor.");
@@ -199,24 +244,29 @@ public class UsuarioService {
     // ==========================================
 
     public UsuarioResponseDTO login(LoginDTO dto) {
-        // Buscar usuario por email
         Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-        // Verificar que el usuario esté activo
         if (!usuario.getActivo()) {
             throw new RuntimeException("Usuario inactivo. Contacte al administrador.");
         }
 
-        // Verificar contraseña
         if (!passwordEncoder.matches(dto.getContrasena(), usuario.getContrasena())) {
             throw new RuntimeException("Credenciales inválidas");
         }
 
+        // ✅ El frontend usará primerIngreso para redirigir
         return convertirAResponseDTO(usuario);
     }
 
-    // Cambiar contraseña
+    // ==========================================
+    // CAMBIAR CONTRASEÑA
+    // ==========================================
+
+    /**
+     * ✅ Cambiar contraseña (primer ingreso o cambio voluntario).
+     * Si es primer ingreso, marca primerIngreso = false.
+     */
     public void cambiarContrasena(Long id, String contrasenaActual, String contrasenaNueva) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
@@ -231,8 +281,58 @@ public class UsuarioService {
             throw new RuntimeException("La nueva contraseña debe ser diferente a la actual");
         }
 
+        // ✅ Validar contraseña robusta
+        validarContrasena(contrasenaNueva);
+
         // Actualizar contraseña
         usuario.setContrasena(passwordEncoder.encode(contrasenaNueva));
+
+        // ✅ Marcar que ya no es primer ingreso
+        usuario.setPrimerIngreso(false);
+
+        usuarioRepository.save(usuario);
+    }
+
+    /**
+     * ✅ Cambiar contraseña en primer ingreso (sin pedir contraseña actual).
+     * Solo funciona si primerIngreso = true.
+     */
+    public void cambiarContrasenaPrimerIngreso(Long id, String contrasenaNueva) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+
+        // Solo permitir si es primer ingreso
+        if (!Boolean.TRUE.equals(usuario.getPrimerIngreso())) {
+            throw new RuntimeException("Esta función solo está disponible para el primer ingreso");
+        }
+
+        // ✅ Validar contraseña robusta
+        validarContrasena(contrasenaNueva);
+
+        // Validar que no sea la contraseña genérica
+        if (passwordEncoder.matches(CONTRASENA_GENERICA, passwordEncoder.encode(contrasenaNueva)) ||
+                contrasenaNueva.equals(CONTRASENA_GENERICA)) {
+            throw new RuntimeException("Debe elegir una contraseña diferente a la genérica");
+        }
+
+        // Actualizar contraseña
+        usuario.setContrasena(passwordEncoder.encode(contrasenaNueva));
+        usuario.setPrimerIngreso(false);
+
+        usuarioRepository.save(usuario);
+    }
+
+    /**
+     * ✅ Resetear contraseña a la genérica (para admin).
+     * Útil cuando un usuario olvida su contraseña.
+     */
+    public void resetearContrasena(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+
+        usuario.setContrasena(passwordEncoder.encode(CONTRASENA_GENERICA));
+        usuario.setPrimerIngreso(true);  // Deberá cambiarla al ingresar
+
         usuarioRepository.save(usuario);
     }
 
@@ -246,6 +346,19 @@ public class UsuarioService {
 
     public Long contarActivosPorRol(Rol rol) {
         return usuarioRepository.countByRolAndActivoTrue(rol);
+    }
+
+    // ==========================================
+    // VALIDACIÓN DE CONTRASEÑA
+    // ==========================================
+
+    private void validarContrasena(String contrasena) {
+        PasswordValidator.ValidationResult resultado = PasswordValidator.validate(contrasena);
+
+        if (!resultado.isValid()) {
+            throw new RuntimeException("La contraseña no cumple los requisitos de seguridad: "
+                    + resultado.getErrorMessage());
+        }
     }
 
     // ==========================================
@@ -265,13 +378,19 @@ public class UsuarioService {
         dto.setRol(usuario.getRol());
         dto.setActivo(usuario.getActivo());
         dto.setFechaCreacion(usuario.getFechaCreacion());
-        // NO incluir contraseña en la respuesta
+        dto.setPrimerIngreso(usuario.getPrimerIngreso());  // ✅ NUEVO
         return dto;
     }
 
-    // Método interno para obtener entidad (usado por otros services)
     public Usuario obtenerEntidadPorId(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+    }
+
+    /**
+     * ✅ Obtener la contraseña genérica (para mostrar en el panel de admin).
+     */
+    public String obtenerContrasenaGenerica() {
+        return CONTRASENA_GENERICA;
     }
 }

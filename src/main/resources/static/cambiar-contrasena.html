@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambiar Contraseña - Sistema Ciempiés</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6B5DD3;
+            --secondary-color: #8B7DE8;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 20px;
+        }
+
+        .change-password-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .change-password-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .change-password-header img {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: white;
+            padding: 5px;
+            margin-bottom: 15px;
+        }
+
+        .change-password-header h2 { margin: 0; font-weight: 600; }
+        .change-password-header p { margin: 10px 0 0; opacity: 0.9; font-size: 0.95rem; }
+
+        .change-password-body { padding: 30px; }
+
+        .alert-info-custom {
+            background-color: #e7f3ff;
+            border: 1px solid #b6d4fe;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .alert-info-custom i { color: var(--primary-color); }
+
+        .form-label { font-weight: 500; color: #333; margin-bottom: 8px; }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(107, 93, 211, 0.15);
+        }
+
+        .input-group-text {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+            cursor: pointer;
+        }
+        .input-group .form-control { border-left: none; border-radius: 0 10px 10px 0; }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(107, 93, 211, 0.4);
+            color: white;
+        }
+        .btn-primary-custom:disabled { opacity: 0.7; transform: none; color: white; }
+
+        .password-requirements {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .password-requirements h6 { font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; color: #333; }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            padding: 4px 0;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        .requirement i { font-size: 0.9rem; transition: all 0.3s ease; }
+        .requirement.valid { color: var(--success-color); }
+        .requirement.valid i { color: var(--success-color); }
+        .requirement.invalid { color: var(--danger-color); }
+        .requirement.invalid i { color: var(--danger-color); }
+
+        .password-strength { margin-top: 10px; }
+        .strength-bar { height: 5px; border-radius: 5px; background: #e0e0e0; overflow: hidden; }
+        .strength-bar-fill { height: 100%; border-radius: 5px; transition: all 0.3s ease; width: 0%; }
+        .strength-text { font-size: 0.8rem; margin-top: 5px; font-weight: 500; }
+        .strength-weak { background-color: var(--danger-color); width: 25%; }
+        .strength-fair { background-color: #ffc107; width: 50%; }
+        .strength-good { background-color: #17a2b8; width: 75%; }
+        .strength-strong { background-color: var(--success-color); width: 100%; }
+
+        .alert-floating {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .passwords-match { font-size: 0.85rem; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .passwords-match.match { color: var(--success-color); }
+        .passwords-match.no-match { color: var(--danger-color); }
+    </style>
+</head>
+<body>
+<div class="change-password-container">
+    <div class="change-password-header">
+        <img src="images/logo.jpeg" alt="Logo" onerror="this.src='https://via.placeholder.com/80/6B5DD3/FFFFFF?text=C'">
+        <h2>Cambiar Contraseña</h2>
+        <p>Por seguridad, debe crear una nueva contraseña</p>
+    </div>
+
+    <div class="change-password-body">
+        <div class="alert-info-custom">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Bienvenido(a), <span id="userName">Usuario</span>!</strong><br>
+            <small>Es su primer ingreso al sistema. Por favor, cree una contraseña segura para continuar.</small>
+        </div>
+
+        <form id="changePasswordForm">
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">Nueva Contraseña</label>
+                <div class="input-group">
+                        <span class="input-group-text" onclick="togglePassword('newPassword', 'toggleIcon1')">
+                            <i class="bi bi-eye" id="toggleIcon1"></i>
+                        </span>
+                    <input type="password" class="form-control" id="newPassword" placeholder="Ingrese su nueva contraseña" required>
+                </div>
+                <div class="password-strength">
+                    <div class="strength-bar"><div class="strength-bar-fill" id="strengthBar"></div></div>
+                    <div class="strength-text" id="strengthText"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+                <div class="input-group">
+                        <span class="input-group-text" onclick="togglePassword('confirmPassword', 'toggleIcon2')">
+                            <i class="bi bi-eye" id="toggleIcon2"></i>
+                        </span>
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="Confirme su nueva contraseña" required>
+                </div>
+                <div class="passwords-match" id="passwordsMatch"></div>
+            </div>
+
+            <div class="password-requirements">
+                <h6><i class="bi bi-shield-check me-2"></i>Requisitos de la contraseña:</h6>
+                <div class="requirement" id="req-length"><i class="bi bi-circle"></i><span>Mínimo 8 caracteres</span></div>
+                <div class="requirement" id="req-uppercase"><i class="bi bi-circle"></i><span>Al menos una letra mayúscula (A-Z)</span></div>
+                <div class="requirement" id="req-lowercase"><i class="bi bi-circle"></i><span>Al menos una letra minúscula (a-z)</span></div>
+                <div class="requirement" id="req-number"><i class="bi bi-circle"></i><span>Al menos un número (0-9)</span></div>
+                <div class="requirement" id="req-special"><i class="bi bi-circle"></i><span>Al menos un carácter especial (@#$%^&+=!.*_-)</span></div>
+                <div class="requirement" id="req-nospace"><i class="bi bi-circle"></i><span>Sin espacios en blanco</span></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom mt-4" id="submitBtn" disabled>
+                <i class="bi bi-check-circle me-2"></i>Guardar Nueva Contraseña
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cambiar-contrasena.js"></script>
+</body>
+</html>

@@ -38,6 +38,7 @@ public class EstudianteResponseDTO {
     // Datos de jornada
     private Long jornadaId;
     private String nombreJornada;
+    private String tipoJornada;
 
     // Datos de ruta
     private Long rutaId;
