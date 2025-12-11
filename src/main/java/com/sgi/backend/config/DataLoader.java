@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -51,8 +49,6 @@ public class DataLoader implements CommandLineRunner {
 
         // Hash para contraseña "admin123"
         String passwordHash = "$2a$10$UB5trHg7K/IWB3.Rg5tnyeagnQUrGgdD8epXkCLbqtQpMvGz4DKbG";
-
-
 
         // ==========================================
         // 1. ZONAS
@@ -106,9 +102,9 @@ public class DataLoader implements CommandLineRunner {
 
         // ENCARGADOS (uno por zona)
         Usuario enc1 = crearUsuario("CC", "1000000002", "Maria", "Isabel", "Rodriguez", "Gomez",
-                "encargado.usaquen@ciempies.com", passwordHash, Rol.ENCARGADO);
+                "propositocorreo@gmail.com", passwordHash, Rol.ENCARGADO);
         Usuario enc2 = crearUsuario("CC", "1000000003", "Pedro", "Luis", "Martinez", "Lopez",
-                "encargado.santafe@ciempies.com", passwordHash, Rol.ENCARGADO);
+                "patriciacc2074@gmail.com", passwordHash, Rol.ENCARGADO);
         Usuario enc3 = crearUsuario("CC", "1000000004", "Ana", "Patricia", "Garcia", "Diaz",
                 "encargado.sancristobal@ciempies.com", passwordHash, Rol.ENCARGADO);
         Usuario enc4 = crearUsuario("CC", "1000000005", "Carlos", "Eduardo", "Hernandez", "Silva",
@@ -145,7 +141,7 @@ public class DataLoader implements CommandLineRunner {
                 "monitor.bolivar2@ciempies.com", passwordHash, Rol.MONITOR);
 
         // ==========================================
-        // 4. COLEGIOS (3 por localidad = 18 colegios)
+        // 4. COLEGIOS (3 por zona = 18 colegios)
         // ==========================================
         // Usaquen
         Colegio col1 = crearColegio("Colegio Distrital Usaquen", zona1);
@@ -180,131 +176,125 @@ public class DataLoader implements CommandLineRunner {
         // ==========================================
         // 5. ASIGNACION COLEGIOS - JORNADAS
         // ==========================================
-        // Usaquen
-        crearColegioJornada(col1, j1);
-        crearColegioJornada(col1, j3);
-        crearColegioJornada(col2, j1);
-        crearColegioJornada(col3, j2);
+        // USAQUEN
+        crearColegioJornada(col1, j1);  // Distrital Usaquen - Mañana
+        crearColegioJornada(col1, j3);  // Distrital Usaquen - Tarde
+        crearColegioJornada(col2, j1);  // Santa Barbara - Mañana
+        crearColegioJornada(col2, j3);  // Santa Barbara - Tarde
+        crearColegioJornada(col3, j2);  // Liceo Boston - Única
 
-        // Santa Fe
-        crearColegioJornada(col4, j4);
-        crearColegioJornada(col4, j6);
-        crearColegioJornada(col5, j6);
-        crearColegioJornada(col6, j5);
+        // SANTA FE
+        crearColegioJornada(col4, j4);  // Agustin Nieto - Mañana
+        crearColegioJornada(col4, j6);  // Agustin Nieto - Tarde
+        crearColegioJornada(col5, j4);  // Caldas - Mañana
+        crearColegioJornada(col5, j6);  // Caldas - Tarde
+        crearColegioJornada(col6, j5);  // San Martin - Única
 
-        // San Cristobal
-        crearColegioJornada(col7, j7);
-        crearColegioJornada(col7, j9);
-        crearColegioJornada(col8, j7);
-        crearColegioJornada(col9, j8);
+        // SAN CRISTOBAL
+        crearColegioJornada(col7, j7);  // San Cristobal Sur - Mañana
+        crearColegioJornada(col7, j9);  // San Cristobal Sur - Tarde
+        crearColegioJornada(col8, j7);  // Juan del Corral - Mañana
+        crearColegioJornada(col8, j9);  // Juan del Corral - Tarde
+        crearColegioJornada(col9, j8);  // Ramon de Zubiria - Única
 
-        // Kennedy
-        crearColegioJornada(col10, j10);
-        crearColegioJornada(col10, j12);
-        crearColegioJornada(col11, j12);
-        crearColegioJornada(col12, j11);
+        // KENNEDY
+        crearColegioJornada(col10, j10); // Kennedy - Mañana
+        crearColegioJornada(col10, j12); // Kennedy - Tarde
+        crearColegioJornada(col11, j10); // Tecnico Industrial - Mañana
+        crearColegioJornada(col11, j12); // Tecnico Industrial - Tarde
+        crearColegioJornada(col12, j11); // Castilla - Única
 
-        // Bosa
-        crearColegioJornada(col13, j13);
-        crearColegioJornada(col13, j15);
-        crearColegioJornada(col14, j13);
-        crearColegioJornada(col15, j14);
+        // BOSA
+        crearColegioJornada(col13, j13); // Integrado Fontibon - Mañana
+        crearColegioJornada(col13, j15); // Integrado Fontibon - Tarde
+        crearColegioJornada(col14, j13); // San Bernardino - Mañana
+        crearColegioJornada(col14, j15); // San Bernardino - Tarde
+        crearColegioJornada(col15, j14); // Paulo VI - Única
 
-        // Ciudad Bolivar
-        crearColegioJornada(col16, j16);
-        crearColegioJornada(col16, j18);
-        crearColegioJornada(col17, j18);
-        crearColegioJornada(col18, j17);
+        // CIUDAD BOLIVAR
+        crearColegioJornada(col16, j16); // Arborizadora Alta - Mañana
+        crearColegioJornada(col16, j18); // Arborizadora Alta - Tarde
+        crearColegioJornada(col17, j16); // Tecnico Distrital - Mañana
+        crearColegioJornada(col17, j18); // Tecnico Distrital - Tarde
+        crearColegioJornada(col18, j17); // Ciudad Bolivar - Única
 
         // ==========================================
-        // 6. RUTAS
+        // 6. RUTAS (60 rutas: IDA y REGRESO para cada colegio-jornada)
         // ==========================================
-        // Usaquen - Colegio Distrital Usaquen (JM y JT)
+        // USAQUEN
         Ruta r1 = crearRuta("Usaquen Distrital - Manana IDA", TipoRecorrido.IDA, zona1);
         Ruta r2 = crearRuta("Usaquen Distrital - Manana REGRESO", TipoRecorrido.REGRESO, zona1);
         Ruta r3 = crearRuta("Usaquen Distrital - Tarde IDA", TipoRecorrido.IDA, zona1);
         Ruta r4 = crearRuta("Usaquen Distrital - Tarde REGRESO", TipoRecorrido.REGRESO, zona1);
-
-        // Usaquen - Instituto Santa Barbara (Solo JM)
         Ruta r5 = crearRuta("Santa Barbara - Manana IDA", TipoRecorrido.IDA, zona1);
         Ruta r6 = crearRuta("Santa Barbara - Manana REGRESO", TipoRecorrido.REGRESO, zona1);
+        Ruta r7 = crearRuta("Santa Barbara - Tarde IDA", TipoRecorrido.IDA, zona1);
+        Ruta r8 = crearRuta("Santa Barbara - Tarde REGRESO", TipoRecorrido.REGRESO, zona1);
+        Ruta r9 = crearRuta("Liceo Boston - Unica IDA", TipoRecorrido.IDA, zona1);
+        Ruta r10 = crearRuta("Liceo Boston - Unica REGRESO", TipoRecorrido.REGRESO, zona1);
 
-        // Usaquen - Liceo Boston (JU)
-        Ruta r7 = crearRuta("Liceo Boston - Unica IDA", TipoRecorrido.IDA, zona1);
-        Ruta r8 = crearRuta("Liceo Boston - Unica REGRESO", TipoRecorrido.REGRESO, zona1);
+        // SANTA FE
+        Ruta r11 = crearRuta("Agustin Nieto - Manana IDA", TipoRecorrido.IDA, zona2);
+        Ruta r12 = crearRuta("Agustin Nieto - Manana REGRESO", TipoRecorrido.REGRESO, zona2);
+        Ruta r13 = crearRuta("Agustin Nieto - Tarde IDA", TipoRecorrido.IDA, zona2);
+        Ruta r14 = crearRuta("Agustin Nieto - Tarde REGRESO", TipoRecorrido.REGRESO, zona2);
+        Ruta r15 = crearRuta("Caldas - Manana IDA", TipoRecorrido.IDA, zona2);
+        Ruta r16 = crearRuta("Caldas - Manana REGRESO", TipoRecorrido.REGRESO, zona2);
+        Ruta r17 = crearRuta("Caldas - Tarde IDA", TipoRecorrido.IDA, zona2);
+        Ruta r18 = crearRuta("Caldas - Tarde REGRESO", TipoRecorrido.REGRESO, zona2);
+        Ruta r19 = crearRuta("San Martin - Unica IDA", TipoRecorrido.IDA, zona2);
+        Ruta r20 = crearRuta("San Martin - Unica REGRESO", TipoRecorrido.REGRESO, zona2);
 
-        // Santa Fe - Colegio Agustin Nieto Caballero (JM y JT)
-        Ruta r9 = crearRuta("Agustin Nieto - Manana IDA", TipoRecorrido.IDA, zona2);
-        Ruta r10 = crearRuta("Agustin Nieto - Manana REGRESO", TipoRecorrido.REGRESO, zona2);
-        Ruta r11 = crearRuta("Agustin Nieto - Tarde IDA", TipoRecorrido.IDA, zona2);
-        Ruta r12 = crearRuta("Agustin Nieto - Tarde REGRESO", TipoRecorrido.REGRESO, zona2);
+        // SAN CRISTOBAL
+        Ruta r21 = crearRuta("San Cristobal Sur - Manana IDA", TipoRecorrido.IDA, zona3);
+        Ruta r22 = crearRuta("San Cristobal Sur - Manana REGRESO", TipoRecorrido.REGRESO, zona3);
+        Ruta r23 = crearRuta("San Cristobal Sur - Tarde IDA", TipoRecorrido.IDA, zona3);
+        Ruta r24 = crearRuta("San Cristobal Sur - Tarde REGRESO", TipoRecorrido.REGRESO, zona3);
+        Ruta r25 = crearRuta("Juan del Corral - Manana IDA", TipoRecorrido.IDA, zona3);
+        Ruta r26 = crearRuta("Juan del Corral - Manana REGRESO", TipoRecorrido.REGRESO, zona3);
+        Ruta r27 = crearRuta("Juan del Corral - Tarde IDA", TipoRecorrido.IDA, zona3);
+        Ruta r28 = crearRuta("Juan del Corral - Tarde REGRESO", TipoRecorrido.REGRESO, zona3);
+        Ruta r29 = crearRuta("Ramon de Zubiria - Unica IDA", TipoRecorrido.IDA, zona3);
+        Ruta r30 = crearRuta("Ramon de Zubiria - Unica REGRESO", TipoRecorrido.REGRESO, zona3);
 
-        // Santa Fe - Instituto Caldas (Solo JT)
-        Ruta r13 = crearRuta("Caldas - Tarde IDA", TipoRecorrido.IDA, zona2);
-        Ruta r14 = crearRuta("Caldas - Tarde REGRESO", TipoRecorrido.REGRESO, zona2);
+        // KENNEDY
+        Ruta r31 = crearRuta("Kennedy - Manana IDA", TipoRecorrido.IDA, zona4);
+        Ruta r32 = crearRuta("Kennedy - Manana REGRESO", TipoRecorrido.REGRESO, zona4);
+        Ruta r33 = crearRuta("Kennedy - Tarde IDA", TipoRecorrido.IDA, zona4);
+        Ruta r34 = crearRuta("Kennedy - Tarde REGRESO", TipoRecorrido.REGRESO, zona4);
+        Ruta r35 = crearRuta("Tecnico Kennedy - Manana IDA", TipoRecorrido.IDA, zona4);
+        Ruta r36 = crearRuta("Tecnico Kennedy - Manana REGRESO", TipoRecorrido.REGRESO, zona4);
+        Ruta r37 = crearRuta("Tecnico Kennedy - Tarde IDA", TipoRecorrido.IDA, zona4);
+        Ruta r38 = crearRuta("Tecnico Kennedy - Tarde REGRESO", TipoRecorrido.REGRESO, zona4);
+        Ruta r39 = crearRuta("Castilla - Unica IDA", TipoRecorrido.IDA, zona4);
+        Ruta r40 = crearRuta("Castilla - Unica REGRESO", TipoRecorrido.REGRESO, zona4);
 
-        // Santa Fe - Colegio San Martin (JU)
-        Ruta r15 = crearRuta("San Martin - Unica IDA", TipoRecorrido.IDA, zona2);
-        Ruta r16 = crearRuta("San Martin - Unica REGRESO", TipoRecorrido.REGRESO, zona2);
+        // BOSA
+        Ruta r41 = crearRuta("Integrado Fontibon - Manana IDA", TipoRecorrido.IDA, zona5);
+        Ruta r42 = crearRuta("Integrado Fontibon - Manana REGRESO", TipoRecorrido.REGRESO, zona5);
+        Ruta r43 = crearRuta("Integrado Fontibon - Tarde IDA", TipoRecorrido.IDA, zona5);
+        Ruta r44 = crearRuta("Integrado Fontibon - Tarde REGRESO", TipoRecorrido.REGRESO, zona5);
+        Ruta r45 = crearRuta("San Bernardino - Manana IDA", TipoRecorrido.IDA, zona5);
+        Ruta r46 = crearRuta("San Bernardino - Manana REGRESO", TipoRecorrido.REGRESO, zona5);
+        Ruta r47 = crearRuta("San Bernardino - Tarde IDA", TipoRecorrido.IDA, zona5);
+        Ruta r48 = crearRuta("San Bernardino - Tarde REGRESO", TipoRecorrido.REGRESO, zona5);
+        Ruta r49 = crearRuta("Paulo VI - Unica IDA", TipoRecorrido.IDA, zona5);
+        Ruta r50 = crearRuta("Paulo VI - Unica REGRESO", TipoRecorrido.REGRESO, zona5);
 
-        // San Cristobal - Colegio San Cristobal Sur (JM y JT)
-        Ruta r17 = crearRuta("San Cristobal Sur - Manana IDA", TipoRecorrido.IDA, zona3);
-        Ruta r18 = crearRuta("San Cristobal Sur - Manana REGRESO", TipoRecorrido.REGRESO, zona3);
-        Ruta r19 = crearRuta("San Cristobal Sur - Tarde IDA", TipoRecorrido.IDA, zona3);
-        Ruta r20 = crearRuta("San Cristobal Sur - Tarde REGRESO", TipoRecorrido.REGRESO, zona3);
-
-        // San Cristobal - Instituto Juan del Corral (Solo JM)
-        Ruta r21 = crearRuta("Juan del Corral - Manana IDA", TipoRecorrido.IDA, zona3);
-        Ruta r22 = crearRuta("Juan del Corral - Manana REGRESO", TipoRecorrido.REGRESO, zona3);
-
-        // San Cristobal - Colegio Ramon de Zubiria (JU)
-        Ruta r23 = crearRuta("Ramon de Zubiria - Unica IDA", TipoRecorrido.IDA, zona3);
-        Ruta r24 = crearRuta("Ramon de Zubiria - Unica REGRESO", TipoRecorrido.REGRESO, zona3);
-
-        // Kennedy - Colegio Kennedy (JM y JT)
-        Ruta r25 = crearRuta("Kennedy - Manana IDA", TipoRecorrido.IDA, zona4);
-        Ruta r26 = crearRuta("Kennedy - Manana REGRESO", TipoRecorrido.REGRESO, zona4);
-        Ruta r27 = crearRuta("Kennedy - Tarde IDA", TipoRecorrido.IDA, zona4);
-        Ruta r28 = crearRuta("Kennedy - Tarde REGRESO", TipoRecorrido.REGRESO, zona4);
-
-        // Kennedy - Instituto Tecnico Industrial (Solo JT)
-        Ruta r29 = crearRuta("Tecnico Kennedy - Tarde IDA", TipoRecorrido.IDA, zona4);
-        Ruta r30 = crearRuta("Tecnico Kennedy - Tarde REGRESO", TipoRecorrido.REGRESO, zona4);
-
-        // Kennedy - Colegio Castilla (JU)
-        Ruta r31 = crearRuta("Castilla - Unica IDA", TipoRecorrido.IDA, zona4);
-        Ruta r32 = crearRuta("Castilla - Unica REGRESO", TipoRecorrido.REGRESO, zona4);
-
-        // Bosa - Colegio Integrado de Fontibon (JM y JT)
-        Ruta r33 = crearRuta("Integrado Fontibon - Manana IDA", TipoRecorrido.IDA, zona5);
-        Ruta r34 = crearRuta("Integrado Fontibon - Manana REGRESO", TipoRecorrido.REGRESO, zona5);
-        Ruta r35 = crearRuta("Integrado Fontibon - Tarde IDA", TipoRecorrido.IDA, zona5);
-        Ruta r36 = crearRuta("Integrado Fontibon - Tarde REGRESO", TipoRecorrido.REGRESO, zona5);
-
-        // Bosa - Instituto San Bernardino (Solo JM)
-        Ruta r37 = crearRuta("San Bernardino - Manana IDA", TipoRecorrido.IDA, zona5);
-        Ruta r38 = crearRuta("San Bernardino - Manana REGRESO", TipoRecorrido.REGRESO, zona5);
-
-        // Bosa - Colegio Paulo VI (JU)
-        Ruta r39 = crearRuta("Paulo VI - Unica IDA", TipoRecorrido.IDA, zona5);
-        Ruta r40 = crearRuta("Paulo VI - Unica REGRESO", TipoRecorrido.REGRESO, zona5);
-
-        // Ciudad Bolivar - Colegio Arborizadora Alta (JM y JT)
-        Ruta r41 = crearRuta("Arborizadora Alta - Manana IDA", TipoRecorrido.IDA, zona6);
-        Ruta r42 = crearRuta("Arborizadora Alta - Manana REGRESO", TipoRecorrido.REGRESO, zona6);
-        Ruta r43 = crearRuta("Arborizadora Alta - Tarde IDA", TipoRecorrido.IDA, zona6);
-        Ruta r44 = crearRuta("Arborizadora Alta - Tarde REGRESO", TipoRecorrido.REGRESO, zona6);
-
-        // Ciudad Bolivar - Instituto Tecnico Distrital (Solo JT)
-        Ruta r45 = crearRuta("Tecnico Bolivar - Tarde IDA", TipoRecorrido.IDA, zona6);
-        Ruta r46 = crearRuta("Tecnico Bolivar - Tarde REGRESO", TipoRecorrido.REGRESO, zona6);
-
-        // Ciudad Bolivar - Colegio Ciudad Bolivar (JU)
-        Ruta r47 = crearRuta("Ciudad Bolivar - Unica IDA", TipoRecorrido.IDA, zona6);
-        Ruta r48 = crearRuta("Ciudad Bolivar - Unica REGRESO", TipoRecorrido.REGRESO, zona6);
+        // CIUDAD BOLIVAR
+        Ruta r51 = crearRuta("Arborizadora Alta - Manana IDA", TipoRecorrido.IDA, zona6);
+        Ruta r52 = crearRuta("Arborizadora Alta - Manana REGRESO", TipoRecorrido.REGRESO, zona6);
+        Ruta r53 = crearRuta("Arborizadora Alta - Tarde IDA", TipoRecorrido.IDA, zona6);
+        Ruta r54 = crearRuta("Arborizadora Alta - Tarde REGRESO", TipoRecorrido.REGRESO, zona6);
+        Ruta r55 = crearRuta("Tecnico Bolivar - Manana IDA", TipoRecorrido.IDA, zona6);
+        Ruta r56 = crearRuta("Tecnico Bolivar - Manana REGRESO", TipoRecorrido.REGRESO, zona6);
+        Ruta r57 = crearRuta("Tecnico Bolivar - Tarde IDA", TipoRecorrido.IDA, zona6);
+        Ruta r58 = crearRuta("Tecnico Bolivar - Tarde REGRESO", TipoRecorrido.REGRESO, zona6);
+        Ruta r59 = crearRuta("Ciudad Bolivar - Unica IDA", TipoRecorrido.IDA, zona6);
+        Ruta r60 = crearRuta("Ciudad Bolivar - Unica REGRESO", TipoRecorrido.REGRESO, zona6);
 
         // ==========================================
-        // 7. MONITORES
+        // 7. MONITORES (2 por zona = 12 monitores)
         // ==========================================
         crearMonitor(mon1, zona1, j1);
         crearMonitor(mon2, zona1, j3);
@@ -320,101 +310,73 @@ public class DataLoader implements CommandLineRunner {
         crearMonitor(mon12, zona6, j18);
 
         // ==========================================
-        // 8. ESTUDIANTES (3 por zona = 18 estudiantes)
+        // 8. ESTUDIANTES (30-45 por colegio-jornada)
         // ==========================================
-        // Usaquen
-        crearEstudiante("TI", "1100000001", "Juan", "Pablo", "Rodriguez", "Gomez", "2014-05-15", Sexo.MASCULINO,
-                "Calle 170 #15-20", "5A", "Nueva EPS", "Maria Rodriguez", "3001234567",
-                "maria.rodriguez@example.com", col1, j1, r1);
+        int estudianteId = 1100000001;
 
-        crearEstudiante("TI", "1100000002", "Maria", "Fernanda", "Martinez", "Lopez", "2014-08-20", Sexo.FEMENINO,
-                "Carrera 7 #145-40", "5B", "Sanitas", "Pedro Martinez", "3009876543",
-                "pedro.martinez@example.com", col2, j1, r5);
+        // USAQUEN
+        estudianteId = crearEstudiantesLote(estudianteId, col1, j1, r1, r2, 40, zona1);
+        estudianteId = crearEstudiantesLote(estudianteId, col1, j3, r3, r4, 35, zona1);
+        estudianteId = crearEstudiantesLote(estudianteId, col2, j1, r5, r6, 38, zona1);
+        estudianteId = crearEstudiantesLote(estudianteId, col2, j3, r7, r8, 32, zona1);
+        estudianteId = crearEstudiantesLote(estudianteId, col3, j2, r9, r10, 45, zona1);
 
-        crearEstudiante("TI", "1100000003", "Carlos", "Andres", "Garcia", "Perez", "2013-03-10", Sexo.MASCULINO,
-                "Calle 165 #20-30", "6A", "Sura", "Ana Garcia", "3005551234",
-                "ana.garcia@example.com", col3, j2, r7);
+        // SANTA FE
+        estudianteId = crearEstudiantesLote(estudianteId, col4, j4, r11, r12, 42, zona2);
+        estudianteId = crearEstudiantesLote(estudianteId, col4, j6, r13, r14, 38, zona2);
+        estudianteId = crearEstudiantesLote(estudianteId, col5, j4, r15, r16, 35, zona2);
+        estudianteId = crearEstudiantesLote(estudianteId, col5, j6, r17, r18, 40, zona2);
+        estudianteId = crearEstudiantesLote(estudianteId, col6, j5, r19, r20, 43, zona2);
 
-        // Santa Fe
-        crearEstudiante("TI", "1100000004", "Laura", "Valentina", "Ramirez", "Castro", "2014-11-25", Sexo.FEMENINO,
-                "Carrera 5 #25-35", "5A", "Nueva EPS", "Carlos Ramirez", "3001112233",
-                "carlos.ramirez@example.com", col4, j4, r9);
+        // SAN CRISTOBAL
+        estudianteId = crearEstudiantesLote(estudianteId, col7, j7, r21, r22, 41, zona3);
+        estudianteId = crearEstudiantesLote(estudianteId, col7, j9, r23, r24, 36, zona3);
+        estudianteId = crearEstudiantesLote(estudianteId, col8, j7, r25, r26, 39, zona3);
+        estudianteId = crearEstudiantesLote(estudianteId, col8, j9, r27, r28, 34, zona3);
+        estudianteId = crearEstudiantesLote(estudianteId, col9, j8, r29, r30, 44, zona3);
 
-        crearEstudiante("TI", "1100000005", "Diego", "Alejandro", "Vargas", "Moreno", "2013-07-18", Sexo.MASCULINO,
-                "Calle 19 #3-50", "6B", "Sanitas", "Sandra Vargas", "3002223344",
-                "sandra.vargas@example.com", col5, j6, r13);
+        // KENNEDY
+        estudianteId = crearEstudiantesLote(estudianteId, col10, j10, r31, r32, 40, zona4);
+        estudianteId = crearEstudiantesLote(estudianteId, col10, j12, r33, r34, 37, zona4);
+        estudianteId = crearEstudiantesLote(estudianteId, col11, j10, r35, r36, 36, zona4);
+        estudianteId = crearEstudiantesLote(estudianteId, col11, j12, r37, r38, 41, zona4);
+        estudianteId = crearEstudiantesLote(estudianteId, col12, j11, r39, r40, 42, zona4);
 
-        crearEstudiante("TI", "1100000006", "Sara", "Isabella", "Mendez", "Ortiz", "2014-02-14", Sexo.FEMENINO,
-                "Carrera 10 #15-20", "5A", "Sura", "Luis Mendez", "3003334455",
-                "luis.mendez@example.com", col6, j5, r15);
+        // BOSA
+        estudianteId = crearEstudiantesLote(estudianteId, col13, j13, r41, r42, 38, zona5);
+        estudianteId = crearEstudiantesLote(estudianteId, col13, j15, r43, r44, 33, zona5);
+        estudianteId = crearEstudiantesLote(estudianteId, col14, j13, r45, r46, 40, zona5);
+        estudianteId = crearEstudiantesLote(estudianteId, col14, j15, r47, r48, 35, zona5);
+        estudianteId = crearEstudiantesLote(estudianteId, col15, j14, r49, r50, 45, zona5);
 
-        // San Cristobal
-        crearEstudiante("TI", "1100000007", "Andres", "Felipe", "Jimenez", "Rojas", "2013-09-22", Sexo.MASCULINO,
-                "Calle 1 Sur #18-25", "6A", "Nueva EPS", "Patricia Jimenez", "3004445566",
-                "patricia.jimenez@example.com", col7, j7, r17);
+        // CIUDAD BOLIVAR
+        estudianteId = crearEstudiantesLote(estudianteId, col16, j16, r51, r52, 39, zona6);
+        estudianteId = crearEstudiantesLote(estudianteId, col16, j18, r53, r54, 34, zona6);
+        estudianteId = crearEstudiantesLote(estudianteId, col17, j16, r55, r56, 37, zona6);
+        estudianteId = crearEstudiantesLote(estudianteId, col17, j18, r57, r58, 40, zona6);
+        estudianteId = crearEstudiantesLote(estudianteId, col18, j17, r59, r60, 43, zona6);
 
-        crearEstudiante("TI", "1100000008", "Camila", "Andrea", "Morales", "Gutierrez", "2014-06-30", Sexo.FEMENINO,
-                "Carrera 5 Este #5-30", "5B", "Sanitas", "Jorge Morales", "3005556677",
-                "jorge.morales@example.com", col8, j7, r21);
-
-        crearEstudiante("TI", "1100000009", "Sebastian", "David", "Castro", "Herrera", "2013-12-05", Sexo.MASCULINO,
-                "Calle 8 Sur #10-35", "6B", "Sura", "Monica Castro", "3006667788",
-                "monica.castro@example.com", col9, j8, r23);
-
-        // Kennedy
-        crearEstudiante("TI", "1100000010", "Valentina", "Sofia", "Torres", "Silva", "2014-04-17", Sexo.FEMENINO,
-                "Carrera 78 #40-50", "5A", "Nueva EPS", "Ricardo Torres", "3007778899",
-                "ricardo.torres@example.com", col10, j10, r25);
-
-        crearEstudiante("TI", "1100000011", "Daniel", "Santiago", "Lopez", "Gomez", "2013-10-08", Sexo.MASCULINO,
-                "Calle 38 Sur #80-20", "6A", "Sanitas", "Andrea Lopez", "3008889900",
-                "andrea.lopez@example.com", col11, j12, r29);
-
-        crearEstudiante("TI", "1100000012", "Isabella", "Marcela", "Sanchez", "Rojas", "2014-01-20", Sexo.FEMENINO,
-                "Carrera 86 #42-30", "5B", "Sura", "Felipe Sanchez", "3009990011",
-                "felipe.sanchez@example.com", col12, j11, r31);
-
-        // Bosa
-        crearEstudiante("TI", "1100000013", "Nicolas", "Alejandro", "Ruiz", "Martinez", "2013-05-12", Sexo.MASCULINO,
-                "Carrera 98 #60-25", "6A", "Nueva EPS", "Carolina Ruiz", "3001011122",
-                "carolina.ruiz@example.com", col13, j13, r33);
-
-        crearEstudiante("TI", "1100000014", "Mariana", "Alejandra", "Diaz", "Castro", "2014-09-03", Sexo.FEMENINO,
-                "Calle 57 Sur #89-40", "5A", "Sanitas", "Miguel Diaz", "3002022233",
-                "miguel.diaz@example.com", col14, j13, r37);
-
-        crearEstudiante("TI", "1100000015", "Santiago", "Esteban", "Gutierrez", "Silva", "2013-11-28", Sexo.MASCULINO,
-                "Carrera 92 #65-15", "6B", "Sura", "Gloria Gutierrez", "3003033344",
-                "gloria.gutierrez@example.com", col15, j14, r39);
-
-        // Ciudad Bolivar
-        crearEstudiante("TI", "1100000016", "Sofia", "Camila", "Herrera", "Moreno", "2014-07-22", Sexo.FEMENINO,
-                "Calle 65 Sur #10-20", "5A", "Nueva EPS", "Javier Herrera", "3004044455",
-                "javier.herrera@example.com", col16, j16, r41);
-
-        crearEstudiante("TI", "1100000017", "Mateo", "Andres", "Ospina", "Ramirez", "2013-04-05", Sexo.MASCULINO,
-                "Carrera 24 Sur #68-30", "6A", "Sanitas", "Paola Ospina", "3005055566",
-                "paola.ospina@example.com", col17, j18, r45);
-
-        crearEstudiante("TI", "1100000018", "Emma", "Valentina", "Molina", "Torres", "2014-12-15", Sexo.FEMENINO,
-                "Calle 70 Sur #15-40", "5B", "Sura", "German Molina", "3006066677",
-                "german.molina@example.com", col18, j17, r47);
+        int totalEstudiantes = estudianteId - 1100000001;
 
         System.out.println("======================================================");
         System.out.println("✅ DATOS INICIALES CARGADOS CORRECTAMENTE");
         System.out.println("======================================================");
         System.out.println("   ✓ 6 Zonas");
-        System.out.println("   ✓ 18 Jornadas");
+        System.out.println("   ✓ 18 Jornadas (3 por zona)");
         System.out.println("   ✓ 19 Usuarios (1 Admin + 6 Encargados + 12 Monitores)");
-        System.out.println("   ✓ 18 Colegios");
-        System.out.println("   ✓ 24 Asignaciones colegio-jornada");
-        System.out.println("   ✓ 48 Rutas");
-        System.out.println("   ✓ 12 Monitores asignados");
-        System.out.println("   ✓ 18 Estudiantes");
+        System.out.println("   ✓ 18 Colegios (3 por zona)");
+        System.out.println("   ✓ 36 Asignaciones colegio-jornada");
+        System.out.println("   ✓ 60 Rutas (IDA y REGRESO para cada colegio-jornada)");
+        System.out.println("   ✓ 12 Monitores asignados (2 por zona)");
+        System.out.println("   ✓ " + totalEstudiantes + " Estudiantes (30-45 por colegio-jornada)");
+        System.out.println("");
+        System.out.println("📊 DISTRIBUCIÓN DE ESTUDIANTES:");
+        System.out.println("   • Colegios con doble jornada: ~70-80 estudiantes");
+        System.out.println("   • Colegios con jornada única: ~40-45 estudiantes");
         System.out.println("");
         System.out.println("🔐 CREDENCIALES DE ACCESO:");
         System.out.println("   Email: admin@ciempies.com");
-        System.out.println("   Contrasena: admin123");
+        System.out.println("   Contraseña: admin123");
         System.out.println("");
         System.out.println("🚀 ¡PUEDES HACER LOGIN AHORA!");
         System.out.println("======================================================");
@@ -526,5 +488,83 @@ public class DataLoader implements CommandLineRunner {
         estudiante.setFechaRegistro(LocalDate.now());
         estudiante.setActivo(true);
         estudianteRepository.save(estudiante);
+    }
+
+    // ==========================================
+    // MÉTODO PARA CREAR ESTUDIANTES EN LOTE
+    // ==========================================
+    private int crearEstudiantesLote(int inicioId, Colegio colegio, Jornada jornada,
+                                     Ruta rutaIda, Ruta rutaRegreso, int cantidad, Zona zona) {
+
+        String[] nombresM = {"Juan", "Carlos", "Andrés", "Luis", "Diego", "Santiago", "Sebastián",
+                "Mateo", "Nicolás", "Daniel", "David", "Miguel", "Alejandro", "Felipe",
+                "Javier", "Ricardo", "Pablo", "Jorge", "Manuel", "Camilo"};
+
+        String[] nombresF = {"María", "Laura", "Ana", "Camila", "Valentina", "Sofia", "Isabella",
+                "Mariana", "Paula", "Andrea", "Carolina", "Natalia", "Daniela", "Sara",
+                "Juliana", "Gabriela", "Manuela", "Valeria", "Alejandra", "Catalina"};
+
+        String[] apellidos = {"García", "Rodríguez", "Martínez", "López", "González", "Pérez",
+                "Sánchez", "Ramírez", "Torres", "Flores", "Rivera", "Gómez", "Díaz",
+                "Cruz", "Morales", "Herrera", "Jiménez", "Álvarez", "Romero", "Vargas",
+                "Castro", "Ortiz", "Silva", "Mendoza", "Rojas", "Gutiérrez", "Moreno",
+                "Ruiz", "Vásquez", "Molina"};
+
+        String[] cursos = {"5A", "5B", "6A", "6B", "7A", "7B", "8A", "8B", "9A", "9B"};
+        String[] eps = {"Nueva EPS", "Sanitas", "Sura", "Compensar", "Famisanar", "Salud Total"};
+
+        String[] direccionesBase = {"Calle", "Carrera", "Avenida", "Diagonal", "Transversal"};
+
+        for (int i = 0; i < cantidad; i++) {
+            boolean esMasculino = (i % 2 == 0);
+            Sexo sexo = esMasculino ? Sexo.MASCULINO : Sexo.FEMENINO;
+
+            // Seleccionar nombres
+            String primerNombre = esMasculino ?
+                    nombresM[i % nombresM.length] :
+                    nombresF[i % nombresF.length];
+            String segundoNombre = esMasculino ?
+                    nombresM[(i + 3) % nombresM.length] :
+                    nombresF[(i + 3) % nombresF.length];
+
+            String primerApellido = apellidos[i % apellidos.length];
+            String segundoApellido = apellidos[(i + 7) % apellidos.length];
+
+            // Número de identificación
+            String numId = String.valueOf(inicioId + i);
+
+            // Fecha de nacimiento (entre 2013 y 2015)
+            int año = 2013 + (i % 3);
+            int mes = 1 + (i % 12);
+            int dia = 1 + (i % 28);
+            String fechaNacimiento = String.format("%d-%02d-%02d", año, mes, dia);
+
+            // Dirección
+            int numCalle = 10 + (i * 3 % 150);
+            int numCarrera = 5 + (i * 2 % 30);
+            String direccion = String.format("%s %d #%d-%d",
+                    direccionesBase[i % direccionesBase.length],
+                    numCalle, numCarrera, 10 + (i % 90));
+
+            // Curso y EPS
+            String curso = cursos[i % cursos.length];
+            String epsSeleccionada = eps[i % eps.length];
+
+            // Información del acudiente
+            String nombreAcudiente = apellidos[(i + 5) % apellidos.length] + " " +
+                    (esMasculino ? nombresF[i % nombresF.length] : nombresM[i % nombresM.length]);
+            String telefonoAcudiente = "300" + String.format("%07d", 1000000 + i);
+            String emailAcudiente = primerNombre.toLowerCase() + "." +
+                    primerApellido.toLowerCase() + i + "@example.com";
+
+            // Alternar entre ruta de IDA y REGRESO
+            Ruta ruta = (i % 2 == 0) ? rutaIda : rutaRegreso;
+
+            crearEstudiante("TI", numId, primerNombre, segundoNombre, primerApellido, segundoApellido,
+                    fechaNacimiento, sexo, direccion, curso, epsSeleccionada, nombreAcudiente,
+                    telefonoAcudiente, emailAcudiente, colegio, jornada, ruta);
+        }
+
+        return inicioId + cantidad;
     }
 }

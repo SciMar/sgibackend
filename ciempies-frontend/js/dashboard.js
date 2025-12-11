@@ -38,6 +38,7 @@ function configurarMenuPorRol() {
         document.getElementById('menuRutas').style.display = 'block';
         document.getElementById('menuColegios').style.display = 'block';
         document.getElementById('menuAsistencias').style.display = 'block';
+        document.getElementById('menuNotificaciones').style.display = 'block';
         document.getElementById('menuReportes').style.display = 'block';
 
         // Acciones rápidas
@@ -49,6 +50,7 @@ function configurarMenuPorRol() {
         document.getElementById('menuRutas').style.display = 'block';
         document.getElementById('menuColegios').style.display = 'block';
         document.getElementById('menuAsistencias').style.display = 'block';
+        document.getElementById('menuNotificaciones').style.display = 'block';
         document.getElementById('menuReportes').style.display = 'block';
 
         // Acciones rápidas
@@ -67,16 +69,28 @@ function mostrarAccionesRapidas(rol) {
     const buttonsContainer = document.getElementById('quickActionsButtons');
     container.style.display = 'block';
 
-    if (rol === 'ADMINISTRADOR' || rol === 'ENCARGADO') {
+    if (rol === 'ADMINISTRADOR') {
         buttonsContainer.innerHTML = `
             <button class="btn btn-primary" onclick="window.location.href='usuarios.html'">
                 <i class="bi bi-person-plus-fill me-2"></i>Crear Usuario
             </button>
-            <button class="btn btn-success" onclick="window.location.href='rutas.html'">
-                <i class="bi bi-plus-circle-fill me-2"></i>Crear Ruta
+            <button class="btn btn-success" onclick="window.location.href='estudiantes.html'">
+                <i class="bi bi-mortarboard-fill me-2"></i>Nuevo Estudiante
             </button>
-            <button class="btn btn-info" onclick="window.location.href='vehiculos.html'">
-                <i class="bi bi-plus-circle-fill me-2"></i>Crear Vehículo
+            <button class="btn btn-info" onclick="window.location.href='colegios.html'">
+                <i class="bi bi-building-fill me-2"></i>Crear Colegio
+            </button>
+        `;
+    } else if (rol === 'ENCARGADO') {
+        buttonsContainer.innerHTML = `
+            <button class="btn btn-success" onclick="window.location.href='estudiantes.html'">
+                <i class="bi bi-mortarboard-fill me-2"></i>Nuevo Estudiante
+            </button>
+            <button class="btn btn-info" onclick="window.location.href='colegios.html'">
+                <i class="bi bi-building-fill me-2"></i>Crear Colegio
+            </button>
+            <button class="btn btn-warning" onclick="window.location.href='rutas.html'">
+                <i class="bi bi-map-fill me-2"></i>Nueva Ruta
             </button>
         `;
     }

@@ -3,11 +3,7 @@ package com.sgi.backend.service;
 import com.sgi.backend.dto.asistencia.RegistrarAsistenciaDTO;
 import com.sgi.backend.dto.asistencia.ActualizarAsistenciaDTO;
 import com.sgi.backend.dto.asistencia.AsistenciaResponseDTO;
-import com.sgi.backend.model.Asistencia;
-import com.sgi.backend.model.Estudiante;
-import com.sgi.backend.model.Monitor;
-import com.sgi.backend.model.EstadoAsistencia;
-import com.sgi.backend.model.TipoRecorrido;
+import com.sgi.backend.model.*;
 import com.sgi.backend.repository.AsistenciaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,7 +71,16 @@ public class AsistenciaService {
 
     // Validar que el monitor tiene permiso para registrar asistencia de este estudiante
     private void validarPermisoMonitor(Monitor monitor, Estudiante estudiante) {
-        // El estudiante debe estar en la misma zona y jornada del monitor
+        // SI ES ADMINISTRADOR, PERMITIR TODO (sin restricciones de zona/jornada)
+        if (monitor.getUsuario().getRol() == Rol.ADMINISTRADOR) {
+            // Solo validar que el estudiante esté activo
+            if (!estudiante.getActivo()) {
+                throw new RuntimeException("No se puede registrar asistencia de un estudiante inactivo");
+            }
+            return; // Salir de la validación, no verificar zona ni jornada
+        }
+
+        // Para ENCARGADO y MONITOR: validar zona y jornada
         if (!estudiante.getColegio().getZona().getId().equals(monitor.getZona().getId())) {
             throw new RuntimeException("El estudiante no pertenece a la zona asignada al monitor");
         }

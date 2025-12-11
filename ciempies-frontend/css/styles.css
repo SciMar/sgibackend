@@ -1,0 +1,63 @@
+/* Logo en header */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Hero adaptado al estilo existente */
+.hero-index {
+    background: #eef3ff;
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.hero-index h1 {
+    margin-bottom: 10px;
+    font-size: 32px;
+}
+
+/* Carrusel minimalista */
+.carousel-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 260px;
+    margin: 30px auto;
+    border-radius: 10px;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.4s ease;
+}
+
+.carousel-img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #004AAD;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.prev { left: 10px; }
+.next { right: 10px; }
+

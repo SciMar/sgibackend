@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Asistencia por Lote - Sistema Ciempiés</title>
+    <title>Registrar Asistencia - Sistema Ciempiés</title>
 
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,54 +11,96 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            background: white;
+            border-radius: 50%;
+            padding: 5px;
         }
 
         .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0;
+            background: white;
+            min-height: calc(100vh - 56px);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
         }
 
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 15px 25px;
-            border-radius: 8px;
+            color: #333;
+            padding: 12px 20px;
             margin: 5px 10px;
-            transition: all 0.3s;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
-        .sidebar .nav-link:hover,
+        .sidebar .nav-link:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+
         .sidebar .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
         }
 
         .sidebar .nav-link i {
+            font-size: 20px;
             margin-right: 10px;
-            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
         }
 
-        .user-info {
+        .main-content {
+            padding: 30px;
+        }
+
+        .card-custom {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card-custom .card-header {
             background: white;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
             padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px 15px 0 0 !important;
         }
 
         .student-card {
             border: 2px solid #e9ecef;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             transition: all 0.3s;
             cursor: pointer;
+            background: white;
         }
 
         .student-card:hover {
-            border-color: #667eea;
+            border-color: var(--primary-color);
             box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
         }
 
         .student-card.selected {
@@ -75,21 +117,22 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
-            position: relative;
+            gap: 10px;
         }
 
         .step {
             flex: 1;
             text-align: center;
-            padding: 10px;
+            padding: 15px 10px;
             background: #e9ecef;
-            position: relative;
-            z-index: 1;
+            border-radius: 10px;
+            transition: all 0.3s;
         }
 
         .step.active {
-            background: #667eea;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
+            transform: scale(1.05);
         }
 
         .step.completed {
@@ -100,52 +143,114 @@
         .btn-state {
             min-width: 100px;
         }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+        }
     </style>
 </head>
 <body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+            <img src="images/logo.jpeg" alt="Logo" class="me-2" onerror="this.style.display='none'">
+            <span class="fw-bold">Sistema Ciempiés</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span id="navUserName">Usuario</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header" id="navUserRole">Rol</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="logout()">
+                            <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-2 sidebar p-0">
-            <div class="user-info text-center">
-                <i class="bi bi-person-circle" style="font-size: 4rem; color: #667eea;"></i>
-                <h6 class="mt-2 mb-0" id="userName" style="color: #333;"></h6>
-                <small id="userRole" style="color: #666;"></small>
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuUsuarios" style="display: none;">
+                        <a class="nav-link" href="usuarios.html">
+                            <i class="bi bi-people-fill"></i>
+                            Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuEstudiantes" style="display: none;">
+                        <a class="nav-link" href="estudiantes.html">
+                            <i class="bi bi-mortarboard-fill"></i>
+                            Estudiantes
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuRutas" style="display: none;">
+                        <a class="nav-link" href="rutas.html">
+                            <i class="bi bi-map-fill"></i>
+                            Rutas
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuColegios" style="display: none;">
+                        <a class="nav-link" href="colegios.html">
+                            <i class="bi bi-building-fill"></i>
+                            Colegios
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuAsistencias" style="display: none;">
+                        <a class="nav-link active" href="asistencias.html">
+                            <i class="bi bi-clipboard-check-fill"></i>
+                            Asistencias
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuNotificaciones" style="display: none;">
+                        <a class="nav-link" href="notificaciones.html">
+                            <i class="bi bi-bell-fill"></i>
+                            Notificaciones
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuReportes" style="display: none;">
+                        <a class="nav-link" href="reportes.html">
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                            Reportes
+                        </a>
+                    </li>
+                </ul>
             </div>
-
-            <nav class="nav flex-column mt-3">
-                <a class="nav-link" href="dashboard.html">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-                <a class="nav-link" href="estudiantes.html">
-                    <i class="bi bi-people-fill"></i> Estudiantes
-                </a>
-                <a class="nav-link active" href="asistencias.html">
-                    <i class="bi bi-clipboard-check"></i> Asistencias
-                </a>
-                <a class="nav-link" href="reportes.html">
-                    <i class="bi bi-file-earmark-bar-graph"></i> Reportes
-                </a>
-                <a class="nav-link" href="notificaciones.html">
-                    <i class="bi bi-envelope-fill"></i> Notificaciones
-                </a>
-                <hr style="border-color: rgba(255,255,255,0.2);">
-                <a class="nav-link" href="#" onclick="logout()">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                </a>
-            </nav>
-        </div>
+        </nav>
 
         <!-- Main Content -->
-        <div class="col-md-10 p-4">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2><i class="bi bi-clipboard-check text-success"></i> Registro de Asistencia por Lote</h2>
+                    <h2><i class="bi bi-clipboard-check text-success me-2"></i>Registro de Asistencia por Lote</h2>
                     <p class="text-muted mb-0">Registra la asistencia de múltiples estudiantes simultáneamente</p>
                 </div>
                 <a href="asistencias.html" class="btn btn-outline-primary">
-                    <i class="bi bi-arrow-left"></i> Ver Estadísticas
+                    <i class="bi bi-arrow-left me-2"></i>Ver Estadísticas
                 </a>
             </div>
 
@@ -170,37 +275,35 @@
 
             <!-- PASO 1: Filtros -->
             <div id="seccionFiltros">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-funnel-fill"></i> Paso 1: Selecciona los Filtros
-                        </h5>
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <i class="bi bi-funnel-fill me-2"></i>Paso 1: Selecciona los Filtros
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-building text-primary"></i> Colegio *
+                                <label class="form-label">
+                                    <i class="bi bi-building text-primary me-1"></i> Colegio *
                                 </label>
-                                <select class="form-select form-select-lg" id="filtroColegio" required>
+                                <select class="form-select" id="filtroColegio" required>
                                     <option value="">Seleccione...</option>
                                 </select>
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-clock text-primary"></i> Jornada *
+                                <label class="form-label">
+                                    <i class="bi bi-clock text-primary me-1"></i> Jornada *
                                 </label>
-                                <select class="form-select form-select-lg" id="filtroJornada" required disabled>
+                                <select class="form-select" id="filtroJornada" required disabled>
                                     <option value="">Primero seleccione colegio</option>
                                 </select>
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-arrow-left-right text-primary"></i> Tipo de Recorrido *
+                                <label class="form-label">
+                                    <i class="bi bi-arrow-left-right text-primary me-1"></i> Tipo de Recorrido *
                                 </label>
-                                <select class="form-select form-select-lg" id="tipoRecorrido" required>
+                                <select class="form-select" id="tipoRecorrido" required>
                                     <option value="">Seleccione...</option>
                                     <option value="IDA">🏠 → 🏫 Ida</option>
                                     <option value="REGRESO">🏫 → 🏠 Regreso</option>
@@ -208,15 +311,15 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-calendar text-primary"></i> Fecha *
+                                <label class="form-label">
+                                    <i class="bi bi-calendar text-primary me-1"></i> Fecha *
                                 </label>
-                                <input type="date" class="form-select form-select-lg" id="fechaAsistencia" required>
+                                <input type="date" class="form-control" id="fechaAsistencia" required>
                             </div>
 
-                            <div class="col-md-12">
+                            <div class="col-md-12 mt-3">
                                 <button class="btn btn-primary btn-lg w-100" onclick="cargarEstudiantes()">
-                                    <i class="bi bi-search"></i> Buscar Estudiantes
+                                    <i class="bi bi-search me-2"></i>Buscar Estudiantes
                                 </button>
                             </div>
                         </div>
@@ -226,35 +329,35 @@
 
             <!-- PASO 2: Lista de Estudiantes -->
             <div id="seccionEstudiantes" style="display: none;">
-                <div class="card shadow-sm mt-4">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-people-fill"></i> Paso 2: Marcar Asistencia
-                        </h5>
+                <div class="card card-custom">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-people-fill me-2"></i>Paso 2: Marcar Asistencia
+                        </span>
                         <div>
-                                <span class="badge bg-light text-dark me-2">
-                                    Total: <strong id="totalEstudiantes">0</strong>
-                                </span>
-                            <span class="badge bg-white text-success me-2">
-                                    Presentes: <strong id="totalPresentes">0</strong>
-                                </span>
-                            <span class="badge bg-white text-danger">
-                                    Ausentes: <strong id="totalAusentes">0</strong>
-                                </span>
+                            <span class="badge bg-secondary me-2">
+                                Total: <strong id="totalEstudiantes">0</strong>
+                            </span>
+                            <span class="badge bg-success me-2">
+                                Presentes: <strong id="totalPresentes">0</strong>
+                            </span>
+                            <span class="badge bg-danger">
+                                Ausentes: <strong id="totalAusentes">0</strong>
+                            </span>
                         </div>
                     </div>
                     <div class="card-body">
                         <!-- Acciones Rápidas -->
                         <div class="alert alert-info">
-                            <strong><i class="bi bi-lightning-fill"></i> Acciones Rápidas:</strong>
+                            <strong><i class="bi bi-lightning-fill me-2"></i>Acciones Rápidas:</strong>
                             <button class="btn btn-sm btn-success ms-3" onclick="marcarTodos('PRESENTE')">
-                                <i class="bi bi-check-all"></i> Marcar Todos Presentes
+                                <i class="bi bi-check-all me-1"></i>Marcar Todos Presentes
                             </button>
                             <button class="btn btn-sm btn-danger ms-2" onclick="marcarTodos('AUSENTE')">
-                                <i class="bi bi-x-lg"></i> Marcar Todos Ausentes
+                                <i class="bi bi-x-lg me-1"></i>Marcar Todos Ausentes
                             </button>
                             <button class="btn btn-sm btn-secondary ms-2" onclick="limpiarSeleccion()">
-                                <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Limpiar
                             </button>
                         </div>
 
@@ -266,26 +369,127 @@
                         <!-- Botón Continuar -->
                         <div class="d-grid gap-2 mt-4">
                             <button class="btn btn-success btn-lg" onclick="guardarAsistencias()">
-                                <i class="bi bi-save-fill"></i> Guardar Asistencias
+                                <i class="bi bi-save-fill me-2"></i>Guardar Asistencias
                                 (<span id="contadorSeleccionados">0</span> estudiantes)
                             </button>
                             <button class="btn btn-outline-secondary" onclick="volverAFiltros()">
-                                <i class="bi bi-arrow-left"></i> Cambiar Filtros
+                                <i class="bi bi-arrow-left me-2"></i>Cambiar Filtros
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Custom JS -->
-<script src="js/api.js"></script>
+<!-- Archivos JS del proyecto -->
+<script src="js/config.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/registrar-lote.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/registro-masivo.js"></script>
+
+<!-- Estilos para Toasts Mejorados -->
+<style>
+    /* Contenedor de toasts flotantes */
+    .toast-container-custom {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 450px;
+    }
+
+    .toast-custom {
+        margin-bottom: 15px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        animation: slideIn 0.4s ease-out;
+        border: none;
+        border-left: 5px solid;
+        font-size: 1rem;
+        padding: 1.25rem;
+    }
+
+    .toast-custom.alert-success {
+        border-left-color: #28a745;
+        background-color: #d4edda;
+    }
+
+    .toast-custom.alert-danger {
+        border-left-color: #dc3545;
+        background-color: #f8d7da;
+    }
+
+    .toast-custom.alert-warning {
+        border-left-color: #ffc107;
+        background-color: #fff3cd;
+    }
+
+    .toast-custom.alert-info {
+        border-left-color: #17a2b8;
+        background-color: #d1ecf1;
+    }
+
+    .toast-custom strong {
+        font-size: 1.1rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .toast-custom .btn-close {
+        font-size: 1.2rem;
+        padding: 0.75rem;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(500px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(500px);
+            opacity: 0;
+        }
+    }
+
+    .toast-custom.removing {
+        animation: slideOut 0.3s ease-in forwards;
+    }
+
+    /* Indicador de tiempo (opcional) */
+    .toast-timer {
+        height: 4px;
+        background: rgba(0,0,0,0.15);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 0 0 4px 4px;
+    }
+
+    .toast-timer-bar {
+        height: 100%;
+        background: currentColor;
+        opacity: 0.3;
+    }
+</style>
+
+<!-- Contenedor de toasts -->
+<div class="toast-container-custom" id="toastContainer"></div>
+
 </body>
 </html>

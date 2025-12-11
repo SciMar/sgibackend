@@ -3,109 +3,585 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Ciempiés</title>
-
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
+    <title>Sistema de Gestión Integral - Ciempiés</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        :root {
+            --primary-color: #6B5DD3;
+            --secondary-color: #8B7DE8;
+            --accent-color: #A89BF0;
+            --dark-purple: #5A4BC2;
+            --light-bg: #f8f9fc;
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); color: #333; }
 
-        .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-            max-width: 400px;
-            width: 100%;
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 15px 0;
+            box-shadow: 0 4px 20px rgba(107, 93, 211, 0.3);
         }
-
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        .navbar-custom .navbar-brand {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 700; font-size: 1.4rem; color: white !important;
         }
-
-        .login-body {
-            padding: 40px;
+        .navbar-custom .navbar-brand img {
+            height: 50px; width: 50px; border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3); background: white; padding: 3px;
         }
-
+        .navbar-custom .nav-link {
+            color: rgba(255,255,255,0.9) !important; font-weight: 500;
+            padding: 8px 20px !important; border-radius: 25px; transition: all 0.3s ease;
+        }
+        .navbar-custom .nav-link:hover { color: white !important; background: rgba(255,255,255,0.15); }
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 12px;
-            font-weight: 600;
+            background: white; color: var(--primary-color) !important;
+            font-weight: 600; padding: 10px 30px !important; border-radius: 25px; transition: all 0.3s ease;
         }
+        .btn-login:hover { background: var(--light-bg); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .hero-section { position: relative; overflow: hidden; }
+        .carousel-item { height: 85vh; min-height: 600px; position: relative; }
+        .carousel-item::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(107, 93, 211, 0.85) 0%, rgba(139, 125, 232, 0.75) 100%);
+            z-index: 1;
+        }
+        .carousel-item img { width: 100%; height: 100%; object-fit: cover; }
+        .carousel-caption {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; z-index: 2; width: 80%; max-width: 900px;
+            padding: 0; bottom: auto; right: auto;
+        }
+        .carousel-caption h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .carousel-caption p { font-size: 1.3rem; margin-bottom: 35px; opacity: 0.95; }
+        .carousel-indicators { bottom: 30px; }
+        .carousel-indicators button {
+            width: 12px; height: 12px; border-radius: 50%; margin: 0 8px;
+            background-color: rgba(255,255,255,0.5); border: 2px solid white;
+        }
+        .carousel-indicators button.active { background-color: white; }
+        .carousel-control-prev, .carousel-control-next {
+            width: 60px; height: 60px; background: rgba(255,255,255,0.2);
+            border-radius: 50%; top: 50%; transform: translateY(-50%); opacity: 1;
+        }
+        .carousel-control-prev { left: 30px; }
+        .carousel-control-next { right: 30px; }
+        .carousel-control-prev:hover, .carousel-control-next:hover { background: rgba(255,255,255,0.35); }
+        .btn-hero {
+            background: white; color: var(--primary-color); padding: 15px 40px;
+            font-size: 1.1rem; font-weight: 600; border-radius: 50px; border: none;
+            transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-hero:hover { background: var(--light-bg); color: var(--dark-purple); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .btn-hero-outline { background: transparent; color: white; border: 2px solid white; margin-left: 15px; }
+        .btn-hero-outline:hover { background: white; color: var(--primary-color); }
+
+        .features-section { padding: 100px 0; background: white; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title h2 { font-size: 2.5rem; font-weight: 700; color: var(--primary-color); margin-bottom: 15px; }
+        .section-title p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
+        .feature-card {
+            background: var(--light-bg); border-radius: 20px; padding: 40px 30px;
+            text-align: center; transition: all 0.4s ease; height: 100%; border: 2px solid transparent;
+        }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(107, 93, 211, 0.15); border-color: var(--accent-color); background: white; }
+        .feature-icon {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 25px; font-size: 2rem; color: white; transition: all 0.3s ease;
+        }
+        .feature-card:hover .feature-icon { transform: scale(1.1) rotate(5deg); }
+        .feature-card h4 { font-weight: 600; color: #333; margin-bottom: 15px; }
+        .feature-card p { color: #666; font-size: 0.95rem; line-height: 1.7; }
+
+        .stats-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        .stat-item { text-align: center; padding: 30px; }
+        .stat-number { font-size: 3.5rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .stat-label { font-size: 1.1rem; opacity: 0.9; }
+
+        .modules-section { padding: 100px 0; background: var(--light-bg); }
+        .module-card {
+            background: white; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: all 0.4s ease; height: 100%;
+        }
+        .module-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(107, 93, 211, 0.2); }
+        .module-image {
+            height: 180px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white;
+        }
+        .module-content { padding: 25px; }
+        .module-content h4 { font-weight: 600; color: var(--primary-color); margin-bottom: 12px; font-size: 1.1rem; }
+        .module-content p { color: #666; margin-bottom: 15px; font-size: 0.9rem; }
+        .module-features { list-style: none; padding: 0; margin: 0; }
+        .module-features li { padding: 6px 0; color: #555; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .module-features li i { color: var(--secondary-color); font-size: 0.9rem; }
+
+        .cta-section { padding: 100px 0; background: white; text-align: center; }
+        .cta-content { max-width: 700px; margin: 0 auto; }
+        .cta-content h2 { font-size: 2.5rem; font-weight: 700; color: #333; margin-bottom: 20px; }
+        .cta-content p { font-size: 1.1rem; color: #666; margin-bottom: 35px; }
+        .btn-cta {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white; padding: 18px 50px; font-size: 1.1rem; font-weight: 600;
+            border-radius: 50px; border: none; transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(107, 93, 211, 0.4); color: white; }
+
+        .footer { background: #1a1a2e; color: white; padding: 60px 0 30px; }
+        .footer-brand { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .footer-brand img { height: 60px; width: 60px; border-radius: 50%; background: white; padding: 5px; }
+        .footer-brand span { font-size: 1.5rem; font-weight: 700; }
+        .footer-description { color: rgba(255,255,255,0.7); margin-bottom: 25px; max-width: 350px; }
+        .footer-title { font-weight: 600; margin-bottom: 25px; color: var(--accent-color); }
+        .footer-links { list-style: none; padding: 0; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a { color: rgba(255,255,255,0.7); text-decoration: none; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .footer-links a:hover { color: var(--accent-color); padding-left: 5px; }
+        .footer-contact li { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; color: rgba(255,255,255,0.7); }
+        .footer-contact i { color: var(--accent-color); font-size: 1.1rem; }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 40px; padding-top: 25px; text-align: center; color: rgba(255,255,255,0.5); }
+        .social-links { display: flex; gap: 15px; margin-top: 20px; }
+        .social-links a {
+            width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; transition: all 0.3s ease;
+        }
+        .social-links a:hover { background: var(--primary-color); transform: translateY(-3px); }
+
+        @media (max-width: 991px) {
+            .carousel-caption h1 { font-size: 2.5rem; }
+            .carousel-caption p { font-size: 1.1rem; }
+            .carousel-item { height: 70vh; min-height: 500px; }
+        }
+        @media (max-width: 767px) {
+            .carousel-caption h1 { font-size: 1.8rem; }
+            .carousel-caption p { font-size: 1rem; }
+            .btn-hero { padding: 12px 25px; font-size: 1rem; }
+            .btn-hero-outline { display: block; margin: 15px auto 0; }
+            .carousel-control-prev, .carousel-control-next { display: none; }
+            .stat-number { font-size: 2.5rem; }
+            .section-title h2 { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
-<div class="login-card">
-    <div class="login-header">
-        <i class="bi bi-bus-front-fill" style="font-size: 4rem;"></i>
-        <h3 class="mb-0">Sistema Ciempiés</h3>
-        <p class="mb-0 mt-2" style="opacity: 0.9;">Gestión de Transporte Escolar</p>
-    </div>
-
-    <div class="login-body">
-        <div id="alertContainer"></div>
-
-        <form id="loginForm">
-            <div class="mb-3">
-                <label class="form-label fw-bold">
-                    <i class="bi bi-envelope-fill text-primary"></i> Correo Electrónico
-                </label>
-                <input type="email" class="form-control" id="email"
-                       placeholder="usuario@ciempies.com" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">
-                    <i class="bi bi-lock-fill text-primary"></i> Contraseña
-                </label>
-                <input type="password" class="form-control" id="password"
-                       placeholder="••••••••" required>
-            </div>
-
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="remember">
-                <label class="form-check-label" for="remember">
-                    Recordar sesión
-                </label>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-login w-100" id="btnLogin">
-                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-            </button>
-        </form>
-
-        <div class="text-center mt-4">
-            <small class="text-muted">
-                <i class="bi bi-info-circle"></i>
-                Usa tus credenciales del sistema
-            </small>
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <img src="images/logo.jpeg" alt="Logo Ciempiés" onerror="this.src='https://via.placeholder.com/50/6B5DD3/FFFFFF?text=C'">
+            <span>Sistema de Gestión Integral - Ciempiés</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="#caracteristicas">Características</a></li>
+                <li class="nav-item"><a class="nav-link" href="#modulos">Módulos</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+                <li class="nav-item ms-lg-3">
+                    <a class="nav-link btn-login" href="login.html"><i class="bi bi-box-arrow-in-right"></i> Ingresar</a>
+                </li>
+            </ul>
         </div>
     </div>
-</div>
+</nav>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<section class="hero-section" id="inicio">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="3"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="images/carousel-1.jpg" alt="Transporte Escolar" onerror="this.src='https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1920&h=1080&fit=crop'">
+                <div class="carousel-caption">
+                    <h1>Sistema de Gestión Integral - Ciempiés</h1>
+                    <p>Gestión integral de transporte escolar. Organización por zonas, colegios y jornadas para garantizar la seguridad de cada estudiante.</p>
+                    <div>
+                        <a href="login.html" class="btn btn-hero"><i class="bi bi-rocket-takeoff"></i> Comenzar Ahora</a>
+                        <a href="#caracteristicas" class="btn btn-hero btn-hero-outline"><i class="bi bi-info-circle"></i> Conocer Más</a>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="images/carousel-2.jpg" alt="Control de Estudiantes" onerror="this.src='https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1920&h=1080&fit=crop'">
+                <div class="carousel-caption">
+                    <h1>Gestión de Estudiantes</h1>
+                    <p>Registro completo de estudiantes con asignación a colegios, jornadas y zonas. Control de estados de inscripción y seguimiento personalizado.</p>
+                    <div><a href="#modulos" class="btn btn-hero"><i class="bi bi-mortarboard"></i> Ver Módulo</a></div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="images/carousel-3.jpg" alt="Control de Asistencia" onerror="this.src='https://images.unsplash.com/photo-1544717305-2782549b5136?w=1920&h=1080&fit=crop'">
+                <div class="carousel-caption">
+                    <h1>Control de Asistencia</h1>
+                    <p>Registro de asistencia en tiempo real por los monitores. Control de recorridos de ida y regreso con estadísticas detalladas.</p>
+                    <div><a href="#modulos" class="btn btn-hero"><i class="bi bi-clipboard-check"></i> Ver Módulo</a></div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="images/carousel-4.jpg" alt="Organización por Zonas" onerror="this.src='https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&h=1080&fit=crop'">
+                <div class="carousel-caption">
+                    <h1>Organización por Zonas</h1>
+                    <p>Distribución geográfica inteligente. Asignación de monitores, rutas y colegios por zona para una cobertura eficiente.</p>
+                    <div><a href="#modulos" class="btn btn-hero"><i class="bi bi-geo-alt"></i> Ver Módulo</a></div>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+</section>
 
-<!-- Custom JS -->
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
+<section class="features-section" id="caracteristicas">
+    <div class="container">
+        <div class="section-title">
+            <h2><i class="bi bi-stars me-2"></i>¿Por qué Sistema de Gestión Integral - Ciempiés?</h2>
+            <p>Una solución completa diseñada para la gestión eficiente del transporte escolar en Bogotá</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-geo-alt"></i></div>
+                    <h4>Organización por Zonas</h4>
+                    <p>Distribución geográfica eficiente de estudiantes, colegios y monitores para optimizar la cobertura del servicio.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-clipboard-check"></i></div>
+                    <h4>Asistencia en Tiempo Real</h4>
+                    <p>Los monitores registran la asistencia de cada estudiante en los recorridos de ida y regreso al instante.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-cloud-sun"></i></div>
+                    <h4>Integración con Clima</h4>
+                    <p>Información del clima de Bogotá en tiempo real con alertas y recomendaciones para los recorridos.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                    <h4>Reportes Completos</h4>
+                    <p>Generación de reportes en PDF y Excel de estudiantes, asistencias, colegios, monitores y más.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-number"><i class="bi bi-mortarboard-fill"></i><span class="counter">500</span>+</div>
+                    <div class="stat-label">Estudiantes Gestionados</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-number"><i class="bi bi-building"></i><span class="counter">20</span>+</div>
+                    <div class="stat-label">Colegios Registrados</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-number"><i class="bi bi-map"></i><span class="counter">10</span>+</div>
+                    <div class="stat-label">Zonas Cubiertas</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-number"><i class="bi bi-person-badge"></i><span class="counter">30</span>+</div>
+                    <div class="stat-label">Monitores Activos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="modules-section" id="modulos">
+    <div class="container">
+        <div class="section-title">
+            <h2><i class="bi bi-grid-3x3-gap me-2"></i>Módulos del Sistema</h2>
+            <p>Cada módulo está diseñado para cubrir una necesidad específica de la gestión de transporte escolar</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-mortarboard"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Estudiantes</h4>
+                        <p>Administración completa de los estudiantes inscritos en el servicio de transporte.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Registro con datos personales</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Asignación a colegio y jornada</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Control de estado de inscripción</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Historial de asistencia</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-building"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Colegios</h4>
+                        <p>Registro y administración de las instituciones educativas atendidas.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Registro de colegios por zona</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Asignación de jornadas</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Conteo de estudiantes</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Estadísticas por institución</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-geo-alt"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Zonas</h4>
+                        <p>Organización geográfica para una distribución eficiente del servicio.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Creación de zonas geográficas</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Asignación de colegios</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Distribución de monitores</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Estadísticas por zona</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-clipboard-check"></i></div>
+                    <div class="module-content">
+                        <h4>Control de Asistencia</h4>
+                        <p>Registro en tiempo real de la asistencia de estudiantes en cada recorrido.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Registro de ida y regreso</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Estados: presente, ausente, excusa</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Registro masivo</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Estadísticas diarias</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-person-badge"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Monitores</h4>
+                        <p>Administración del personal encargado del cuidado de estudiantes.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Registro de monitores</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Asignación a zona y jornada</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Reasignación de rutas</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Estadísticas de desempeño</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-clock"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Jornadas</h4>
+                        <p>Configuración de horarios escolares para organizar los recorridos.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Jornadas mañana/tarde</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Asignación a colegios</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Horarios de entrada/salida</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Activar/desactivar jornadas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-signpost-2"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Rutas</h4>
+                        <p>Planificación de recorridos de ida y regreso por zona.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Rutas de ida y regreso</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Asignación por zona</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Clonar rutas existentes</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Conteo de estudiantes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                    <div class="module-content">
+                        <h4>Reportes y Estadísticas</h4>
+                        <p>Generación de informes completos para análisis y toma de decisiones.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Exportar a PDF y Excel</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Reportes de asistencia</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Estadísticas por colegio</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Informes de estudiantes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+                    <div class="module-image"><i class="bi bi-people"></i></div>
+                    <div class="module-content">
+                        <h4>Gestión de Usuarios</h4>
+                        <p>Control de acceso y permisos para los usuarios del sistema.</p>
+                        <ul class="module-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Roles: Admin, Encargado, Monitor</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Gestión de credenciales</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Activar/desactivar usuarios</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Auditoría de accesos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>¿Listo para organizar tu transporte escolar?</h2>
+            <p>Únete a las instituciones que ya confían en Sistema de Gestión Integral - Ciempiés para la gestión eficiente y segura de sus estudiantes.</p>
+            <a href="login.html" class="btn btn-cta"><i class="bi bi-rocket-takeoff"></i> Comenzar Ahora</a>
+        </div>
+    </div>
+</section>
+
+<footer class="footer" id="contacto">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="footer-brand">
+                    <img src="images/logo.jpeg" alt="Logo" onerror="this.src='https://via.placeholder.com/60/6B5DD3/FFFFFF?text=C'">
+                    <span>Sistema de Gestión Integral - Ciempiés</span>
+                </div>
+                <p class="footer-description">Sistema integral de gestión de transporte escolar. Organización, control y seguridad para toda la comunidad educativa de Bogotá.</p>
+                <div class="social-links">
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h5 class="footer-title">Enlaces</h5>
+                <ul class="footer-links">
+                    <li><a href="#inicio"><i class="bi bi-chevron-right"></i> Inicio</a></li>
+                    <li><a href="#caracteristicas"><i class="bi bi-chevron-right"></i> Características</a></li>
+                    <li><a href="#modulos"><i class="bi bi-chevron-right"></i> Módulos</a></li>
+                    <li><a href="login.html"><i class="bi bi-chevron-right"></i> Ingresar</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="footer-title">Módulos</h5>
+                <ul class="footer-links">
+                    <li><a href="#modulos"><i class="bi bi-chevron-right"></i> Estudiantes</a></li>
+                    <li><a href="#modulos"><i class="bi bi-chevron-right"></i> Colegios</a></li>
+                    <li><a href="#modulos"><i class="bi bi-chevron-right"></i> Zonas</a></li>
+                    <li><a href="#modulos"><i class="bi bi-chevron-right"></i> Asistencia</a></li>
+                    <li><a href="#modulos"><i class="bi bi-chevron-right"></i> Monitores</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="footer-title">Contacto</h5>
+                <ul class="footer-contact list-unstyled">
+                    <li><i class="bi bi-geo-alt-fill"></i><span>Bogotá D.C., Colombia</span></li>
+                    <li><i class="bi bi-envelope-fill"></i><span>ciempiesmovilidad@gmail.com</span></li>
+                    <li><i class="bi bi-telephone-fill"></i><span>+57 300 123 4567</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Sistema de Gestión Integral - Ciempiés. Todos los derechos reservados. | Desarrollado con <i class="bi bi-heart-fill text-danger"></i> para la comunidad educativa</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar-custom');
+        if (window.scrollY > 50) {
+            navbar.style.background = 'linear-gradient(135deg, #6B5DD3 0%, #8B7DE8 100%)';
+            navbar.style.boxShadow = '0 4px 20px rgba(107, 93, 211, 0.3)';
+        }
+    });
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const offsetTop = target.offsetTop - 80;
+                window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+            }
+        });
+    });
+    function animateCounters() {
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = parseInt(counter.innerText);
+            const increment = target / 50;
+            let current = 0;
+            const updateCounter = () => {
+                if (current < target) {
+                    current += increment;
+                    counter.innerText = Math.ceil(current);
+                    setTimeout(updateCounter, 30);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            updateCounter();
+        });
+    }
+    const statsSection = document.querySelector('.stats-section');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounters();
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    observer.observe(statsSection);
+    document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            const navbarCollapse = document.querySelector('.navbar-collapse');
+            if (navbarCollapse.classList.contains('show')) {
+                navbarCollapse.classList.remove('show');
+            }
+        });
+    });
+</script>
 </body>
 </html>

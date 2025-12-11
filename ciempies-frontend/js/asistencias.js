@@ -1,170 +1,371 @@
-let chartTendencia;
-let chartDistribucion;
-let asistenciasData = [];
+// Lógica de Asistencias (corregido)
 
-// Cargar información del usuario
-function loadUserInfo() {
-    const user = getCurrentUser();
-    if (user) {
-        document.getElementById('userName').textContent =
-            `${user.primerNombre} ${user.primerApellido}`;
-        document.getElementById('userRole').textContent = user.rol;
+// Helper: acceso seguro a elementos por id
+function byId(id) {
+    return document.getElementById(id);
+}
+
+// Verificar autenticación y obtener usuario al iniciar
+let currentUser = null;
+
+// Inicializar al cargar la página (UN SOLO listener)
+document.addEventListener('DOMContentLoaded', () => {
+    Auth.requireAuth();
+    Auth.requireRoles(['ADMINISTRADOR', 'ENCARGADO', 'MONITOR']);
+
+    currentUser = Auth.getUser();
+
+    // Inicializaciones
+    loadNavbarUser();
+    configurarMenuPorRol(currentUser);
+    cargarDatosUsuario();
+    cargarColegios();
+    establecerFechasDefault();
+    cargarEstadisticasHoy();
+});
+
+// Configurar menú según rol (usa currentUser pasado o global)
+function configurarMenuPorRol(user) {
+    const rol = user ? user.rol : null;
+
+    // Helper para mostrar un menú si el elemento existe
+    const show = id => {
+        const el = byId(id);
+        if (el) el.style.display = 'block';
+    };
+
+    // Opcional: esconder menús por defecto no hace aquí; asumimos que el CSS oculta lo necesario
+    if (rol === 'ADMINISTRADOR') {
+        show('menuUsuarios');
+        show('menuEstudiantes');
+        show('menuRutas');
+        show('menuColegios');
+        show('menuAsistencias');
+        show('menuNotificaciones');
+        show('menuReportes');
+    } else if (rol === 'ENCARGADO') {
+        show('menuEstudiantes');
+        show('menuRutas');
+        show('menuColegios');
+        show('menuAsistencias');
+        show('menuNotificaciones');
+        show('menuReportes');
+    } else if (rol === 'MONITOR') {
+        show('menuEstudiantes');
+        show('menuAsistencias');
     }
 }
 
-// Cargar colegios para el filtro
+// ==========================================
+// AUTENTICACIÓN Y USUARIO
+// ==========================================
+function cargarDatosUsuario() {
+    const usuario = Auth.getUser();
+    if (!usuario) return;
+
+    const elName = byId('userName');
+    if (elName) elName.textContent = usuario.nombre || 'Usuario';
+
+    const elRole = byId('userRole');
+    if (elRole) elRole.textContent = usuario.rol || 'Sin rol';
+}
+
+function logout() {
+    Auth.logout();
+}
+
+// ==========================================
+// CARGAR COLEGIOS PARA FILTRO
+// ==========================================
 async function cargarColegios() {
     try {
-        const colegios = await API.get('/colegios');
-        const select = document.getElementById('filtroColegio');
-
-        colegios.forEach(colegio => {
-            const option = document.createElement('option');
-            option.value = colegio.id;
-            option.textContent = colegio.nombreColegio;
-            select.appendChild(option);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/colegios`, {
+            headers: Auth.getHeaders()
         });
 
+        if (!response.ok) throw new Error('Error al cargar colegios');
+
+        const colegios = await response.json();
+        const select = byId('filtroColegio');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Todos los colegios</option>';
+        colegios.forEach(colegio => {
+            select.innerHTML += `<option value="${colegio.id}">${colegio.nombre}</option>`;
+        });
     } catch (error) {
-        console.error('Error cargando colegios:', error);
+        console.error('Error:', error);
+        mostrarAlerta('Error al cargar la lista de colegios', 'danger');
     }
 }
 
-// Cargar estadísticas de hoy
-async function cargarEstadisticasHoy() {
+// ==========================================
+// FECHAS DEFAULT
+// ==========================================
+function establecerFechasDefault() {
     const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('fechaInicio').value = hoy;
-    document.getElementById('fechaFin').value = hoy;
-    await aplicarFiltros();
+    const hace7dias = new Date();
+    hace7dias.setDate(hace7dias.getDate() - 7);
+    const fecha7dias = hace7dias.toISOString().split('T')[0];
+
+    const inicioEl = byId('fechaInicio');
+    const finEl = byId('fechaFin');
+
+    if (inicioEl) inicioEl.value = fecha7dias;
+    if (finEl) finEl.value = hoy;
 }
 
-// Aplicar filtros y cargar datos
+// ==========================================
+// CARGAR ESTADÍSTICAS DE HOY
+// ==========================================
+async function cargarEstadisticasHoy() {
+    try {
+        mostrarCargando();
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}/asistencias/estadisticas/hoy`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (!response.ok) throw new Error('Error al cargar estadísticas');
+
+        const stats = await response.json();
+
+        // Actualizar tarjetas de estadísticas
+        actualizarEstadisticas(stats);
+
+        // Cargar registros de hoy
+        await cargarAsistenciasHoy();
+
+        ocultarCargando();
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al cargar las estadísticas del día', 'danger');
+        ocultarCargando();
+    }
+}
+
+// ==========================================
+// CARGAR ASISTENCIAS DE HOY
+// ==========================================
+async function cargarAsistenciasHoy() {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/asistencias/hoy`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (!response.ok) throw new Error('Error al cargar asistencias');
+
+        const asistencias = await response.json();
+        asistenciasActuales = asistencias || [];
+
+        renderizarTabla(asistenciasActuales);
+        actualizarGraficos(asistenciasActuales);
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al cargar los registros de asistencia', 'danger');
+    }
+}
+
+// ==========================================
+// APLICAR FILTROS
+// ==========================================
 async function aplicarFiltros() {
-    const fechaInicio = document.getElementById('fechaInicio').value;
-    const fechaFin = document.getElementById('fechaFin').value;
-    const colegioId = document.getElementById('filtroColegio').value;
-    const estado = document.getElementById('filtroEstado').value;
+    const fechaInicioEl = byId('fechaInicio');
+    const fechaFinEl = byId('fechaFin');
+    const filtroColegioEl = byId('filtroColegio');
+    const filtroEstadoEl = byId('filtroEstado');
+
+    const fechaInicio = fechaInicioEl ? fechaInicioEl.value : null;
+    const fechaFin = fechaFinEl ? fechaFinEl.value : null;
+    const colegioId = filtroColegioEl ? filtroColegioEl.value : '';
+    const estado = filtroEstadoEl ? filtroEstadoEl.value : '';
 
     if (!fechaInicio || !fechaFin) {
-        showAlert('Por favor selecciona un rango de fechas', 'warning');
+        mostrarAlerta('Por favor selecciona un rango de fechas', 'warning');
+        return;
+    }
+
+    if (new Date(fechaInicio) > new Date(fechaFin)) {
+        mostrarAlerta('La fecha de inicio no puede ser mayor a la fecha fin', 'warning');
         return;
     }
 
     try {
-        // Construir URL con parámetros
-        let url = `/asistencias?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
-        if (colegioId) url += `&colegioId=${colegioId}`;
-        if (estado) url += `&estado=${estado}`;
+        mostrarCargando();
 
-        asistenciasData = await API.get(url);
+        let url = `${CONFIG.API_BASE_URL}/asistencias/rango-fechas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
 
-        // Actualizar estadísticas
-        actualizarEstadisticas(asistenciasData);
+        const response = await fetch(url, {
+            headers: Auth.getHeaders()
+        });
 
-        // Actualizar gráficos
-        actualizarGraficos(asistenciasData);
+        if (!response.ok) throw new Error('Error al cargar asistencias');
 
-        // Actualizar tabla
-        actualizarTabla(asistenciasData);
+        let asistencias = await response.json();
 
+        // Aplicar filtros adicionales en el cliente (uso seguro de propiedades opcionales)
+        if (colegioId) {
+            asistencias = asistencias.filter(a => (a.colegio && String(a.colegio.id)) == String(colegioId));
+        }
+
+        if (estado) {
+            asistencias = asistencias.filter(a => a.estadoAsistencia === estado);
+        }
+
+        asistenciasActuales = asistencias;
+
+        const stats = calcularEstadisticas(asistencias);
+        actualizarEstadisticas(stats);
+
+        renderizarTabla(asistencias);
+        actualizarGraficos(asistencias);
+
+        mostrarAlerta(`Se encontraron ${asistencias.length} registros`, 'success');
+        ocultarCargando();
     } catch (error) {
         console.error('Error:', error);
-        showAlert('Error al cargar las asistencias', 'danger');
+        mostrarAlerta('Error al aplicar los filtros', 'danger');
+        ocultarCargando();
     }
 }
 
-// Actualizar estadísticas
-function actualizarEstadisticas(datos) {
-    const total = datos.length;
-    const presentes = datos.filter(a => a.estadoAsistencia === 'PRESENTE').length;
-    const ausentes = datos.filter(a => a.estadoAsistencia === 'AUSENTE').length;
-    const porcentaje = total > 0 ? ((presentes / total) * 100).toFixed(1) : 0;
-
-    document.getElementById('totalRegistros').textContent = total;
-    document.getElementById('totalPresentes').textContent = presentes;
-    document.getElementById('totalAusentes').textContent = ausentes;
-    document.getElementById('porcentajeAsistencia').textContent = porcentaje + '%';
+// ==========================================
+// LIMPIAR FILTROS
+// ==========================================
+function limpiarFiltros() {
+    establecerFechasDefault();
+    const filtroColegioEl = byId('filtroColegio');
+    const filtroEstadoEl = byId('filtroEstado');
+    if (filtroColegioEl) filtroColegioEl.value = '';
+    if (filtroEstadoEl) filtroEstadoEl.value = '';
+    cargarEstadisticasHoy();
 }
 
-// Actualizar gráficos
-function actualizarGraficos(datos) {
-    // Agrupar por fecha
-    const porFecha = {};
-    datos.forEach(asistencia => {
-        const fecha = asistencia.fecha;
-        if (!porFecha[fecha]) {
-            porFecha[fecha] = { presentes: 0, ausentes: 0 };
-        }
-        if (asistencia.estadoAsistencia === 'PRESENTE') {
-            porFecha[fecha].presentes++;
-        } else {
-            porFecha[fecha].ausentes++;
-        }
-    });
+// ==========================================
+// CALCULAR ESTADÍSTICAS
+// ==========================================
+function calcularEstadisticas(asistencias) {
+    const total = asistencias.length;
+    const presentes = asistencias.filter(a => a.estadoAsistencia === 'PRESENTE').length;
+    const ausentes = asistencias.filter(a => a.estadoAsistencia === 'AUSENTE').length;
 
-    const fechas = Object.keys(porFecha).sort();
-    const presentes = fechas.map(f => porFecha[f].presentes);
-    const ausentes = fechas.map(f => porFecha[f].ausentes);
+    return {
+        total: total,
+        presentes: presentes,
+        ausentes: ausentes,
+        porcentajeAsistencia: total > 0 ? ((presentes / total) * 100).toFixed(1) : 0
+    };
+}
 
-    // Gráfico de tendencia
-    if (chartTendencia) chartTendencia.destroy();
+// ==========================================
+// ACTUALIZAR ESTADÍSTICAS EN TARJETAS
+// ==========================================
+function actualizarEstadisticas(stats) {
+    const totalEl = byId('totalRegistros');
+    const presentesEl = byId('totalPresentes');
+    const ausentesEl = byId('totalAusentes');
+    const porcentajeEl = byId('porcentajeAsistencia');
 
-    const ctxTendencia = document.getElementById('chartTendencia').getContext('2d');
-    chartTendencia = new Chart(ctxTendencia, {
-        type: 'line',
-        data: {
-            labels: fechas.map(f => new Date(f).toLocaleDateString('es-CO')),
-            datasets: [
-                {
-                    label: 'Presentes',
-                    data: presentes,
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'Ausentes',
-                    data: ausentes,
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
+    if (totalEl) totalEl.textContent = stats.total || 0;
+    if (presentesEl) presentesEl.textContent = stats.presentes || 0;
+    if (ausentesEl) ausentesEl.textContent = stats.ausentes || 0;
+    if (porcentajeEl) porcentajeEl.textContent = (stats.porcentajeAsistencia || 0) + '%';
+}
 
-    // Gráfico de distribución (pie)
-    if (chartDistribucion) chartDistribucion.destroy();
+// ==========================================
+// RENDERIZAR TABLA
+// ==========================================
+function renderizarTabla(asistencias) {
+    const tbody = byId('tablaAsistencias');
+    const badge = byId('totalTabla');
 
-    const totalPresentes = datos.filter(a => a.estadoAsistencia === 'PRESENTE').length;
-    const totalAusentes = datos.filter(a => a.estadoAsistencia === 'AUSENTE').length;
+    if (badge) badge.textContent = `${asistencias.length} registros`;
+    if (!tbody) return;
 
-    const ctxDistribucion = document.getElementById('chartDistribucion').getContext('2d');
-    chartDistribucion = new Chart(ctxDistribucion, {
+    if (asistencias.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                    <p class="mt-2">No se encontraron registros</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = asistencias.map(asistencia => {
+        const estadoBadge = asistencia.estadoAsistencia === 'PRESENTE'
+            ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> PRESENTE</span>'
+            : '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> AUSENTE</span>';
+
+        const tipoRecorrido = asistencia.tipoRecorrido === 'IDA'
+            ? '<span class="badge bg-primary"><i class="bi bi-arrow-right-circle"></i> IDA</span>'
+            : '<span class="badge bg-info"><i class="bi bi-arrow-left-circle"></i> REGRESO</span>';
+
+        const estudianteNombre = asistencia.estudiante ? asistencia.estudiante.nombre : 'Desconocido';
+        const estudianteDocumento = asistencia.estudiante ? asistencia.estudiante.documento : '';
+        const colegioNombre = asistencia.colegio ? asistencia.colegio.nombre : '';
+        const monitorNombre = asistencia.monitor ? asistencia.monitor.nombre : '';
+
+        return `
+            <tr>
+                <td><strong>${formatearFecha(asistencia.fecha)}</strong></td>
+                <td>
+                    <i class="bi bi-clock"></i> ${asistencia.horaRegistro || ''}
+                </td>
+                <td>
+                    <div>
+                        <strong>${estudianteNombre}</strong><br>
+                        <small class="text-muted">
+                            <i class="bi bi-person-badge"></i> ${estudianteDocumento}
+                        </small>
+                    </div>
+                </td>
+                <td>
+                    <small>${colegioNombre}</small>
+                </td>
+                <td>${tipoRecorrido}</td>
+                <td>${estadoBadge}</td>
+                <td>
+                    <small class="text-muted">
+                        <i class="bi bi-person"></i> ${monitorNombre}
+                    </small>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ==========================================
+// ACTUALIZAR GRÁFICOS
+// ==========================================
+function actualizarGraficos(asistencias) {
+    actualizarGraficoDistribucion(asistencias);
+    actualizarGraficoTendencia(asistencias);
+}
+
+// ==========================================
+// GRÁFICO DE DISTRIBUCIÓN (PIE)
+// ==========================================
+function actualizarGraficoDistribucion(asistencias) {
+    const presentes = asistencias.filter(a => a.estadoAsistencia === 'PRESENTE').length;
+    const ausentes = asistencias.filter(a => a.estadoAsistencia === 'AUSENTE').length;
+
+    if (chartDistribucion) {
+        try { chartDistribucion.destroy(); } catch(e){ /* ignore */ }
+    }
+
+    const canvas = byId('chartDistribucion');
+    if (!canvas || !canvas.getContext) return;
+
+    const ctx = canvas.getContext('2d');
+    chartDistribucion = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Presentes', 'Ausentes'],
             datasets: [{
-                data: [totalPresentes, totalAusentes],
+                data: [presentes, ausentes],
                 backgroundColor: ['#28a745', '#dc3545'],
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -175,82 +376,159 @@ function actualizarGraficos(datos) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
                 }
             }
         }
     });
 }
 
-// Actualizar tabla
-function actualizarTabla(datos) {
-    const tbody = document.getElementById('tablaAsistencias');
-    document.getElementById('totalTabla').textContent = `${datos.length} registros`;
+// ==========================================
+// GRÁFICO DE TENDENCIA (LÍNEA)
+// ==========================================
+function actualizarGraficoTendencia(asistencias) {
+    const porFecha = {};
 
-    if (datos.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center text-muted">
-                    No se encontraron registros con los filtros seleccionados
-                </td>
-            </tr>
-        `;
-        return;
+    asistencias.forEach(asistencia => {
+        const fecha = asistencia.fecha;
+        if (!fecha) return;
+        if (!porFecha[fecha]) {
+            porFecha[fecha] = { presentes: 0, ausentes: 0, total: 0 };
+        }
+        porFecha[fecha].total++;
+        if (asistencia.estadoAsistencia === 'PRESENTE') {
+            porFecha[fecha].presentes++;
+        } else {
+            porFecha[fecha].ausentes++;
+        }
+    });
+
+    const fechasOrdenadas = Object.keys(porFecha).sort();
+    const presentes = fechasOrdenadas.map(f => porFecha[f].presentes);
+    const ausentes = fechasOrdenadas.map(f => porFecha[f].ausentes);
+    const labels = fechasOrdenadas.map(f => formatearFecha(f));
+
+    if (chartTendencia) {
+        try { chartTendencia.destroy(); } catch(e){ /* ignore */ }
     }
 
-    tbody.innerHTML = '';
+    const canvas = byId('chartTendencia');
+    if (!canvas || !canvas.getContext) return;
 
-    // Ordenar por fecha y hora (más recientes primero)
-    datos.sort((a, b) => new Date(b.fecha + ' ' + b.hora) - new Date(a.fecha + ' ' + a.hora));
-
-    datos.forEach(asistencia => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${new Date(asistencia.fecha).toLocaleDateString('es-CO')}</td>
-            <td>${asistencia.hora || 'N/A'}</td>
-            <td>${asistencia.nombreEstudiante || 'N/A'}</td>
-            <td>${asistencia.nombreColegio || 'N/A'}</td>
-            <td><span class="badge bg-info">${asistencia.tipoRecorrido}</span></td>
-            <td>
-                <span class="badge ${asistencia.estadoAsistencia === 'PRESENTE' ? 'bg-success' : 'bg-danger'}">
-                    ${asistencia.estadoAsistencia}
-                </span>
-            </td>
-            <td>${asistencia.nombreMonitor || 'N/A'}</td>
-        `;
-        tbody.appendChild(tr);
+    const ctx = canvas.getContext('2d');
+    chartTendencia = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Presentes',
+                    data: presentes,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'Ausentes',
+                    data: ausentes,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { padding: 15, font: { size: 12 } } },
+                tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12 }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+            }
+        }
     });
 }
 
-// Limpiar filtros
-function limpiarFiltros() {
-    document.getElementById('fechaInicio').value = '';
-    document.getElementById('fechaFin').value = '';
-    document.getElementById('filtroColegio').value = '';
-    document.getElementById('filtroEstado').value = '';
+// ==========================================
+// UTILIDADES
+// ==========================================
+function formatearFecha(fecha) {
+    const opciones = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', opciones);
+}
 
-    // Limpiar tablas y gráficos
-    document.getElementById('tablaAsistencias').innerHTML = `
+function mostrarAlerta(mensaje, tipo = 'info') {
+    const alertContainer = byId('alertContainer');
+    if (!alertContainer) {
+        console.warn('Alerta: elemento alertContainer no encontrado. Mensaje:', mensaje);
+        return;
+    }
+
+    const iconos = {
+        success: 'check-circle-fill',
+        danger: 'x-circle-fill',
+        warning: 'exclamation-triangle-fill',
+        info: 'info-circle-fill'
+    };
+
+    const alerta = `
+        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+            <i class="bi bi-${iconos[tipo]}"></i>
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    alertContainer.innerHTML = alerta;
+
+    setTimeout(() => {
+        const alert = alertContainer.querySelector('.alert');
+        if (alert) {
+            alert.classList.remove('show');
+            setTimeout(() => { alertContainer.innerHTML = ''; }, 150);
+        }
+    }, 5000);
+}
+
+function mostrarCargando() {
+    const tbody = byId('tablaAsistencias');
+    if (!tbody) return;
+    tbody.innerHTML = `
         <tr>
-            <td colspan="7" class="text-center text-muted">
-                Selecciona un rango de fechas para ver los registros
+            <td colspan="7" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando datos...</p>
             </td>
         </tr>
     `;
-
-    document.getElementById('totalRegistros').textContent = '0';
-    document.getElementById('totalPresentes').textContent = '0';
-    document.getElementById('totalAusentes').textContent = '0';
-    document.getElementById('porcentajeAsistencia').textContent = '0%';
-    document.getElementById('totalTabla').textContent = '0 registros';
-
-    if (chartTendencia) chartTendencia.destroy();
-    if (chartDistribucion) chartDistribucion.destroy();
 }
 
-// Inicializar
-document.addEventListener('DOMContentLoaded', () => {
-    loadUserInfo();
-    cargarColegios();
-    cargarEstadisticasHoy(); // Cargar estadísticas de hoy por defecto
-});
+function ocultarCargando() {
+    console.log('Carga completada');
+}
