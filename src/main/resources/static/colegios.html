@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Usuarios - Sistema Ciempiés</title>
+  <title>Gestión de Colegios - Sistema Ciempiés</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
   <style>
     :root {
@@ -89,29 +89,14 @@
         border-radius: 15px 15px 0 0 !important;
     }
 
-    .table-responsive {
-        border-radius: 10px;
-    }
-
-    .table {
-        margin-bottom: 0;
-    }
-
-    .table thead th {
-        background: #f8f9fa;
-        border-bottom: 2px solid #dee2e6;
+    .form-label {
         font-weight: 600;
         color: #333;
     }
 
-    .badge {
-        padding: 6px 12px;
-        font-weight: 500;
-    }
-
-    .btn-action {
-        padding: 5px 10px;
-        font-size: 14px;
+    .required::after {
+        content: " *";
+        color: red;
     }
 
     .modal-content {
@@ -125,27 +110,57 @@
         border-radius: 15px 15px 0 0;
     }
 
-    .form-label {
+    .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+
+    .table th {
+        background: #f8f9fa;
         font-weight: 600;
         color: #333;
+        border-bottom: 2px solid #dee2e6;
     }
 
-    .required::after {
-        content: " *";
-        color: red;
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
     }
 
-    .dropdown-menu {
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    .jornada-badge {
+        font-size: 11px;
+        margin: 2px;
+        padding: 4px 8px;
     }
 
-    .info-asignacion {
-        background: #e8f4fd;
-        border-left: 4px solid #667eea;
+    .jornadas-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .jornada-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         padding: 10px 15px;
-        border-radius: 0 8px 8px 0;
-        margin-top: 5px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .jornada-item:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .jornada-item.active {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+
+    .jornada-item.inactive {
+        border-color: #dc3545;
+        background: #f8d7da;
     }
   </style>
 </head>
@@ -195,7 +210,7 @@
             </a>
           </li>
           <li class="nav-item" id="menuUsuarios" style="display: none;">
-            <a class="nav-link active" href="usuarios.html">
+            <a class="nav-link" href="usuarios.html">
               <i class="bi bi-people-fill"></i>
               Usuarios
             </a>
@@ -213,7 +228,7 @@
             </a>
           </li>
           <li class="nav-item" id="menuColegios" style="display: none;">
-            <a class="nav-link" href="colegios.html">
+            <a class="nav-link active" href="colegios.html">
               <i class="bi bi-building-fill"></i>
               Colegios
             </a>
@@ -244,16 +259,13 @@
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2><i class="bi bi-people-fill text-primary me-2"></i>Gestión de Usuarios</h2>
-          <p class="text-muted mb-0">Administra los usuarios del sistema</p>
+          <h2><i class="bi bi-building-fill me-2"></i>Gestión de Colegios</h2>
+          <p class="text-muted mb-0">Administra los colegios y sus jornadas</p>
         </div>
-        <button class="btn btn-primary btn-lg" onclick="mostrarModalCrear()">
-          <i class="bi bi-person-plus-fill me-2"></i>Nuevo Usuario
+        <button class="btn btn-primary" onclick="mostrarModalCrear()">
+          <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Colegio
         </button>
       </div>
-
-      <!-- Alert Container -->
-      <div id="alertContainer"></div>
 
       <!-- Filtros -->
       <div class="card card-custom">
@@ -262,36 +274,32 @@
         </div>
         <div class="card-body">
           <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label">Rol</label>
-              <select class="form-select" id="filtroRol" onchange="filtrarUsuarios()">
-                <option value="">Todos</option>
-                <option value="ADMINISTRADOR">Administrador</option>
-                <option value="ENCARGADO">Encargado</option>
-                <option value="MONITOR">Monitor</option>
+            <div class="col-md-4">
+              <label class="form-label">Zona</label>
+              <select class="form-select" id="filtroZona" onchange="filtrarColegios()">
+                <option value="">Todas</option>
               </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Estado</label>
-              <select class="form-select" id="filtroEstado" onchange="filtrarUsuarios()">
+              <select class="form-select" id="filtroEstado" onchange="filtrarColegios()">
                 <option value="">Todos</option>
                 <option value="true">Activos</option>
                 <option value="false">Inactivos</option>
               </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label">Buscar</label>
-              <input type="text" class="form-control" id="busqueda" placeholder="Buscar por nombre, email o identificación..." onkeyup="buscarUsuarios()">
+              <input type="text" class="form-control" id="busqueda" placeholder="Nombre del colegio..." onkeyup="buscarColegios()">
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tabla de Usuarios -->
+      <!-- Tabla de Colegios -->
       <div class="card card-custom">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-table me-2"></i>Listado de Usuarios</span>
-          <span class="badge bg-primary" id="totalUsuarios">0 usuarios</span>
+        <div class="card-header">
+          <i class="bi bi-table me-2"></i>Listado de Colegios
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -299,22 +307,21 @@
               <thead>
               <tr>
                 <th>ID</th>
-                <th>Identificación</th>
-                <th>Nombre Completo</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Zona / Jornada</th>
+                <th>Nombre del Colegio</th>
+                <th>Zona</th>
+                <th>Jornadas</th>
+                <th>Estudiantes</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
               </thead>
               <tbody id="tableBody">
               <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="7" class="text-center py-4">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                   </div>
-                  <p class="mt-2 mb-0">Cargando usuarios...</p>
+                  <p class="mt-2 mb-0">Cargando colegios...</p>
                 </td>
               </tr>
               </tbody>
@@ -326,178 +333,138 @@
   </div>
 </div>
 
-<!-- Modal Crear/Editar Usuario -->
-<div class="modal fade" id="modalUsuario" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+<!-- Modal Crear Colegio -->
+<div class="modal fade" id="modalCrear" tabindex="-1">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalTitle">
-          <i class="bi bi-person-plus-fill me-2"></i>Crear Usuario
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle-fill me-2"></i>Crear Nuevo Colegio
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="formUsuario">
-          <input type="hidden" id="usuarioId">
-          <input type="hidden" id="modoEdicion" value="false">
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label required">Tipo de Identificación</label>
-              <select class="form-select" id="tipoId" required>
-                <option value="">Seleccione...</option>
-                <option value="CC">Cédula de Ciudadanía</option>
-                <option value="CE">Cédula de Extranjería</option>
-                <option value="PA">Pasaporte</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label required">Número de Identificación</label>
-              <input type="text" class="form-control" id="numId" required maxlength="50">
-            </div>
+        <form id="formCrear">
+          <div class="mb-3">
+            <label for="crearNombreColegio" class="form-label required">Nombre del Colegio</label>
+            <input type="text" class="form-control" id="crearNombreColegio" maxlength="200"
+                   placeholder="Ej: Colegio Distrital San Martín">
           </div>
 
-          <div class="row g-3 mt-2">
-            <div class="col-md-6">
-              <label class="form-label required">Primer Nombre</label>
-              <input type="text" class="form-control" id="primerNombre" required maxlength="100">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Segundo Nombre</label>
-              <input type="text" class="form-control" id="segundoNombre" maxlength="100">
-            </div>
+          <div class="mb-3">
+            <label for="crearZonaId" class="form-label required">Zona</label>
+            <select class="form-select" id="crearZonaId" onchange="cargarJornadasParaCrear()">
+              <option value="">Seleccione zona...</option>
+            </select>
           </div>
 
-          <div class="row g-3 mt-2">
-            <div class="col-md-6">
-              <label class="form-label required">Primer Apellido</label>
-              <input type="text" class="form-control" id="primerApellido" required maxlength="100">
+          <div class="mb-3" id="divJornadasCrear" style="display: none;">
+            <label class="form-label">Jornadas <small class="text-muted">(opcional)</small></label>
+            <div id="checkboxesJornadas" class="border rounded p-3">
+              <p class="text-muted mb-0">Seleccione una zona primero...</p>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Segundo Apellido</label>
-              <input type="text" class="form-control" id="segundoApellido" maxlength="100">
-            </div>
-          </div>
-
-          <div class="row g-3 mt-2">
-            <div class="col-md-6">
-              <label class="form-label required">Email</label>
-              <input type="email" class="form-control" id="email" required maxlength="150">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label required">Rol</label>
-              <select class="form-select" id="rol" required>
-                <option value="">Seleccione...</option>
-                <option value="ADMINISTRADOR">Administrador</option>
-                <option value="ENCARGADO">Encargado</option>
-                <option value="MONITOR">Monitor</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Info contraseña por defecto -->
-          <div class="row g-3 mt-2" id="infoContrasena">
-            <div class="col-12">
-              <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                <strong>Contraseña por defecto:</strong> Ciempies2024!
-                <br><small class="text-muted">El usuario deberá cambiarla en su primer inicio de sesión.</small>
-              </div>
-            </div>
+            <div class="form-text">Seleccione las jornadas en las que operará el colegio.</div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
-          <i class="bi bi-save-fill me-2"></i>Guardar
+        <button type="button" class="btn btn-primary" onclick="guardarColegio()">
+          <i class="bi bi-save-fill me-2"></i>Crear Colegio
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Asignar Zona/Jornada -->
-<div class="modal fade" id="modalAsignar" tabindex="-1">
+<!-- Modal Editar Colegio -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="bi bi-geo-alt-fill me-2"></i>Asignar Zona y Jornada
+          <i class="bi bi-pencil-fill me-2"></i>Editar Colegio
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="asignarUsuarioId">
+        <form id="formEditar">
+          <input type="hidden" id="editarColegioId">
 
-        <div class="alert alert-info">
-          <i class="bi bi-person-fill me-2"></i>
-          <strong id="asignarUsuarioNombre">Usuario</strong>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label required">Zona</label>
-          <select class="form-select" id="asignarZona" required onchange="cargarJornadasPorZona()">
-            <option value="">Seleccione zona...</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label required">Jornada</label>
-          <select class="form-select" id="asignarJornada" required>
-            <option value="">Primero seleccione zona</option>
-          </select>
-        </div>
-
-        <!-- Info de asignación actual -->
-        <div id="infoAsignacionActual" style="display: none;">
-          <hr>
-          <h6><i class="bi bi-info-circle me-2"></i>Asignación Actual</h6>
-          <div class="info-asignacion">
-            <strong>Zona:</strong> <span id="zonaActual">-</span><br>
-            <strong>Jornada:</strong> <span id="jornadaActual">-</span>
+          <div class="mb-3">
+            <label for="editarNombreColegio" class="form-label required">Nombre del Colegio</label>
+            <input type="text" class="form-control" id="editarNombreColegio" maxlength="200">
           </div>
-        </div>
+
+          <div class="mb-3">
+            <label class="form-label">Zona</label>
+            <input type="text" class="form-control" id="editarZonaNombre" disabled>
+            <div class="form-text">La zona no se puede cambiar.</div>
+          </div>
+        </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="guardarAsignacion()">
-          <i class="bi bi-check-circle-fill me-2"></i>Asignar
+        <button type="button" class="btn btn-primary" onclick="actualizarColegio()">
+          <i class="bi bi-save-fill me-2"></i>Guardar Cambios
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Confirmar Eliminación -->
-<div class="modal fade" id="modalConfirmar" tabindex="-1">
-  <div class="modal-dialog">
+<!-- Modal Gestionar Jornadas -->
+<div class="modal fade" id="modalJornadas" tabindex="-1">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
+      <div class="modal-header">
         <h5 class="modal-title">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar Acción
+          <i class="bi bi-clock-fill me-2"></i>Gestionar Jornadas
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p id="mensajeConfirmacion">¿Está seguro de realizar esta acción?</p>
+        <input type="hidden" id="jornadasColegioId">
+
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          <strong id="jornadasColegioNombre">Colegio</strong>
+        </div>
+
+        <h6 class="mb-3"><i class="bi bi-plus-circle me-2"></i>Agregar Jornada</h6>
+        <div class="row mb-4">
+          <div class="col-md-8">
+            <select class="form-select" id="selectNuevaJornada">
+              <option value="">Seleccione jornada para agregar...</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-success w-100" onclick="agregarJornada()">
+              <i class="bi bi-plus-lg me-1"></i>Agregar
+            </button>
+          </div>
+        </div>
+
+        <h6 class="mb-3"><i class="bi bi-list-check me-2"></i>Jornadas Asignadas</h6>
+        <div id="listaJornadasAsignadas">
+          <p class="text-muted text-center">Cargando jornadas...</p>
+        </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-danger" id="btnConfirmar">Confirmar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Bootstrap JS -->
+<!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Archivos JS del proyecto -->
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Scripts propios -->
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
-<script src="js/usuarios.js"></script>
-
+<script src="js/colegios.js"></script>
 </body>
 </html>

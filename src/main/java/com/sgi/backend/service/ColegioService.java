@@ -223,6 +223,7 @@ public class ColegioService {
                     .collect(Collectors.toList());
             dto.setJornadas(jornadas);
         }
+        dto.setTotalEstudiantes(colegioRepository.contarEstudiantesPorColegio(colegio.getId()));
 
         return dto;
     }

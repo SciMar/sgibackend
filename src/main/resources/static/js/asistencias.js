@@ -1,101 +1,225 @@
-// Lógica de Asistencias (corregido)
+// Lógica de Asistencias - Vistas diferenciadas por rol
 
 // Helper: acceso seguro a elementos por id
 function byId(id) {
     return document.getElementById(id);
 }
 
-// Verificar autenticación y obtener usuario al iniciar
+// Variables globales
 let currentUser = null;
+let monitorData = null;
+let asistenciasActuales = [];
+let chartDistribucion = null;
+let chartTendencia = null;
 
-// Inicializar al cargar la página (UN SOLO listener)
-document.addEventListener('DOMContentLoaded', () => {
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', async () => {
     Auth.requireAuth();
-    Auth.requireRoles(['ADMINISTRADOR', 'ENCARGADO', 'MONITOR']);
-
     currentUser = Auth.getUser();
 
-    // Inicializaciones
     loadNavbarUser();
-    configurarMenuPorRol(currentUser);
-    cargarDatosUsuario();
-    cargarColegios();
-    establecerFechasDefault();
-    cargarEstadisticasHoy();
+    configurarMenuPorRol();
+
+    // Cargar datos del monitor si aplica
+    await cargarDatosMonitor();
+
+    // Configurar vista según rol
+    configurarVistaPorRol();
 });
 
-// Configurar menú según rol (usa currentUser pasado o global)
-function configurarMenuPorRol(user) {
-    const rol = user ? user.rol : null;
+// ==========================================
+// CONFIGURAR MENÚ SEGÚN ROL
+// ==========================================
+function configurarMenuPorRol() {
+    const rol = currentUser?.rol;
+    const show = id => { const el = byId(id); if (el) el.style.display = 'block'; };
 
-    // Helper para mostrar un menú si el elemento existe
-    const show = id => {
-        const el = byId(id);
-        if (el) el.style.display = 'block';
-    };
-
-    // Opcional: esconder menús por defecto no hace aquí; asumimos que el CSS oculta lo necesario
     if (rol === 'ADMINISTRADOR') {
-        show('menuUsuarios');
-        show('menuEstudiantes');
-        show('menuRutas');
-        show('menuColegios');
-        show('menuAsistencias');
-        show('menuNotificaciones');
-        show('menuReportes');
+        ['menuUsuarios','menuEstudiantes','menuRutas','menuColegios','menuAsistencias','menuNotificaciones','menuReportes'].forEach(show);
     } else if (rol === 'ENCARGADO') {
-        show('menuEstudiantes');
-        show('menuRutas');
-        show('menuColegios');
-        show('menuAsistencias');
-        show('menuNotificaciones');
-        show('menuReportes');
+        ['menuEstudiantes','menuRutas','menuColegios','menuAsistencias','menuNotificaciones','menuReportes'].forEach(show);
     } else if (rol === 'MONITOR') {
-        show('menuEstudiantes');
-        show('menuAsistencias');
+        ['menuEstudiantes','menuAsistencias'].forEach(show);
     }
 }
 
 // ==========================================
-// AUTENTICACIÓN Y USUARIO
+// CARGAR DATOS DEL MONITOR
 // ==========================================
-function cargarDatosUsuario() {
-    const usuario = Auth.getUser();
-    if (!usuario) return;
+async function cargarDatosMonitor() {
+    try {
+        const response = await fetch(`${API_URL}/monitores/usuario/${currentUser.id}`, {
+            headers: Auth.getHeaders()
+        });
 
-    const elName = byId('userName');
-    if (elName) elName.textContent = usuario.nombre || 'Usuario';
-
-    const elRole = byId('userRole');
-    if (elRole) elRole.textContent = usuario.rol || 'Sin rol';
+        if (response.ok) {
+            monitorData = await response.json();
+            console.log('Datos del monitor:', monitorData);
+        }
+    } catch (error) {
+        console.error('Error cargando datos del monitor:', error);
+    }
 }
 
-function logout() {
-    Auth.logout();
+// ==========================================
+// CONFIGURAR VISTA SEGÚN ROL
+// ==========================================
+function configurarVistaPorRol() {
+    const rol = currentUser?.rol;
+
+    if (rol === 'MONITOR') {
+        configurarVistaMonitor();
+    } else {
+        configurarVistaAdminEncargado();
+    }
+}
+
+// ==========================================
+// VISTA MONITOR - Simplificada
+// ==========================================
+function configurarVistaMonitor() {
+    // Ocultar filtros avanzados para monitor
+    const filtrosCard = byId('filtrosAvanzados');
+    if (filtrosCard) filtrosCard.style.display = 'none';
+
+    // Mostrar info de zona del monitor
+    const infoZona = byId('infoZonaMonitor');
+    if (infoZona && monitorData) {
+        infoZona.style.display = 'block';
+        infoZona.innerHTML = `
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-geo-alt-fill me-2"></i>
+                <strong>Tu Zona:</strong> ${monitorData.nombreZona || 'N/A'} |
+                <strong>Jornada:</strong> ${monitorData.nombreJornada || 'N/A'}
+            </div>
+        `;
+    }
+
+    // Cargar solo estadísticas de hoy para el monitor
+    cargarEstadisticasMonitor();
+}
+
+// ==========================================
+// VISTA ADMIN/ENCARGADO - Completa
+// ==========================================
+function configurarVistaAdminEncargado() {
+    // Mostrar filtros avanzados
+    const filtrosCard = byId('filtrosAvanzados');
+    if (filtrosCard) filtrosCard.style.display = 'block';
+
+    // Ocultar info de zona (solo para monitor)
+    const infoZona = byId('infoZonaMonitor');
+    if (infoZona) infoZona.style.display = 'none';
+
+    // Cargar zonas y colegios para filtros
+    cargarZonasFiltro();
+    cargarColegiosFiltro();
+    establecerFechasDefault();
+
+    // Cargar estadísticas generales
+    cargarEstadisticasHoy();
+}
+
+// ==========================================
+// ESTADÍSTICAS PARA MONITOR
+// ==========================================
+async function cargarEstadisticasMonitor() {
+    try {
+        mostrarCargando();
+
+        const hoy = new Date().toISOString().split('T')[0];
+
+        // Cargar asistencias de hoy
+        const response = await fetch(`${API_URL}/asistencias/hoy`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (!response.ok) throw new Error('Error al cargar asistencias');
+
+        let asistencias = await response.json();
+
+        // Filtrar solo las de la zona del monitor
+        if (monitorData && monitorData.zonaId) {
+            asistencias = asistencias.filter(a => {
+                // Filtrar por zona (el colegio del estudiante debe estar en la zona del monitor)
+                return a.colegioId && monitorData.zonaId;
+            });
+        }
+
+        // Filtrar solo las registradas por este monitor
+        if (monitorData && monitorData.id) {
+            const misAsistencias = asistencias.filter(a => a.monitorId === monitorData.id);
+
+            // Mostrar estadísticas
+            const stats = calcularEstadisticas(misAsistencias);
+            actualizarEstadisticas(stats);
+
+            // Mostrar en tabla
+            asistenciasActuales = misAsistencias;
+            renderizarTabla(misAsistencias);
+            actualizarGraficos(misAsistencias);
+        } else {
+            // Si no hay monitorData, mostrar todas de hoy
+            const stats = calcularEstadisticas(asistencias);
+            actualizarEstadisticas(stats);
+            asistenciasActuales = asistencias;
+            renderizarTabla(asistencias);
+            actualizarGraficos(asistencias);
+        }
+
+        ocultarCargando();
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al cargar las estadísticas', 'danger');
+        ocultarCargando();
+    }
+}
+
+// ==========================================
+// CARGAR ZONAS PARA FILTRO
+// ==========================================
+async function cargarZonasFiltro() {
+    try {
+        const response = await fetch(`${API_URL}/zonas`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (!response.ok) return;
+
+        const zonas = await response.json();
+        const select = byId('filtroZona');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Todas las zonas</option>';
+        zonas.filter(z => z.activa !== false).forEach(zona => {
+            select.innerHTML += `<option value="${zona.id}">${zona.nombreZona}</option>`;
+        });
+    } catch (error) {
+        console.error('Error cargando zonas:', error);
+    }
 }
 
 // ==========================================
 // CARGAR COLEGIOS PARA FILTRO
 // ==========================================
-async function cargarColegios() {
+async function cargarColegiosFiltro() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/colegios`, {
+        const response = await fetch(`${API_URL}/colegios`, {
             headers: Auth.getHeaders()
         });
 
-        if (!response.ok) throw new Error('Error al cargar colegios');
+        if (!response.ok) return;
 
         const colegios = await response.json();
         const select = byId('filtroColegio');
         if (!select) return;
 
         select.innerHTML = '<option value="">Todos los colegios</option>';
-        colegios.forEach(colegio => {
-            select.innerHTML += `<option value="${colegio.id}">${colegio.nombre}</option>`;
+        colegios.filter(c => c.activo).forEach(colegio => {
+            select.innerHTML += `<option value="${colegio.id}">${colegio.nombreColegio}</option>`;
         });
     } catch (error) {
-        console.error('Error:', error);
-        mostrarAlerta('Error al cargar la lista de colegios', 'danger');
+        console.error('Error cargando colegios:', error);
     }
 }
 
@@ -122,15 +246,13 @@ async function cargarEstadisticasHoy() {
     try {
         mostrarCargando();
 
-        const response = await fetch(`${CONFIG.API_BASE_URL}/asistencias/estadisticas/hoy`, {
+        const response = await fetch(`${API_URL}/asistencias/estadisticas/hoy`, {
             headers: Auth.getHeaders()
         });
 
         if (!response.ok) throw new Error('Error al cargar estadísticas');
 
         const stats = await response.json();
-
-        // Actualizar tarjetas de estadísticas
         actualizarEstadisticas(stats);
 
         // Cargar registros de hoy
@@ -149,7 +271,7 @@ async function cargarEstadisticasHoy() {
 // ==========================================
 async function cargarAsistenciasHoy() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/asistencias/hoy`, {
+        const response = await fetch(`${API_URL}/asistencias/hoy`, {
             headers: Auth.getHeaders()
         });
 
@@ -167,18 +289,15 @@ async function cargarAsistenciasHoy() {
 }
 
 // ==========================================
-// APLICAR FILTROS
+// APLICAR FILTROS (Solo Admin/Encargado)
 // ==========================================
 async function aplicarFiltros() {
-    const fechaInicioEl = byId('fechaInicio');
-    const fechaFinEl = byId('fechaFin');
-    const filtroColegioEl = byId('filtroColegio');
-    const filtroEstadoEl = byId('filtroEstado');
-
-    const fechaInicio = fechaInicioEl ? fechaInicioEl.value : null;
-    const fechaFin = fechaFinEl ? fechaFinEl.value : null;
-    const colegioId = filtroColegioEl ? filtroColegioEl.value : '';
-    const estado = filtroEstadoEl ? filtroEstadoEl.value : '';
+    const fechaInicio = byId('fechaInicio')?.value;
+    const fechaFin = byId('fechaFin')?.value;
+    const zonaId = byId('filtroZona')?.value;
+    const colegioId = byId('filtroColegio')?.value;
+    const estado = byId('filtroEstado')?.value;
+    const tipoRecorrido = byId('filtroTipo')?.value;
 
     if (!fechaInicio || !fechaFin) {
         mostrarAlerta('Por favor selecciona un rango de fechas', 'warning');
@@ -193,9 +312,7 @@ async function aplicarFiltros() {
     try {
         mostrarCargando();
 
-        let url = `${CONFIG.API_BASE_URL}/asistencias/rango-fechas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
-
-        const response = await fetch(url, {
+        const response = await fetch(`${API_URL}/asistencias/rango-fechas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
             headers: Auth.getHeaders()
         });
 
@@ -203,13 +320,17 @@ async function aplicarFiltros() {
 
         let asistencias = await response.json();
 
-        // Aplicar filtros adicionales en el cliente (uso seguro de propiedades opcionales)
+        // Aplicar filtros adicionales
         if (colegioId) {
-            asistencias = asistencias.filter(a => (a.colegio && String(a.colegio.id)) == String(colegioId));
+            asistencias = asistencias.filter(a => String(a.colegioId) === String(colegioId));
         }
 
         if (estado) {
             asistencias = asistencias.filter(a => a.estadoAsistencia === estado);
+        }
+
+        if (tipoRecorrido) {
+            asistencias = asistencias.filter(a => a.tipoRecorrido === tipoRecorrido);
         }
 
         asistenciasActuales = asistencias;
@@ -234,10 +355,17 @@ async function aplicarFiltros() {
 // ==========================================
 function limpiarFiltros() {
     establecerFechasDefault();
-    const filtroColegioEl = byId('filtroColegio');
-    const filtroEstadoEl = byId('filtroEstado');
-    if (filtroColegioEl) filtroColegioEl.value = '';
-    if (filtroEstadoEl) filtroEstadoEl.value = '';
+
+    const filtroZona = byId('filtroZona');
+    const filtroColegio = byId('filtroColegio');
+    const filtroEstado = byId('filtroEstado');
+    const filtroTipo = byId('filtroTipo');
+
+    if (filtroZona) filtroZona.value = '';
+    if (filtroColegio) filtroColegio.value = '';
+    if (filtroEstado) filtroEstado.value = '';
+    if (filtroTipo) filtroTipo.value = '';
+
     cargarEstadisticasHoy();
 }
 
@@ -296,42 +424,25 @@ function renderizarTabla(asistencias) {
 
     tbody.innerHTML = asistencias.map(asistencia => {
         const estadoBadge = asistencia.estadoAsistencia === 'PRESENTE'
-            ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> PRESENTE</span>'
-            : '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> AUSENTE</span>';
+            ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Presente</span>'
+            : '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Ausente</span>';
 
         const tipoRecorrido = asistencia.tipoRecorrido === 'IDA'
-            ? '<span class="badge bg-primary"><i class="bi bi-arrow-right-circle"></i> IDA</span>'
-            : '<span class="badge bg-info"><i class="bi bi-arrow-left-circle"></i> REGRESO</span>';
-
-        const estudianteNombre = asistencia.estudiante ? asistencia.estudiante.nombre : 'Desconocido';
-        const estudianteDocumento = asistencia.estudiante ? asistencia.estudiante.documento : '';
-        const colegioNombre = asistencia.colegio ? asistencia.colegio.nombre : '';
-        const monitorNombre = asistencia.monitor ? asistencia.monitor.nombre : '';
+            ? '<span class="badge bg-primary">🏠→🏫 Ida</span>'
+            : '<span class="badge bg-info">🏫→🏠 Regreso</span>';
 
         return `
             <tr>
                 <td><strong>${formatearFecha(asistencia.fecha)}</strong></td>
+                <td><i class="bi bi-clock me-1"></i>${asistencia.horaRegistro || '-'}</td>
                 <td>
-                    <i class="bi bi-clock"></i> ${asistencia.horaRegistro || ''}
+                    <strong>${asistencia.nombreEstudiante || 'N/A'}</strong><br>
+                    <small class="text-muted">${asistencia.numIdEstudiante || ''}</small>
                 </td>
-                <td>
-                    <div>
-                        <strong>${estudianteNombre}</strong><br>
-                        <small class="text-muted">
-                            <i class="bi bi-person-badge"></i> ${estudianteDocumento}
-                        </small>
-                    </div>
-                </td>
-                <td>
-                    <small>${colegioNombre}</small>
-                </td>
+                <td><small>${asistencia.nombreColegio || 'N/A'}</small></td>
                 <td>${tipoRecorrido}</td>
                 <td>${estadoBadge}</td>
-                <td>
-                    <small class="text-muted">
-                        <i class="bi bi-person"></i> ${monitorNombre}
-                    </small>
-                </td>
+                <td><small class="text-muted"><i class="bi bi-person me-1"></i>${asistencia.nombreMonitor || 'N/A'}</small></td>
             </tr>
         `;
     }).join('');
@@ -340,24 +451,24 @@ function renderizarTabla(asistencias) {
 // ==========================================
 // ACTUALIZAR GRÁFICOS
 // ==========================================
-function actualizarGraficos(asistencias) {
+async function actualizarGraficos(asistencias) {
     actualizarGraficoDistribucion(asistencias);
-    actualizarGraficoTendencia(asistencias);
+    await actualizarGraficoTendencia(asistencias);
 }
 
 // ==========================================
-// GRÁFICO DE DISTRIBUCIÓN (PIE)
+// GRÁFICO DE DISTRIBUCIÓN (DONUT)
 // ==========================================
 function actualizarGraficoDistribucion(asistencias) {
     const presentes = asistencias.filter(a => a.estadoAsistencia === 'PRESENTE').length;
     const ausentes = asistencias.filter(a => a.estadoAsistencia === 'AUSENTE').length;
 
     if (chartDistribucion) {
-        try { chartDistribucion.destroy(); } catch(e){ /* ignore */ }
+        try { chartDistribucion.destroy(); } catch(e) {}
     }
 
     const canvas = byId('chartDistribucion');
-    if (!canvas || !canvas.getContext) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     chartDistribucion = new Chart(ctx, {
@@ -377,19 +488,15 @@ function actualizarGraficoDistribucion(asistencias) {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: { size: 12 }
-                    }
+                    labels: { padding: 15, font: { size: 12 } }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const label = context.label || '';
                             const value = context.parsed || 0;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                            return `${label}: ${value} (${percentage}%)`;
+                            return `${context.label}: ${value} (${percentage}%)`;
                         }
                     }
                 }
@@ -399,76 +506,104 @@ function actualizarGraficoDistribucion(asistencias) {
 }
 
 // ==========================================
-// GRÁFICO DE TENDENCIA (LÍNEA)
+// GRÁFICO DE ASISTENCIA POR ZONA (BARRAS)
 // ==========================================
-function actualizarGraficoTendencia(asistencias) {
-    const porFecha = {};
+async function actualizarGraficoTendencia(asistencias) {
+    // Cargar colegios para obtener las zonas
+    let colegiosMap = {};
+    let zonasMap = {};
 
-    asistencias.forEach(asistencia => {
-        const fecha = asistencia.fecha;
-        if (!fecha) return;
-        if (!porFecha[fecha]) {
-            porFecha[fecha] = { presentes: 0, ausentes: 0, total: 0 };
+    try {
+        const [colegiosRes, zonasRes] = await Promise.all([
+            fetch(`${API_URL}/colegios`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/zonas`, { headers: Auth.getHeaders() })
+        ]);
+
+        if (colegiosRes.ok && zonasRes.ok) {
+            const colegios = await colegiosRes.json();
+            const zonas = await zonasRes.json();
+
+            // Mapear zonas por ID
+            zonas.forEach(z => {
+                zonasMap[z.id] = z.nombreZona;
+            });
+
+            // Mapear colegios a zonas
+            colegios.forEach(c => {
+                colegiosMap[c.id] = zonasMap[c.zonaId] || 'Sin zona';
+            });
         }
-        porFecha[fecha].total++;
-        if (asistencia.estadoAsistencia === 'PRESENTE') {
-            porFecha[fecha].presentes++;
+    } catch (e) {
+        console.error('Error cargando datos para gráfico:', e);
+    }
+
+    // Agrupar por zona
+    const porZona = {};
+
+    asistencias.forEach(a => {
+        const zona = colegiosMap[a.colegioId] || 'Sin zona';
+
+        if (!porZona[zona]) {
+            porZona[zona] = { presentes: 0, ausentes: 0 };
+        }
+
+        if (a.estadoAsistencia === 'PRESENTE') {
+            porZona[zona].presentes++;
         } else {
-            porFecha[fecha].ausentes++;
+            porZona[zona].ausentes++;
         }
     });
 
-    const fechasOrdenadas = Object.keys(porFecha).sort();
-    const presentes = fechasOrdenadas.map(f => porFecha[f].presentes);
-    const ausentes = fechasOrdenadas.map(f => porFecha[f].ausentes);
-    const labels = fechasOrdenadas.map(f => formatearFecha(f));
+    const zonas = Object.keys(porZona).sort();
+    const presentes = zonas.map(z => porZona[z].presentes);
+    const ausentes = zonas.map(z => porZona[z].ausentes);
 
     if (chartTendencia) {
-        try { chartTendencia.destroy(); } catch(e){ /* ignore */ }
+        try { chartTendencia.destroy(); } catch(e) {}
     }
 
     const canvas = byId('chartTendencia');
-    if (!canvas || !canvas.getContext) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     chartTendencia = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: labels,
+            labels: zonas,
             datasets: [
                 {
                     label: 'Presentes',
                     data: presentes,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
                     borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    borderWidth: 1
                 },
                 {
                     label: 'Ausentes',
                     data: ausentes,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
                     borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    borderWidth: 1
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { padding: 15, font: { size: 12 } } },
-                tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12 }
+                legend: { position: 'top' },
+                title: {
+                    display: false
+                }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
-                x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                },
+                x: {
+                    ticks: { font: { size: 11 } }
+                }
             }
         }
     });
@@ -478,16 +613,20 @@ function actualizarGraficoTendencia(asistencias) {
 // UTILIDADES
 // ==========================================
 function formatearFecha(fecha) {
+    if (!fecha) return '-';
     const opciones = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', opciones);
+}
+
+function formatearFechaCorta(fecha) {
+    if (!fecha) return '-';
+    const opciones = { month: 'short', day: 'numeric' };
     return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', opciones);
 }
 
 function mostrarAlerta(mensaje, tipo = 'info') {
     const alertContainer = byId('alertContainer');
-    if (!alertContainer) {
-        console.warn('Alerta: elemento alertContainer no encontrado. Mensaje:', mensaje);
-        return;
-    }
+    if (!alertContainer) return;
 
     const iconos = {
         success: 'check-circle-fill',
@@ -496,21 +635,16 @@ function mostrarAlerta(mensaje, tipo = 'info') {
         info: 'info-circle-fill'
     };
 
-    const alerta = `
+    alertContainer.innerHTML = `
         <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-            <i class="bi bi-${iconos[tipo]}"></i>
-            ${mensaje}
+            <i class="bi bi-${iconos[tipo]} me-2"></i>${mensaje}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
-    alertContainer.innerHTML = alerta;
 
     setTimeout(() => {
         const alert = alertContainer.querySelector('.alert');
-        if (alert) {
-            alert.classList.remove('show');
-            setTimeout(() => { alertContainer.innerHTML = ''; }, 150);
-        }
+        if (alert) alert.remove();
     }, 5000);
 }
 
@@ -520,9 +654,7 @@ function mostrarCargando() {
     tbody.innerHTML = `
         <tr>
             <td colspan="7" class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
+                <div class="spinner-border text-primary" role="status"></div>
                 <p class="mt-2 text-muted">Cargando datos...</p>
             </td>
         </tr>
@@ -530,5 +662,9 @@ function mostrarCargando() {
 }
 
 function ocultarCargando() {
-    console.log('Carga completada');
+    // Completado
+}
+
+function logout() {
+    Auth.logout();
 }

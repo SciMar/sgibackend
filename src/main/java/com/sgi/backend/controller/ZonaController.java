@@ -42,6 +42,7 @@ public class ZonaController {
     // ==========================================
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENCARGADO', 'MONITOR')")
     public ResponseEntity<List<ZonaResponseDTO>> listarTodas() {
         List<ZonaResponseDTO> zonas = zonaService.listarTodas();
         return ResponseEntity.ok(zonas);

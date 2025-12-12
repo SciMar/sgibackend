@@ -71,22 +71,18 @@ public class AsistenciaService {
 
     // Validar que el monitor tiene permiso para registrar asistencia de este estudiante
     private void validarPermisoMonitor(Monitor monitor, Estudiante estudiante) {
-        // SI ES ADMINISTRADOR, PERMITIR TODO (sin restricciones de zona/jornada)
-        if (monitor.getUsuario().getRol() == Rol.ADMINISTRADOR) {
-            // Solo validar que el estudiante esté activo
+        // SI ES ADMINISTRADOR o ENCARGADO, PERMITIR TODO
+        if (monitor.getUsuario().getRol() == Rol.ADMINISTRADOR ||
+                monitor.getUsuario().getRol() == Rol.ENCARGADO) {
             if (!estudiante.getActivo()) {
                 throw new RuntimeException("No se puede registrar asistencia de un estudiante inactivo");
             }
-            return; // Salir de la validación, no verificar zona ni jornada
+            return;
         }
 
-        // Para ENCARGADO y MONITOR: validar zona y jornada
+        // Para MONITOR: validar solo zona (puede registrar cualquier jornada de su zona)
         if (!estudiante.getColegio().getZona().getId().equals(monitor.getZona().getId())) {
             throw new RuntimeException("El estudiante no pertenece a la zona asignada al monitor");
-        }
-
-        if (!estudiante.getJornada().getId().equals(monitor.getJornada().getId())) {
-            throw new RuntimeException("El estudiante no pertenece a la jornada asignada al monitor");
         }
 
         // El estudiante debe estar activo

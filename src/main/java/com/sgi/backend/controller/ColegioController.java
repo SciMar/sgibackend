@@ -28,12 +28,11 @@ public class ColegioController {
     // ==========================================
 
     @PostMapping
-    public ResponseEntity<ColegioResponseDTO> crear(@Valid @RequestBody CrearColegioDTO dto) {
+    public ResponseEntity<?> crear(@Valid @RequestBody CrearColegioDTO dto) {
         try {
-            ColegioResponseDTO colegio = colegioService.crear(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(colegio);
+            return ResponseEntity.status(HttpStatus.CREATED).body(colegioService.crear(dto));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -54,6 +53,7 @@ public class ColegioController {
     }
 
     @GetMapping("/zona/{zonaId}")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENCARGADO', 'MONITOR')")
     public ResponseEntity<List<ColegioResponseDTO>> listarPorZona(@PathVariable Long zonaId) {
         List<ColegioResponseDTO> colegios = colegioService.listarPorZona(zonaId);
         return ResponseEntity.ok(colegios);
@@ -110,14 +110,11 @@ public class ColegioController {
     // ==========================================
 
     @PutMapping("/{id}")
-    public ResponseEntity<ColegioResponseDTO> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody ActualizarColegioDTO dto) {
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @Valid @RequestBody ActualizarColegioDTO dto) {
         try {
-            ColegioResponseDTO colegio = colegioService.actualizar(id, dto);
-            return ResponseEntity.ok(colegio);
+            return ResponseEntity.ok(colegioService.actualizar(id, dto));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -150,12 +147,12 @@ public class ColegioController {
     // ==========================================
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
         try {
             colegioService.eliminar(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

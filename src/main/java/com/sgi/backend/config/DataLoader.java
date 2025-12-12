@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.*;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -37,17 +38,62 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private EstudianteRepository estudianteRepository;
 
-    // ✅ Inyectar el PasswordEncoder para encriptar la contraseña
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ✅ Contraseña genérica para todos los usuarios nuevos
     private static final String CONTRASENA_GENERICA = "Ciempies2024!";
+
+    // ==========================================
+    // LISTAS EXPANDIDAS DE NOMBRES (100+ cada una)
+    // ==========================================
+    private static final String[] NOMBRES_MASCULINOS = {
+            "Juan", "Carlos", "Andrés", "Luis", "Diego", "Santiago", "Sebastián", "Mateo", "Nicolás", "Daniel",
+            "David", "Miguel", "Alejandro", "Felipe", "Javier", "Ricardo", "Pablo", "Jorge", "Manuel", "Camilo",
+            "Samuel", "Tomás", "Emilio", "Gabriel", "Rafael", "Ángel", "Martín", "Eduardo", "Fernando", "Sergio",
+            "Iván", "Óscar", "Adrián", "Hugo", "Rubén", "Álvaro", "Pedro", "Raúl", "Gonzalo", "Víctor",
+            "Enrique", "Alberto", "Joaquín", "Ignacio", "Cristian", "Esteban", "Simón", "Leonardo", "Julián", "Maximiliano",
+            "Rodrigo", "Fabián", "Mauricio", "Gustavo", "Héctor", "Arturo", "César", "Roberto", "Ernesto", "Germán",
+            "Jairo", "Freddy", "Wilson", "Brayan", "Kevin", "Johan", "Jeisson", "Duván", "Yeferson", "Stiven",
+            "Brandon", "Jonathan", "Anderson", "Jefferson", "Dilan", "Brahian", "Yeison", "Cristhian", "Jhon", "Arley",
+            "Alexis", "Bryan", "Harold", "Edinson", "Maicol", "Fabian", "Leandro", "Ezequiel", "Thiago", "Benjamín",
+            "Luciano", "Valentín", "Agustín", "Bruno", "Dante", "Franco", "Gael", "Ian", "Liam", "Noah"
+    };
+
+    private static final String[] NOMBRES_FEMENINOS = {
+            "María", "Laura", "Ana", "Camila", "Valentina", "Sofía", "Isabella", "Mariana", "Paula", "Andrea",
+            "Carolina", "Natalia", "Daniela", "Sara", "Juliana", "Gabriela", "Manuela", "Valeria", "Alejandra", "Catalina",
+            "Lucía", "Emma", "Martina", "Victoria", "Elena", "Adriana", "Patricia", "Sandra", "Mónica", "Diana",
+            "Claudia", "Lorena", "Marcela", "Viviana", "Ángela", "Paola", "Liliana", "Gloria", "Martha", "Rosa",
+            "Fernanda", "Jimena", "Renata", "Regina", "Antonella", "Emilia", "Mía", "Bianca", "Abril", "Luciana",
+            "Miranda", "Samantha", "Nicole", "Melanie", "Ashley", "Britney", "Jennifer", "Jessica", "Katherine", "Stephanie",
+            "Tatiana", "Vanessa", "Yuliana", "Estefanía", "Karen", "Lina", "Mayra", "Milena", "Yesica", "Leidy",
+            "Angie", "Dayana", "Yuri", "Wendy", "Cindy", "Kelly", "Ingrid", "Johana", "Luisa", "Ximena",
+            "Rocío", "Pilar", "Inés", "Carmen", "Teresa", "Blanca", "Esperanza", "Luz", "Mercedes", "Amparo",
+            "Agustina", "Alma", "Aurora", "Celeste", "Delfina", "Elisa", "Florencia", "Helena", "Irene", "Jazmín"
+    };
+
+    private static final String[] APELLIDOS = {
+            "García", "Rodríguez", "Martínez", "López", "González", "Pérez", "Sánchez", "Ramírez", "Torres", "Flores",
+            "Rivera", "Gómez", "Díaz", "Cruz", "Morales", "Herrera", "Jiménez", "Álvarez", "Romero", "Vargas",
+            "Castro", "Ortiz", "Silva", "Mendoza", "Rojas", "Gutiérrez", "Moreno", "Ruiz", "Vásquez", "Molina",
+            "Acosta", "Aguilar", "Alvarado", "Arias", "Benavides", "Bermúdez", "Blanco", "Bonilla", "Bravo", "Cabrera",
+            "Calderón", "Camacho", "Campos", "Cárdenas", "Carrillo", "Castillo", "Cepeda", "Cervantes", "Chávez", "Contreras",
+            "Córdoba", "Coronado", "Corrales", "Cortés", "Cuellar", "Delgado", "Duarte", "Durán", "Escobar", "Espinosa",
+            "Estrada", "Fajardo", "Figueroa", "Franco", "Fuentes", "Galindo", "Gallego", "Garay", "Gaviria", "Gil",
+            "Giraldo", "Guerrero", "Henao", "Hernández", "Hurtado", "Ibáñez", "Jaramillo", "Lara", "Leal", "León",
+            "Londoño", "Lozano", "Luna", "Maldonado", "Marin", "Medina", "Mejía", "Méndez", "Miranda", "Montoya",
+            "Mora", "Muñoz", "Murillo", "Navarro", "Niño", "Núñez", "Ochoa", "Ordóñez", "Orozco", "Ospina",
+            "Otero", "Palacios", "Pardo", "Paredes", "Parra", "Peña", "Pineda", "Pinto", "Portilla", "Posada",
+            "Prieto", "Quintero", "Quiroga", "Restrepo", "Reyes", "Rincón", "Ríos", "Rivas", "Roa", "Robayo"
+    };
+
+    // Set para rastrear nombres completos ya usados
+    private Set<String> nombresUsados = new HashSet<>();
+    private Random random = new Random(42); // Semilla fija para reproducibilidad
 
     @Override
     public void run(String... args) throws Exception {
 
-        // Verificar si ya hay datos
         if (usuarioRepository.count() > 0) {
             System.out.println("⚠️  La base de datos ya tiene datos. No se cargara data inicial.");
             return;
@@ -55,7 +101,6 @@ public class DataLoader implements CommandLineRunner {
 
         System.out.println("📦 Cargando datos iniciales...");
 
-        // ✅ Encriptar la contraseña genérica
         String passwordHash = passwordEncoder.encode(CONTRASENA_GENERICA);
         System.out.println("🔐 Contraseña genérica para todos los usuarios: " + CONTRASENA_GENERICA);
 
@@ -72,32 +117,26 @@ public class DataLoader implements CommandLineRunner {
         // ==========================================
         // 2. JORNADAS (18 jornadas: 3 por zona)
         // ==========================================
-        // Usaquen
         Jornada j1 = crearJornada("J001", TipoJornada.MANANA, zona1);
         Jornada j2 = crearJornada("J002", TipoJornada.UNICA, zona1);
         Jornada j3 = crearJornada("J003", TipoJornada.TARDE, zona1);
 
-        // Santa Fe
         Jornada j4 = crearJornada("J004", TipoJornada.MANANA, zona2);
         Jornada j5 = crearJornada("J005", TipoJornada.UNICA, zona2);
         Jornada j6 = crearJornada("J006", TipoJornada.TARDE, zona2);
 
-        // San Cristobal
         Jornada j7 = crearJornada("J007", TipoJornada.MANANA, zona3);
         Jornada j8 = crearJornada("J008", TipoJornada.UNICA, zona3);
         Jornada j9 = crearJornada("J009", TipoJornada.TARDE, zona3);
 
-        // Kennedy
         Jornada j10 = crearJornada("J010", TipoJornada.MANANA, zona4);
         Jornada j11 = crearJornada("J011", TipoJornada.UNICA, zona4);
         Jornada j12 = crearJornada("J012", TipoJornada.TARDE, zona4);
 
-        // Bosa
         Jornada j13 = crearJornada("J013", TipoJornada.MANANA, zona5);
         Jornada j14 = crearJornada("J014", TipoJornada.UNICA, zona5);
         Jornada j15 = crearJornada("J015", TipoJornada.TARDE, zona5);
 
-        // Ciudad Bolivar
         Jornada j16 = crearJornada("J016", TipoJornada.MANANA, zona6);
         Jornada j17 = crearJornada("J017", TipoJornada.UNICA, zona6);
         Jornada j18 = crearJornada("J018", TipoJornada.TARDE, zona6);
@@ -105,15 +144,13 @@ public class DataLoader implements CommandLineRunner {
         // ==========================================
         // 3. USUARIOS
         // ==========================================
-        // ✅ ADMINISTRADOR (primerIngreso = false para que pueda entrar directamente)
         Usuario admin = crearUsuario("CC", "1000000001", "Juan", "Carlos", "Administrador", "Sistema",
-                "admin@ciempies.com", passwordHash, Rol.ADMINISTRADOR, false); // ← Admin NO requiere cambio
+                "admin@ciempies.com", passwordHash, Rol.ADMINISTRADOR, false);
 
-        // ✅ ENCARGADOS (primerIngreso = true, deben cambiar contraseña)
         Usuario enc1 = crearUsuario("CC", "1000000002", "Maria", "Isabel", "Rodriguez", "Gomez",
-                "propositocorreo@gmail.com", passwordHash, Rol.ENCARGADO, true);
+                "propositocoreo@gmail.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc2 = crearUsuario("CC", "1000000003", "Pedro", "Luis", "Martinez", "Lopez",
-                "patriciacc2074@gmail.com", passwordHash, Rol.ENCARGADO, true);
+                "patriciacc204@gmail.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc3 = crearUsuario("CC", "1000000004", "Ana", "Patricia", "Garcia", "Diaz",
                 "encargado.sancristobal@ciempies.com", passwordHash, Rol.ENCARGADO, true);
         Usuario enc4 = crearUsuario("CC", "1000000005", "Carlos", "Eduardo", "Hernandez", "Silva",
@@ -123,7 +160,6 @@ public class DataLoader implements CommandLineRunner {
         Usuario enc6 = crearUsuario("CC", "1000000007", "Jorge", "Enrique", "Vargas", "Torres",
                 "encargado.bolivar@ciempies.com", passwordHash, Rol.ENCARGADO, true);
 
-        // ✅ MONITORES (primerIngreso = true, deben cambiar contraseña)
         Usuario mon1 = crearUsuario("CC", "1000000010", "Carlos", "Andres", "Monitor", "Perez",
                 "cmramireza29@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon2 = crearUsuario("CC", "1000000011", "Ana", "Maria", "Supervisora", "Garcia",
@@ -131,7 +167,7 @@ public class DataLoader implements CommandLineRunner {
         Usuario mon3 = crearUsuario("CC", "1000000012", "Luis", "Fernando", "Acompanante", "Diaz",
                 "kritho0311@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon4 = crearUsuario("CC", "1000000013", "Diana", "Carolina", "Ruiz", "Moreno",
-                "alarconpaula992@gmail.com", passwordHash, Rol.MONITOR, true);
+                "alarconpaula@gmail.com", passwordHash, Rol.MONITOR, true);
         Usuario mon5 = crearUsuario("CC", "1000000014", "Ricardo", "Alberto", "Castro", "Lopez",
                 "monitor.sancristobal1@ciempies.com", passwordHash, Rol.MONITOR, true);
         Usuario mon6 = crearUsuario("CC", "1000000015", "Sandra", "Milena", "Gomez", "Martinez",
@@ -152,32 +188,26 @@ public class DataLoader implements CommandLineRunner {
         // ==========================================
         // 4. COLEGIOS (3 por zona = 18 colegios)
         // ==========================================
-        // Usaquen
         Colegio col1 = crearColegio("Colegio Distrital Usaquen", zona1);
         Colegio col2 = crearColegio("Instituto Santa Barbara", zona1);
         Colegio col3 = crearColegio("Liceo Boston", zona1);
 
-        // Santa Fe
         Colegio col4 = crearColegio("Colegio Agustin Nieto Caballero", zona2);
         Colegio col5 = crearColegio("Instituto Francisco Jose de Caldas", zona2);
         Colegio col6 = crearColegio("Colegio San Martin de Porres", zona2);
 
-        // San Cristobal
         Colegio col7 = crearColegio("Colegio San Cristobal Sur", zona3);
         Colegio col8 = crearColegio("Instituto Juan del Corral", zona3);
         Colegio col9 = crearColegio("Colegio Ramon de Zubiria", zona3);
 
-        // Kennedy
         Colegio col10 = crearColegio("Colegio Kennedy", zona4);
         Colegio col11 = crearColegio("Instituto Tecnico Industrial", zona4);
         Colegio col12 = crearColegio("Colegio Castilla", zona4);
 
-        // Bosa
         Colegio col13 = crearColegio("Colegio Integrado de Fontibon", zona5);
         Colegio col14 = crearColegio("Instituto San Bernardino", zona5);
         Colegio col15 = crearColegio("Colegio Paulo VI", zona5);
 
-        // Ciudad Bolivar
         Colegio col16 = crearColegio("Colegio Arborizadora Alta", zona6);
         Colegio col17 = crearColegio("Instituto Tecnico Distrital", zona6);
         Colegio col18 = crearColegio("Colegio Ciudad Bolivar", zona6);
@@ -185,52 +215,45 @@ public class DataLoader implements CommandLineRunner {
         // ==========================================
         // 5. ASIGNACION COLEGIOS - JORNADAS
         // ==========================================
-        // USAQUEN
-        crearColegioJornada(col1, j1);  // Distrital Usaquen - Mañana
-        crearColegioJornada(col1, j3);  // Distrital Usaquen - Tarde
-        crearColegioJornada(col2, j1);  // Santa Barbara - Mañana
-        crearColegioJornada(col2, j3);  // Santa Barbara - Tarde
-        crearColegioJornada(col3, j2);  // Liceo Boston - Única
+        crearColegioJornada(col1, j1);
+        crearColegioJornada(col1, j3);
+        crearColegioJornada(col2, j1);
+        crearColegioJornada(col2, j3);
+        crearColegioJornada(col3, j2);
 
-        // SANTA FE
-        crearColegioJornada(col4, j4);  // Agustin Nieto - Mañana
-        crearColegioJornada(col4, j6);  // Agustin Nieto - Tarde
-        crearColegioJornada(col5, j4);  // Caldas - Mañana
-        crearColegioJornada(col5, j6);  // Caldas - Tarde
-        crearColegioJornada(col6, j5);  // San Martin - Única
+        crearColegioJornada(col4, j4);
+        crearColegioJornada(col4, j6);
+        crearColegioJornada(col5, j4);
+        crearColegioJornada(col5, j6);
+        crearColegioJornada(col6, j5);
 
-        // SAN CRISTOBAL
-        crearColegioJornada(col7, j7);  // San Cristobal Sur - Mañana
-        crearColegioJornada(col7, j9);  // San Cristobal Sur - Tarde
-        crearColegioJornada(col8, j7);  // Juan del Corral - Mañana
-        crearColegioJornada(col8, j9);  // Juan del Corral - Tarde
-        crearColegioJornada(col9, j8);  // Ramon de Zubiria - Única
+        crearColegioJornada(col7, j7);
+        crearColegioJornada(col7, j9);
+        crearColegioJornada(col8, j7);
+        crearColegioJornada(col8, j9);
+        crearColegioJornada(col9, j8);
 
-        // KENNEDY
-        crearColegioJornada(col10, j10); // Kennedy - Mañana
-        crearColegioJornada(col10, j12); // Kennedy - Tarde
-        crearColegioJornada(col11, j10); // Tecnico Industrial - Mañana
-        crearColegioJornada(col11, j12); // Tecnico Industrial - Tarde
-        crearColegioJornada(col12, j11); // Castilla - Única
+        crearColegioJornada(col10, j10);
+        crearColegioJornada(col10, j12);
+        crearColegioJornada(col11, j10);
+        crearColegioJornada(col11, j12);
+        crearColegioJornada(col12, j11);
 
-        // BOSA
-        crearColegioJornada(col13, j13); // Integrado Fontibon - Mañana
-        crearColegioJornada(col13, j15); // Integrado Fontibon - Tarde
-        crearColegioJornada(col14, j13); // San Bernardino - Mañana
-        crearColegioJornada(col14, j15); // San Bernardino - Tarde
-        crearColegioJornada(col15, j14); // Paulo VI - Única
+        crearColegioJornada(col13, j13);
+        crearColegioJornada(col13, j15);
+        crearColegioJornada(col14, j13);
+        crearColegioJornada(col14, j15);
+        crearColegioJornada(col15, j14);
 
-        // CIUDAD BOLIVAR
-        crearColegioJornada(col16, j16); // Arborizadora Alta - Mañana
-        crearColegioJornada(col16, j18); // Arborizadora Alta - Tarde
-        crearColegioJornada(col17, j16); // Tecnico Distrital - Mañana
-        crearColegioJornada(col17, j18); // Tecnico Distrital - Tarde
-        crearColegioJornada(col18, j17); // Ciudad Bolivar - Única
+        crearColegioJornada(col16, j16);
+        crearColegioJornada(col16, j18);
+        crearColegioJornada(col17, j16);
+        crearColegioJornada(col17, j18);
+        crearColegioJornada(col18, j17);
 
         // ==========================================
-        // 6. RUTAS (60 rutas: IDA y REGRESO para cada colegio-jornada)
+        // 6. RUTAS
         // ==========================================
-        // USAQUEN
         Ruta r1 = crearRuta("Usaquen Distrital - Manana IDA", TipoRecorrido.IDA, zona1);
         Ruta r2 = crearRuta("Usaquen Distrital - Manana REGRESO", TipoRecorrido.REGRESO, zona1);
         Ruta r3 = crearRuta("Usaquen Distrital - Tarde IDA", TipoRecorrido.IDA, zona1);
@@ -242,7 +265,6 @@ public class DataLoader implements CommandLineRunner {
         Ruta r9 = crearRuta("Liceo Boston - Unica IDA", TipoRecorrido.IDA, zona1);
         Ruta r10 = crearRuta("Liceo Boston - Unica REGRESO", TipoRecorrido.REGRESO, zona1);
 
-        // SANTA FE
         Ruta r11 = crearRuta("Agustin Nieto - Manana IDA", TipoRecorrido.IDA, zona2);
         Ruta r12 = crearRuta("Agustin Nieto - Manana REGRESO", TipoRecorrido.REGRESO, zona2);
         Ruta r13 = crearRuta("Agustin Nieto - Tarde IDA", TipoRecorrido.IDA, zona2);
@@ -254,7 +276,6 @@ public class DataLoader implements CommandLineRunner {
         Ruta r19 = crearRuta("San Martin - Unica IDA", TipoRecorrido.IDA, zona2);
         Ruta r20 = crearRuta("San Martin - Unica REGRESO", TipoRecorrido.REGRESO, zona2);
 
-        // SAN CRISTOBAL
         Ruta r21 = crearRuta("San Cristobal Sur - Manana IDA", TipoRecorrido.IDA, zona3);
         Ruta r22 = crearRuta("San Cristobal Sur - Manana REGRESO", TipoRecorrido.REGRESO, zona3);
         Ruta r23 = crearRuta("San Cristobal Sur - Tarde IDA", TipoRecorrido.IDA, zona3);
@@ -266,7 +287,6 @@ public class DataLoader implements CommandLineRunner {
         Ruta r29 = crearRuta("Ramon de Zubiria - Unica IDA", TipoRecorrido.IDA, zona3);
         Ruta r30 = crearRuta("Ramon de Zubiria - Unica REGRESO", TipoRecorrido.REGRESO, zona3);
 
-        // KENNEDY
         Ruta r31 = crearRuta("Kennedy - Manana IDA", TipoRecorrido.IDA, zona4);
         Ruta r32 = crearRuta("Kennedy - Manana REGRESO", TipoRecorrido.REGRESO, zona4);
         Ruta r33 = crearRuta("Kennedy - Tarde IDA", TipoRecorrido.IDA, zona4);
@@ -278,7 +298,6 @@ public class DataLoader implements CommandLineRunner {
         Ruta r39 = crearRuta("Castilla - Unica IDA", TipoRecorrido.IDA, zona4);
         Ruta r40 = crearRuta("Castilla - Unica REGRESO", TipoRecorrido.REGRESO, zona4);
 
-        // BOSA
         Ruta r41 = crearRuta("Integrado Fontibon - Manana IDA", TipoRecorrido.IDA, zona5);
         Ruta r42 = crearRuta("Integrado Fontibon - Manana REGRESO", TipoRecorrido.REGRESO, zona5);
         Ruta r43 = crearRuta("Integrado Fontibon - Tarde IDA", TipoRecorrido.IDA, zona5);
@@ -290,7 +309,6 @@ public class DataLoader implements CommandLineRunner {
         Ruta r49 = crearRuta("Paulo VI - Unica IDA", TipoRecorrido.IDA, zona5);
         Ruta r50 = crearRuta("Paulo VI - Unica REGRESO", TipoRecorrido.REGRESO, zona5);
 
-        // CIUDAD BOLIVAR
         Ruta r51 = crearRuta("Arborizadora Alta - Manana IDA", TipoRecorrido.IDA, zona6);
         Ruta r52 = crearRuta("Arborizadora Alta - Manana REGRESO", TipoRecorrido.REGRESO, zona6);
         Ruta r53 = crearRuta("Arborizadora Alta - Tarde IDA", TipoRecorrido.IDA, zona6);
@@ -303,7 +321,7 @@ public class DataLoader implements CommandLineRunner {
         Ruta r60 = crearRuta("Ciudad Bolivar - Unica REGRESO", TipoRecorrido.REGRESO, zona6);
 
         // ==========================================
-        // 7. MONITORES (2 por zona = 12 monitores)
+        // 7. MONITORES
         // ==========================================
         crearMonitor(mon1, zona1, j1);
         crearMonitor(mon2, zona1, j3);
@@ -318,52 +336,60 @@ public class DataLoader implements CommandLineRunner {
         crearMonitor(mon11, zona6, j16);
         crearMonitor(mon12, zona6, j18);
 
+        crearMonitor(admin, zona1, j1);
+        crearMonitor(enc1, zona1, j1);
+        crearMonitor(enc2, zona2, j4);
+        crearMonitor(enc3, zona3, j7);
+        crearMonitor(enc4, zona4, j10);
+        crearMonitor(enc5, zona5, j13);
+        crearMonitor(enc6, zona6, j16);
+
         // ==========================================
-        // 8. ESTUDIANTES (30-45 por colegio-jornada)
+        // 8. ESTUDIANTES (con nombres únicos)
         // ==========================================
         int estudianteId = 1100000001;
 
         // USAQUEN
-        estudianteId = crearEstudiantesLote(estudianteId, col1, j1, r1, r2, 40, zona1);
-        estudianteId = crearEstudiantesLote(estudianteId, col1, j3, r3, r4, 35, zona1);
-        estudianteId = crearEstudiantesLote(estudianteId, col2, j1, r5, r6, 38, zona1);
-        estudianteId = crearEstudiantesLote(estudianteId, col2, j3, r7, r8, 32, zona1);
-        estudianteId = crearEstudiantesLote(estudianteId, col3, j2, r9, r10, 45, zona1);
+        estudianteId = crearEstudiantesLote(estudianteId, col1, j1, r1, r2, 40);
+        estudianteId = crearEstudiantesLote(estudianteId, col1, j3, r3, r4, 35);
+        estudianteId = crearEstudiantesLote(estudianteId, col2, j1, r5, r6, 38);
+        estudianteId = crearEstudiantesLote(estudianteId, col2, j3, r7, r8, 32);
+        estudianteId = crearEstudiantesLote(estudianteId, col3, j2, r9, r10, 45);
 
         // SANTA FE
-        estudianteId = crearEstudiantesLote(estudianteId, col4, j4, r11, r12, 42, zona2);
-        estudianteId = crearEstudiantesLote(estudianteId, col4, j6, r13, r14, 38, zona2);
-        estudianteId = crearEstudiantesLote(estudianteId, col5, j4, r15, r16, 35, zona2);
-        estudianteId = crearEstudiantesLote(estudianteId, col5, j6, r17, r18, 40, zona2);
-        estudianteId = crearEstudiantesLote(estudianteId, col6, j5, r19, r20, 43, zona2);
+        estudianteId = crearEstudiantesLote(estudianteId, col4, j4, r11, r12, 42);
+        estudianteId = crearEstudiantesLote(estudianteId, col4, j6, r13, r14, 38);
+        estudianteId = crearEstudiantesLote(estudianteId, col5, j4, r15, r16, 35);
+        estudianteId = crearEstudiantesLote(estudianteId, col5, j6, r17, r18, 40);
+        estudianteId = crearEstudiantesLote(estudianteId, col6, j5, r19, r20, 43);
 
         // SAN CRISTOBAL
-        estudianteId = crearEstudiantesLote(estudianteId, col7, j7, r21, r22, 41, zona3);
-        estudianteId = crearEstudiantesLote(estudianteId, col7, j9, r23, r24, 36, zona3);
-        estudianteId = crearEstudiantesLote(estudianteId, col8, j7, r25, r26, 39, zona3);
-        estudianteId = crearEstudiantesLote(estudianteId, col8, j9, r27, r28, 34, zona3);
-        estudianteId = crearEstudiantesLote(estudianteId, col9, j8, r29, r30, 44, zona3);
+        estudianteId = crearEstudiantesLote(estudianteId, col7, j7, r21, r22, 41);
+        estudianteId = crearEstudiantesLote(estudianteId, col7, j9, r23, r24, 36);
+        estudianteId = crearEstudiantesLote(estudianteId, col8, j7, r25, r26, 39);
+        estudianteId = crearEstudiantesLote(estudianteId, col8, j9, r27, r28, 34);
+        estudianteId = crearEstudiantesLote(estudianteId, col9, j8, r29, r30, 44);
 
         // KENNEDY
-        estudianteId = crearEstudiantesLote(estudianteId, col10, j10, r31, r32, 40, zona4);
-        estudianteId = crearEstudiantesLote(estudianteId, col10, j12, r33, r34, 37, zona4);
-        estudianteId = crearEstudiantesLote(estudianteId, col11, j10, r35, r36, 36, zona4);
-        estudianteId = crearEstudiantesLote(estudianteId, col11, j12, r37, r38, 41, zona4);
-        estudianteId = crearEstudiantesLote(estudianteId, col12, j11, r39, r40, 42, zona4);
+        estudianteId = crearEstudiantesLote(estudianteId, col10, j10, r31, r32, 40);
+        estudianteId = crearEstudiantesLote(estudianteId, col10, j12, r33, r34, 37);
+        estudianteId = crearEstudiantesLote(estudianteId, col11, j10, r35, r36, 36);
+        estudianteId = crearEstudiantesLote(estudianteId, col11, j12, r37, r38, 41);
+        estudianteId = crearEstudiantesLote(estudianteId, col12, j11, r39, r40, 42);
 
         // BOSA
-        estudianteId = crearEstudiantesLote(estudianteId, col13, j13, r41, r42, 38, zona5);
-        estudianteId = crearEstudiantesLote(estudianteId, col13, j15, r43, r44, 33, zona5);
-        estudianteId = crearEstudiantesLote(estudianteId, col14, j13, r45, r46, 40, zona5);
-        estudianteId = crearEstudiantesLote(estudianteId, col14, j15, r47, r48, 35, zona5);
-        estudianteId = crearEstudiantesLote(estudianteId, col15, j14, r49, r50, 45, zona5);
+        estudianteId = crearEstudiantesLote(estudianteId, col13, j13, r41, r42, 38);
+        estudianteId = crearEstudiantesLote(estudianteId, col13, j15, r43, r44, 33);
+        estudianteId = crearEstudiantesLote(estudianteId, col14, j13, r45, r46, 40);
+        estudianteId = crearEstudiantesLote(estudianteId, col14, j15, r47, r48, 35);
+        estudianteId = crearEstudiantesLote(estudianteId, col15, j14, r49, r50, 45);
 
         // CIUDAD BOLIVAR
-        estudianteId = crearEstudiantesLote(estudianteId, col16, j16, r51, r52, 39, zona6);
-        estudianteId = crearEstudiantesLote(estudianteId, col16, j18, r53, r54, 34, zona6);
-        estudianteId = crearEstudiantesLote(estudianteId, col17, j16, r55, r56, 37, zona6);
-        estudianteId = crearEstudiantesLote(estudianteId, col17, j18, r57, r58, 40, zona6);
-        estudianteId = crearEstudiantesLote(estudianteId, col18, j17, r59, r60, 43, zona6);
+        estudianteId = crearEstudiantesLote(estudianteId, col16, j16, r51, r52, 39);
+        estudianteId = crearEstudiantesLote(estudianteId, col16, j18, r53, r54, 34);
+        estudianteId = crearEstudiantesLote(estudianteId, col17, j16, r55, r56, 37);
+        estudianteId = crearEstudiantesLote(estudianteId, col17, j18, r57, r58, 40);
+        estudianteId = crearEstudiantesLote(estudianteId, col18, j17, r59, r60, 43);
 
         int totalEstudiantes = estudianteId - 1100000001;
 
@@ -383,6 +409,9 @@ public class DataLoader implements CommandLineRunner {
         System.out.println("   - Zonas: " + zonaRepository.count());
         System.out.println("   - Jornadas: " + jornadaRepository.count());
         System.out.println("   - Usuarios: " + usuarioRepository.count());
+        System.out.println("   - Colegios: " + colegioRepository.count());
+        System.out.println("   - Rutas: " + rutaRepository.count());
+        System.out.println("   - Estudiantes: " + totalEstudiantes + " (todos con nombres únicos)");
         System.out.println("");
         System.out.println("🔑 CREDENCIALES DE ACCESO:");
         System.out.println("   Admin: admin@ciempies.com / " + CONTRASENA_GENERICA + " (no requiere cambio)");
@@ -414,7 +443,6 @@ public class DataLoader implements CommandLineRunner {
         return jornadaRepository.save(jornada);
     }
 
-    // ✅ Método CON primerIngreso (10 parámetros)
     private Usuario crearUsuario(String tipoId, String numId, String primerNombre, String segundoNombre,
                                  String primerApellido, String segundoApellido, String email,
                                  String passwordHash, Rol rol, boolean primerIngreso) {
@@ -429,12 +457,11 @@ public class DataLoader implements CommandLineRunner {
         usuario.setContrasena(passwordHash);
         usuario.setRol(rol);
         usuario.setActivo(true);
-        usuario.setPrimerIngreso(primerIngreso);  // ✅ NUEVO
+        usuario.setPrimerIngreso(primerIngreso);
         usuario.setFechaCreacion(LocalDateTime.now());
         return usuarioRepository.save(usuario);
     }
 
-    // ✅ Método SIN primerIngreso (9 parámetros) - compatibilidad
     private Usuario crearUsuario(String tipoId, String numId, String primerNombre, String segundoNombre,
                                  String primerApellido, String segundoApellido, String email,
                                  String passwordHash, Rol rol) {
@@ -477,6 +504,113 @@ public class DataLoader implements CommandLineRunner {
         monitorRepository.save(monitor);
     }
 
+    /**
+     * Genera un nombre completo único (primerNombre + primerApellido)
+     */
+    private String[] generarNombreUnico(boolean esMasculino) {
+        String[] nombres = esMasculino ? NOMBRES_MASCULINOS : NOMBRES_FEMENINOS;
+        int maxIntentos = 1000;
+        int intentos = 0;
+
+        while (intentos < maxIntentos) {
+            String primerNombre = nombres[random.nextInt(nombres.length)];
+            String segundoNombre = nombres[random.nextInt(nombres.length)];
+            String primerApellido = APELLIDOS[random.nextInt(APELLIDOS.length)];
+            String segundoApellido = APELLIDOS[random.nextInt(APELLIDOS.length)];
+
+            // Evitar que segundo nombre sea igual al primero
+            while (segundoNombre.equals(primerNombre)) {
+                segundoNombre = nombres[random.nextInt(nombres.length)];
+            }
+
+            // Evitar que segundo apellido sea igual al primero
+            while (segundoApellido.equals(primerApellido)) {
+                segundoApellido = APELLIDOS[random.nextInt(APELLIDOS.length)];
+            }
+
+            // Crear clave única: primerNombre + primerApellido
+            String claveUnica = primerNombre + " " + primerApellido;
+
+            if (!nombresUsados.contains(claveUnica)) {
+                nombresUsados.add(claveUnica);
+                return new String[]{primerNombre, segundoNombre, primerApellido, segundoApellido};
+            }
+
+            intentos++;
+        }
+
+        // Si no encontramos único después de muchos intentos, agregar sufijo numérico
+        String primerNombre = nombres[random.nextInt(nombres.length)];
+        String primerApellido = APELLIDOS[random.nextInt(APELLIDOS.length)] + nombresUsados.size();
+        nombresUsados.add(primerNombre + " " + primerApellido);
+
+        return new String[]{
+                primerNombre,
+                nombres[random.nextInt(nombres.length)],
+                primerApellido,
+                APELLIDOS[random.nextInt(APELLIDOS.length)]
+        };
+    }
+
+    private int crearEstudiantesLote(int inicioId, Colegio colegio, Jornada jornada,
+                                     Ruta rutaIda, Ruta rutaRegreso, int cantidad) {
+
+        String[] cursos = {"5A", "5B", "6A", "6B", "7A", "7B", "8A", "8B", "9A", "9B", "10A", "10B", "11A", "11B"};
+        String[] eps = {"Nueva EPS", "Sanitas", "Sura", "Compensar", "Famisanar", "Salud Total", "Coomeva", "Medimas"};
+        String[] direccionesBase = {"Calle", "Carrera", "Avenida", "Diagonal", "Transversal"};
+
+        for (int i = 0; i < cantidad; i++) {
+            boolean esMasculino = random.nextBoolean();
+            Sexo sexo = esMasculino ? Sexo.MASCULINO : Sexo.FEMENINO;
+
+            // Generar nombre único
+            String[] nombreCompleto = generarNombreUnico(esMasculino);
+            String primerNombre = nombreCompleto[0];
+            String segundoNombre = nombreCompleto[1];
+            String primerApellido = nombreCompleto[2];
+            String segundoApellido = nombreCompleto[3];
+
+            String numId = String.valueOf(inicioId + i);
+
+            // Fecha de nacimiento (entre 2008 y 2016)
+            int año = 2008 + random.nextInt(9);
+            int mes = 1 + random.nextInt(12);
+            int dia = 1 + random.nextInt(28);
+            String fechaNacimiento = String.format("%d-%02d-%02d", año, mes, dia);
+
+            // Dirección aleatoria
+            String direccion = String.format("%s %d #%d-%d",
+                    direccionesBase[random.nextInt(direccionesBase.length)],
+                    10 + random.nextInt(150),
+                    5 + random.nextInt(30),
+                    10 + random.nextInt(90));
+
+            String curso = cursos[random.nextInt(cursos.length)];
+            String epsSeleccionada = eps[random.nextInt(eps.length)];
+
+            // Información del acudiente (basada en apellidos del estudiante)
+            String nombreAcudiente = APELLIDOS[random.nextInt(APELLIDOS.length)] + " " +
+                    (esMasculino ? NOMBRES_FEMENINOS[random.nextInt(NOMBRES_FEMENINOS.length)] :
+                            NOMBRES_MASCULINOS[random.nextInt(NOMBRES_MASCULINOS.length)]);
+            String telefonoAcudiente = "3" + String.format("%02d", random.nextInt(23)) +
+                    String.format("%07d", random.nextInt(10000000));
+            String emailAcudiente = primerNombre.toLowerCase().replace("á", "a").replace("é", "e")
+                    .replace("í", "i").replace("ó", "o").replace("ú", "u") + "." +
+                    primerApellido.toLowerCase().replace("á", "a").replace("é", "e")
+                            .replace("í", "i").replace("ó", "o").replace("ú", "u") +
+                    random.nextInt(100) + "@email.com";
+
+            // Alternar entre ruta de IDA y REGRESO
+            Ruta ruta = random.nextBoolean() ? rutaIda : rutaRegreso;
+
+            crearEstudiante("TI", numId, primerNombre, segundoNombre, primerApellido, segundoApellido,
+                    fechaNacimiento, sexo, direccion, curso, epsSeleccionada, nombreAcudiente,
+                    telefonoAcudiente, emailAcudiente, colegio, jornada, ruta);
+        }
+
+        return inicioId + cantidad;
+    }
+
     private void crearEstudiante(String tipoId, String numId, String primerNombre, String segundoNombre,
                                  String primerApellido, String segundoApellido, String fechaNacimiento,
                                  Sexo sexo, String direccion, String curso, String eps,
@@ -508,83 +642,5 @@ public class DataLoader implements CommandLineRunner {
         estudiante.setFechaRegistro(LocalDate.now());
         estudiante.setActivo(true);
         estudianteRepository.save(estudiante);
-    }
-
-    // ==========================================
-    // MÉTODO PARA CREAR ESTUDIANTES EN LOTE
-    // ==========================================
-    private int crearEstudiantesLote(int inicioId, Colegio colegio, Jornada jornada,
-                                     Ruta rutaIda, Ruta rutaRegreso, int cantidad, Zona zona) {
-
-        String[] nombresM = {"Juan", "Carlos", "Andrés", "Luis", "Diego", "Santiago", "Sebastián",
-                "Mateo", "Nicolás", "Daniel", "David", "Miguel", "Alejandro", "Felipe",
-                "Javier", "Ricardo", "Pablo", "Jorge", "Manuel", "Camilo"};
-
-        String[] nombresF = {"María", "Laura", "Ana", "Camila", "Valentina", "Sofia", "Isabella",
-                "Mariana", "Paula", "Andrea", "Carolina", "Natalia", "Daniela", "Sara",
-                "Juliana", "Gabriela", "Manuela", "Valeria", "Alejandra", "Catalina"};
-
-        String[] apellidos = {"García", "Rodríguez", "Martínez", "López", "González", "Pérez",
-                "Sánchez", "Ramírez", "Torres", "Flores", "Rivera", "Gómez", "Díaz",
-                "Cruz", "Morales", "Herrera", "Jiménez", "Álvarez", "Romero", "Vargas",
-                "Castro", "Ortiz", "Silva", "Mendoza", "Rojas", "Gutiérrez", "Moreno",
-                "Ruiz", "Vásquez", "Molina"};
-
-        String[] cursos = {"5A", "5B", "6A", "6B", "7A", "7B", "8A", "8B", "9A", "9B"};
-        String[] eps = {"Nueva EPS", "Sanitas", "Sura", "Compensar", "Famisanar", "Salud Total"};
-
-        String[] direccionesBase = {"Calle", "Carrera", "Avenida", "Diagonal", "Transversal"};
-
-        for (int i = 0; i < cantidad; i++) {
-            boolean esMasculino = (i % 2 == 0);
-            Sexo sexo = esMasculino ? Sexo.MASCULINO : Sexo.FEMENINO;
-
-            // Seleccionar nombres
-            String primerNombre = esMasculino ?
-                    nombresM[i % nombresM.length] :
-                    nombresF[i % nombresF.length];
-            String segundoNombre = esMasculino ?
-                    nombresM[(i + 3) % nombresM.length] :
-                    nombresF[(i + 3) % nombresF.length];
-
-            String primerApellido = apellidos[i % apellidos.length];
-            String segundoApellido = apellidos[(i + 7) % apellidos.length];
-
-            // Número de identificación
-            String numId = String.valueOf(inicioId + i);
-
-            // Fecha de nacimiento (entre 2013 y 2015)
-            int año = 2013 + (i % 3);
-            int mes = 1 + (i % 12);
-            int dia = 1 + (i % 28);
-            String fechaNacimiento = String.format("%d-%02d-%02d", año, mes, dia);
-
-            // Dirección
-            int numCalle = 10 + (i * 3 % 150);
-            int numCarrera = 5 + (i * 2 % 30);
-            String direccion = String.format("%s %d #%d-%d",
-                    direccionesBase[i % direccionesBase.length],
-                    numCalle, numCarrera, 10 + (i % 90));
-
-            // Curso y EPS
-            String curso = cursos[i % cursos.length];
-            String epsSeleccionada = eps[i % eps.length];
-
-            // Información del acudiente
-            String nombreAcudiente = apellidos[(i + 5) % apellidos.length] + " " +
-                    (esMasculino ? nombresF[i % nombresF.length] : nombresM[i % nombresM.length]);
-            String telefonoAcudiente = "300" + String.format("%07d", 1000000 + i);
-            String emailAcudiente = primerNombre.toLowerCase() + "." +
-                    primerApellido.toLowerCase() + i + "@example.com";
-
-            // Alternar entre ruta de IDA y REGRESO
-            Ruta ruta = (i % 2 == 0) ? rutaIda : rutaRegreso;
-
-            crearEstudiante("TI", numId, primerNombre, segundoNombre, primerApellido, segundoApellido,
-                    fechaNacimiento, sexo, direccion, curso, epsSeleccionada, nombreAcudiente,
-                    telefonoAcudiente, emailAcudiente, colegio, jornada, ruta);
-        }
-
-        return inicioId + cantidad;
     }
 }

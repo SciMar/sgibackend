@@ -28,12 +28,12 @@ public class UsuarioController {
     // ==========================================
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping
-    public ResponseEntity<UsuarioResponseDTO> crear(@Valid @RequestBody CrearUsuarioDTO dto) {
+    public ResponseEntity<?> crear(@Valid @RequestBody CrearUsuarioDTO dto) {
         try {
             UsuarioResponseDTO usuario = usuarioService.crear(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -108,13 +108,13 @@ public class UsuarioController {
     // ==========================================
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> actualizar(
+    public ResponseEntity<?> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarUsuarioDTO dto) {
         try {
             return ResponseEntity.ok(usuarioService.actualizar(id, dto));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

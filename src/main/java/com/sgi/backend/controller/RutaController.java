@@ -29,12 +29,12 @@ public class RutaController {
     // ==========================================
 
     @PostMapping
-    public ResponseEntity<RutaResponseDTO> crear(@Valid @RequestBody CrearRutaDTO dto) {
+    public ResponseEntity<?> crear(@Valid @RequestBody CrearRutaDTO dto) {
         try {
             RutaResponseDTO ruta = rutaService.crear(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(ruta);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -127,14 +127,14 @@ public class RutaController {
     // ==========================================
 
     @PutMapping("/{id}")
-    public ResponseEntity<RutaResponseDTO> actualizar(
+    public ResponseEntity<?> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarRutaDTO dto) {
         try {
             RutaResponseDTO ruta = rutaService.actualizar(id, dto);
             return ResponseEntity.ok(ruta);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -167,12 +167,12 @@ public class RutaController {
     // ==========================================
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
         try {
             rutaService.eliminar(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

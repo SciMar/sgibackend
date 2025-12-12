@@ -28,12 +28,12 @@ public class EstudianteController {
     // ==========================================
 
     @PostMapping
-    public ResponseEntity<EstudianteResponseDTO> crear(@Valid @RequestBody CrearEstudianteDTO dto) {
+    public ResponseEntity<?> crear(@Valid @RequestBody CrearEstudianteDTO dto) {
         try {
             EstudianteResponseDTO estudiante = estudianteService.crear(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(estudiante);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -166,14 +166,14 @@ public class EstudianteController {
     // ==========================================
 
     @PutMapping("/{id}")
-    public ResponseEntity<EstudianteResponseDTO> actualizar(
+    public ResponseEntity<?> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarEstudianteDTO dto) {
         try {
             EstudianteResponseDTO estudiante = estudianteService.actualizar(id, dto);
             return ResponseEntity.ok(estudiante);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

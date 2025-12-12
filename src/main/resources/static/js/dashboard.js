@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserInfo();
     configurarMenuPorRol();
     cargarEstadisticas();
-    cargarClima(); // Cargar clima
+    cargarClima();
 });
 
 // Cargar información del usuario
@@ -32,7 +32,6 @@ function configurarMenuPorRol() {
     const rol = currentUser.rol;
 
     if (rol === 'ADMINISTRADOR') {
-        // ADMINISTRADOR: Acceso a TODO
         document.getElementById('menuUsuarios').style.display = 'block';
         document.getElementById('menuEstudiantes').style.display = 'block';
         document.getElementById('menuRutas').style.display = 'block';
@@ -40,24 +39,18 @@ function configurarMenuPorRol() {
         document.getElementById('menuAsistencias').style.display = 'block';
         document.getElementById('menuNotificaciones').style.display = 'block';
         document.getElementById('menuReportes').style.display = 'block';
-
-        // Acciones rápidas
         mostrarAccionesRapidas(rol);
 
     } else if (rol === 'ENCARGADO') {
-        // ENCARGADO: TODO menos Usuarios
         document.getElementById('menuEstudiantes').style.display = 'block';
         document.getElementById('menuRutas').style.display = 'block';
         document.getElementById('menuColegios').style.display = 'block';
         document.getElementById('menuAsistencias').style.display = 'block';
         document.getElementById('menuNotificaciones').style.display = 'block';
         document.getElementById('menuReportes').style.display = 'block';
-
-        // Acciones rápidas
         mostrarAccionesRapidas(rol);
 
     } else if (rol === 'MONITOR') {
-        // MONITOR: Solo Estudiantes y Asistencias
         document.getElementById('menuEstudiantes').style.display = 'block';
         document.getElementById('menuAsistencias').style.display = 'block';
     }
@@ -96,27 +89,21 @@ function mostrarAccionesRapidas(rol) {
     }
 }
 
-// Cargar estadísticas
+// ✅ Cargar estadísticas según rol
 async function cargarEstadisticas() {
     const container = document.getElementById('statsContainer');
 
     try {
-        if (currentUser.rol === 'ADMINISTRADOR' || currentUser.rol === 'ENCARGADO') {
-            const response = await fetch(`${API_URL}/usuarios`, {
-                headers: Auth.getHeaders()
-            });
-
-            if (response.ok) {
-                const usuarios = await response.json();
-                mostrarEstadisticasUsuarios(usuarios);
-            } else if (response.status === 401) {
-                alert('Sesión expirada. Por favor inicie sesión nuevamente.');
-                Auth.logout();
-            } else {
-                container.innerHTML = '<div class="col-12"><div class="alert alert-warning">No se pudieron cargar las estadísticas</div></div>';
-            }
+        if (currentUser.rol === 'ADMINISTRADOR') {
+            // Admin: Mostrar estadísticas de usuarios
+            await cargarEstadisticasAdmin(container);
+        } else if (currentUser.rol === 'ENCARGADO') {
+            // Encargado: Mostrar estadísticas de estudiantes, colegios, rutas
+            await cargarEstadisticasEncargado(container);
+        } else if (currentUser.rol === 'MONITOR') {
+            // Monitor: Mostrar estadísticas de sus estudiantes
+            await cargarEstadisticasMonitor(container);
         } else {
-            // Para monitores mostrar mensaje de bienvenida
             container.innerHTML = `
                 <div class="col-12">
                     <div class="card card-custom">
@@ -135,7 +122,212 @@ async function cargarEstadisticas() {
     }
 }
 
-// Mostrar estadísticas de usuarios
+// ✅ Estadísticas para ADMINISTRADOR
+async function cargarEstadisticasAdmin(container) {
+    const response = await fetch(`${API_URL}/usuarios`, {
+        headers: Auth.getHeaders()
+    });
+
+    if (response.ok) {
+        const usuarios = await response.json();
+        mostrarEstadisticasUsuarios(usuarios);
+    } else if (response.status === 401) {
+        alert('Sesión expirada. Por favor inicie sesión nuevamente.');
+        Auth.logout();
+    } else {
+        container.innerHTML = '<div class="col-12"><div class="alert alert-warning">No se pudieron cargar las estadísticas</div></div>';
+    }
+}
+
+// ✅ Estadísticas para ENCARGADO
+async function cargarEstadisticasEncargado(container) {
+    try {
+        // Cargar estudiantes, colegios y rutas en paralelo
+        const [estudiantesRes, colegiosRes, rutasRes, zonasRes] = await Promise.all([
+            fetch(`${API_URL}/estudiantes`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/colegios`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/rutas`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/zonas`, { headers: Auth.getHeaders() })
+        ]);
+
+        const estudiantes = estudiantesRes.ok ? await estudiantesRes.json() : [];
+        const colegios = colegiosRes.ok ? await colegiosRes.json() : [];
+        const rutas = rutasRes.ok ? await rutasRes.json() : [];
+        const zonas = zonasRes.ok ? await zonasRes.json() : [];
+
+        // Calcular estadísticas
+        const totalEstudiantes = estudiantes.length;
+        const estudiantesActivos = estudiantes.filter(e => e.estadoInscripcion === 'ACTIVA').length;
+        const totalColegios = colegios.filter(c => c.activo).length;
+        const totalRutas = rutas.filter(r => r.activa !== false).length;
+        const totalZonas = zonas.filter(z => z.activa !== false).length;
+
+        container.innerHTML = `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #28a745;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Total Estudiantes</div>
+                            <div class="stat-value">${totalEstudiantes}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #17a2b8;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Estudiantes Activos</div>
+                            <div class="stat-value">${estudiantesActivos}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #17a2b8, #6610f2);">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #fd7e14;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Colegios</div>
+                            <div class="stat-value">${totalColegios}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #fd7e14, #e83e8c);">
+                            <i class="bi bi-building-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #6f42c1;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Rutas Activas</div>
+                            <div class="stat-value">${totalRutas}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #6f42c1, #e83e8c);">
+                            <i class="bi bi-map-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #20c997;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Zonas</div>
+                            <div class="stat-value">${totalZonas}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #20c997, #28a745);">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error cargando estadísticas de encargado:', error);
+        container.innerHTML = '<div class="col-12"><div class="alert alert-warning">No se pudieron cargar las estadísticas</div></div>';
+    }
+}
+
+// ✅ Estadísticas para MONITOR
+async function cargarEstadisticasMonitor(container) {
+    try {
+        // Obtener datos del monitor
+        const monitorRes = await fetch(`${API_URL}/monitores/usuario/${currentUser.id}`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (!monitorRes.ok) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="card card-custom">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-emoji-smile" style="font-size: 60px; color: var(--primary-color);"></i>
+                            <h4 class="mt-3">Bienvenido al Sistema</h4>
+                            <p class="text-muted">Utiliza el menú lateral para navegar</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const monitor = await monitorRes.json();
+
+        // Cargar estudiantes de la zona/jornada del monitor
+        const estudiantesRes = await fetch(
+            `${API_URL}/estudiantes/monitor/zona/${monitor.zonaId}/jornada/${monitor.jornadaId}`,
+            { headers: Auth.getHeaders() }
+        );
+
+        const estudiantes = estudiantesRes.ok ? await estudiantesRes.json() : [];
+        const totalEstudiantes = estudiantes.length;
+        const estudiantesActivos = estudiantes.filter(e => e.estadoInscripcion === 'ACTIVA').length;
+
+        container.innerHTML = `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #28a745;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Mis Estudiantes</div>
+                            <div class="stat-value">${totalEstudiantes}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #17a2b8;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Estudiantes Activos</div>
+                            <div class="stat-value">${estudiantesActivos}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #17a2b8, #6610f2);">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card" style="border-left-color: #6f42c1;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Mi Zona</div>
+                            <div class="stat-value">${monitor.nombreZona || 'N/A'}</div>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #6f42c1, #e83e8c);">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error cargando estadísticas de monitor:', error);
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-emoji-smile" style="font-size: 60px; color: var(--primary-color);"></i>
+                        <h4 class="mt-3">Bienvenido al Sistema</h4>
+                        <p class="text-muted">Utiliza el menú lateral para navegar</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Mostrar estadísticas de usuarios (para ADMIN)
 function mostrarEstadisticasUsuarios(usuarios) {
     const container = document.getElementById('statsContainer');
 
@@ -279,7 +471,6 @@ async function mostrarDetalleClima() {
     modalClimaInstance.show();
 
     try {
-        // Cargar recomendación
         const response = await fetch(`${API_URL}/clima/recomendacion`, {
             headers: Auth.getHeaders()
         });

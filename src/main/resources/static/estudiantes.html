@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Estudiantes - Sistema Ciempiés</title>
@@ -12,8 +14,12 @@
 
     <style>
         :root {
-            --primary-color: #6B5DD3;
-            --secondary-color: #8B7DE8;
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
         }
 
         body {
@@ -23,7 +29,7 @@
 
         .navbar-custom {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
         }
 
         .navbar-brand img {
@@ -53,11 +59,13 @@
         .sidebar .nav-link:hover {
             background: #f0f0f0;
             color: var(--primary-color);
+            transform: translateX(5px);
         }
 
         .sidebar .nav-link.active {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .sidebar .nav-link i {
@@ -69,79 +77,106 @@
 
         .main-content {
             padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: calc(100vh - 56px);
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .page-header h2 i {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 25px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary-gradient:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
         }
 
         .card-custom {
-            border-radius: 15px;
+            border-radius: 20px;
             border: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
         }
 
         .card-custom .card-header {
             background: white;
             border-bottom: 2px solid #f0f0f0;
             font-weight: 600;
-            color: #333;
-            padding: 20px;
-            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+            border-radius: 20px 20px 0 0 !important;
+        }
+
+        .card-custom .card-header i {
+            color: var(--primary-color);
+        }
+
+        .filter-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        }
+
+        .results-count {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .form-select, .form-control {
+            border-radius: 12px;
+            border: 2px solid #e8e8e8;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
         }
 
         .form-label {
             font-weight: 600;
-            color: #333;
+            color: #555;
             font-size: 0.9rem;
         }
 
-        .required::after {
-            content: " *";
-            color: red;
-        }
-
-        .modal-content {
-            border-radius: 15px;
-            border: none;
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
-            margin: 20px 0 15px 0;
-        }
-
-        /* Estilos para filtros */
-        .filter-card {
-            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
-            border: 1px solid #e0e4ff;
-        }
-
-        .filter-card .card-header {
-            background: transparent;
-            border-bottom: 1px solid #e0e4ff;
-        }
+        .form-label i { color: var(--primary-color); }
 
         .btn-filter {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             border: none;
             color: white;
             font-weight: 600;
-            padding: 10px 25px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+            padding: 12px 25px;
+            border-radius: 12px;
         }
 
         .btn-filter:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(107, 93, 211, 0.4);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
             color: white;
         }
 
@@ -149,59 +184,141 @@
             background: #f0f0f0;
             border: none;
             color: #666;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+            padding: 12px 18px;
+            border-radius: 12px;
         }
 
-        .btn-clear:hover {
-            background: #e0e0e0;
-            color: #333;
+        .table thead th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 700;
+            padding: 15px 12px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
         }
 
-        .form-select, .form-control {
-            border-radius: 10px;
-            border: 2px solid #e0e0e0;
-            padding: 10px 15px;
-            transition: all 0.3s ease;
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
         }
 
-        .form-select:focus, .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(107, 93, 211, 0.15);
+        .table tbody td {
+            padding: 15px 12px;
+            vertical-align: middle;
         }
 
-        .table th {
-            background: #f8f9fa;
+        .badge {
+            padding: 8px 14px;
             font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .badge-estado-activa {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .badge-estado-suspendida {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
             color: #333;
-            border-bottom: 2px solid #dee2e6;
+        }
+
+        .badge-estado-finalizada {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .badge-jornada {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
         }
 
         .btn-action {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             padding: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.2s ease;
         }
 
-        .badge {
-            padding: 6px 12px;
-            font-weight: 500;
+        .btn-action:hover { transform: translateY(-2px); }
+
+        .btn-action-edit {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
         }
 
-        /* Contador de resultados */
-        .results-count {
+        .btn-action-edit:hover {
             background: var(--primary-color);
             color: white;
-            padding: 5px 15px;
+        }
+
+        .btn-action-view {
+            background: rgba(23, 162, 184, 0.1);
+            color: var(--info-color);
+        }
+
+        .btn-action-view:hover {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-action-delete {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+
+        .btn-action-delete:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .modal-content {
             border-radius: 20px;
-            font-size: 0.85rem;
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px 25px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
+            padding: 12px 15px;
+            margin: 25px 0 20px 0;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 0 10px 10px 0;
+        }
+
+        .required::after {
+            content: " *";
+            color: var(--danger-color);
+        }
+
+        .student-name { font-weight: 600; color: #333; }
+        .student-doc { font-size: 0.85rem; color: #666; }
+
+        .dropdown-menu {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: none;
+            padding: 8px;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 10px 15px;
             font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(102, 126, 234, 0.1);
         }
     </style>
 </head>
@@ -246,44 +363,42 @@
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" href="dashboard.html">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
+                            <i class="bi bi-speedometer2"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item" id="menuUsuarios" style="display: none;">
                         <a class="nav-link" href="usuarios.html">
-                            <i class="bi bi-people-fill"></i>
-                            Usuarios
+                            <i class="bi bi-people-fill"></i>Usuarios
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" id="menuEstudiantes" style="display: none;">
                         <a class="nav-link active" href="estudiantes.html">
-                            <i class="bi bi-mortarboard-fill"></i>
-                            Estudiantes
+                            <i class="bi bi-mortarboard-fill"></i>Estudiantes
                         </a>
                     </li>
                     <li class="nav-item" id="menuRutas" style="display: none;">
                         <a class="nav-link" href="rutas.html">
-                            <i class="bi bi-map-fill"></i>
-                            Rutas
+                            <i class="bi bi-map-fill"></i>Rutas
                         </a>
                     </li>
                     <li class="nav-item" id="menuColegios" style="display: none;">
                         <a class="nav-link" href="colegios.html">
-                            <i class="bi bi-building-fill"></i>
-                            Colegios
+                            <i class="bi bi-building-fill"></i>Colegios
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" id="menuAsistencias" style="display: none;">
                         <a class="nav-link" href="asistencias.html">
-                            <i class="bi bi-clipboard-check-fill"></i>
-                            Asistencias
+                            <i class="bi bi-clipboard-check-fill"></i>Asistencias
+                        </a>
+                    </li>
+                    <li class="nav-item" id="menuNotificaciones" style="display: none;">
+                        <a class="nav-link" href="notificaciones.html">
+                            <i class="bi bi-bell-fill"></i>Notificaciones
                         </a>
                     </li>
                     <li class="nav-item" id="menuReportes" style="display: none;">
                         <a class="nav-link" href="reportes.html">
-                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                            Reportes
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>Reportes
                         </a>
                     </li>
                 </ul>
@@ -292,47 +407,51 @@
 
         <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Page Header -->
+            <div class="page-header d-flex justify-content-between align-items-center">
                 <div>
                     <h2><i class="bi bi-mortarboard-fill me-2"></i>Gestión de Estudiantes</h2>
-                    <p class="text-muted mb-0">Administra los estudiantes del sistema</p>
+                    <p class="text-muted mb-0">Administra los estudiantes inscritos en el programa de transporte</p>
                 </div>
-                <button class="btn btn-primary" onclick="mostrarModalCrear()" id="btnCrear">
+                <button class="btn btn-primary-gradient" onclick="mostrarModalCrear()" id="btnCrear">
                     <i class="bi bi-person-plus-fill me-2"></i>Nuevo Estudiante
                 </button>
             </div>
 
-            <!-- Filtros Mejorados -->
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Filtros -->
             <div class="card card-custom filter-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-funnel-fill me-2"></i>Filtros de Búsqueda</span>
-                    <span class="results-count" id="resultsCount">0 estudiantes</span>
+                    <span class="results-count" id="resultsCount">
+                        <i class="bi bi-people-fill me-1"></i>
+                        <span id="countNumber">0</span> estudiantes
+                    </span>
                 </div>
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
-                            <label class="form-label">
-                                <i class="bi bi-building me-1"></i>Colegio
-                            </label>
+                            <label class="form-label"><i class="bi bi-geo-alt me-1"></i>Zona</label>
+                            <select class="form-select" id="filtroZona" onchange="cargarColegiosFiltro()">
+                                <option value="">Todas las zonas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-building me-1"></i>Colegio</label>
                             <select class="form-select" id="filtroColegio" onchange="actualizarJornadasPorColegio()">
                                 <option value="">Todos los colegios</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">
-                                <i class="bi bi-clock me-1"></i>Jornada
-                            </label>
+                            <label class="form-label"><i class="bi bi-clock me-1"></i>Jornada</label>
                             <select class="form-select" id="filtroJornada">
                                 <option value="">Todas</option>
-                                <option value="MANANA">Mañana</option>
-                                <option value="TARDE">Tarde</option>
-                                <option value="UNICA">Única</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">
-                                <i class="bi bi-flag me-1"></i>Estado
-                            </label>
+                            <label class="form-label"><i class="bi bi-flag me-1"></i>Estado</label>
                             <select class="form-select" id="filtroEstado">
                                 <option value="">Todos</option>
                                 <option value="ACTIVA">Activa</option>
@@ -340,21 +459,19 @@
                                 <option value="FINALIZADA">Finalizada</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">
-                                <i class="bi bi-search me-1"></i>Buscar
-                            </label>
-                            <input type="text" class="form-control" id="busqueda" placeholder="Nombre o documento...">
-                        </div>
                         <div class="col-md-2">
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-filter flex-grow-1" onclick="aplicarFiltros()">
-                                    <i class="bi bi-search me-1"></i>Filtrar
-                                </button>
-                                <button type="button" class="btn btn-clear" onclick="limpiarFiltros()" title="Limpiar filtros">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
+                            <label class="form-label"><i class="bi bi-search me-1"></i>Buscar</label>
+                            <input type="text" class="form-control" id="busqueda" placeholder="Nombre o doc...">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12 d-flex gap-2">
+                            <button type="button" class="btn btn-filter" onclick="aplicarFiltros()">
+                                <i class="bi bi-search me-2"></i>Aplicar Filtros
+                            </button>
+                            <button type="button" class="btn btn-clear" onclick="limpiarFiltros()">
+                                <i class="bi bi-x-lg me-2"></i>Limpiar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -371,22 +488,19 @@
                             <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Documento</th>
-                                <th>Nombre Completo</th>
+                                <th>Estudiante</th>
                                 <th>Curso</th>
                                 <th>Colegio</th>
                                 <th>Jornada</th>
                                 <th>Estado</th>
-                                <th>Acciones</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                             </thead>
                             <tbody id="tableBody">
                             <tr>
-                                <td colspan="8" class="text-center py-4">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Cargando...</span>
-                                    </div>
-                                    <p class="mt-2 mb-0">Cargando estudiantes...</p>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p class="mt-3 mb-0 text-muted">Cargando estudiantes...</p>
                                 </td>
                             </tr>
                             </tbody>
@@ -413,8 +527,7 @@
                     <input type="hidden" id="estudianteId">
                     <input type="hidden" id="modoEdicion" value="false">
 
-                    <!-- Datos del Estudiante -->
-                    <div class="section-title">📋 Datos del Estudiante</div>
+                    <div class="section-title"><i class="bi bi-person-badge me-2"></i>Datos del Estudiante</div>
 
                     <div class="row g-3">
                         <div class="col-md-3">
@@ -423,9 +536,8 @@
                                 <option value="">Seleccione...</option>
                                 <option value="RC">Registro Civil</option>
                                 <option value="TI">Tarjeta de Identidad</option>
-                                <option value="CC">Cédula de Ciudadanía</option>
-                                <option value="CE">Cédula de Extranjería</option>
-                                <option value="PA">Pasaporte</option>
+                                <option value="PPT">Permiso por Protección Temporal</option>
+                                <option value="PEP">Permiso Especial de Permanencia</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -473,27 +585,32 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Curso</label>
-                            <input type="text" class="form-control" id="curso" maxlength="50">
+                            <input type="text" class="form-control" id="curso" maxlength="50" placeholder="Ej: 5A">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">EPS</label>
-                            <input type="text" class="form-control" id="eps" maxlength="100">
+                            <select class="form-select" id="eps">
+                                <option value="">Seleccione...</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
                             <label class="form-label">Discapacidad</label>
-                            <input type="text" class="form-control" id="discapacidad" maxlength="200">
+                            <select class="form-select" id="discapacidad">
+                                <option value="">Seleccione...</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Etnia</label>
-                            <input type="text" class="form-control" id="etnia" maxlength="100">
+                            <select class="form-select" id="etnia">
+                                <option value="">Seleccione...</option>
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Datos del Acudiente -->
-                    <div class="section-title">👤 Datos del Acudiente</div>
+                    <div class="section-title"><i class="bi bi-person-heart me-2"></i>Datos del Acudiente</div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -517,8 +634,7 @@
                         </div>
                     </div>
 
-                    <!-- Datos de Inscripción -->
-                    <div class="section-title">🏫 Datos de Inscripción</div>
+                    <div class="section-title"><i class="bi bi-building-check me-2"></i>Datos de Inscripción</div>
 
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -541,7 +657,6 @@
                         </div>
                     </div>
 
-                    <!-- Estado (solo visible en edición) -->
                     <div class="row g-3 mt-2" id="estadoContainer" style="display: none;">
                         <div class="col-md-4">
                             <label class="form-label">Estado de Inscripción</label>
@@ -562,10 +677,28 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarEstudiante()">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary-gradient" onclick="guardarEstudiante()">
                     <i class="bi bi-save-fill me-2"></i>Guardar
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Detalles -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Detalle del Estudiante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detalleContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>

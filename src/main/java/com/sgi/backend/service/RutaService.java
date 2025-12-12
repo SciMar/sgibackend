@@ -3,9 +3,11 @@ package com.sgi.backend.service;
 import com.sgi.backend.dto.ruta.CrearRutaDTO;
 import com.sgi.backend.dto.ruta.ActualizarRutaDTO;
 import com.sgi.backend.dto.ruta.RutaResponseDTO;
+import com.sgi.backend.model.ColegioJornada;
 import com.sgi.backend.model.Ruta;
 import com.sgi.backend.model.Zona;
 import com.sgi.backend.model.TipoRecorrido;
+import com.sgi.backend.repository.ColegioJornadaRepository;
 import com.sgi.backend.repository.RutaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,22 +26,36 @@ public class RutaService {
     @Autowired
     private ZonaService zonaService;
 
+    @Autowired
+    private ColegioJornadaRepository colegioJornadaRepository;
+
     // ==========================================
     // CREAR
     // ==========================================
 
     public RutaResponseDTO crear(CrearRutaDTO dto) {
-        // Obtener la zona
-        Zona zona = zonaService.obtenerEntidadPorId(dto.getZonaId());
+        // Obtener ColegioJornada
+        ColegioJornada colegioJornada = colegioJornadaRepository.findById(dto.getColegioJornadaId())
+                .orElseThrow(() -> new RuntimeException("Colegio-Jornada no encontrado"));
+
+        // Obtener datos para construir el nombre
+        String nombreColegio = colegioJornada.getColegio().getNombreColegio();
+        String nombreJornada = colegioJornada.getJornada().getNombreJornada().getDisplayName();
+        String tipoRecorrido = dto.getTipoRuta().name();
+
+        // Construir nombre: "Ciudad Bolivar - Unica REGRESO"
+        String nombreRuta = nombreColegio + " - " + nombreJornada + " " + tipoRecorrido;
+
+        // Obtener zona del colegio
+        Zona zona = colegioJornada.getColegio().getZona();
 
         // Validar que no exista una ruta con ese nombre en la misma zona
-        if (rutaRepository.existsByNombreRutaAndZonaId(dto.getNombreRuta(), dto.getZonaId())) {
-            throw new RuntimeException("Ya existe una ruta con el nombre '" + dto.getNombreRuta() +
-                    "' en la zona " + zona.getNombreZona());
+        if (rutaRepository.existsByNombreRutaAndZonaId(nombreRuta, zona.getId())) {
+            throw new RuntimeException("Ya existe la ruta '" + nombreRuta + "' en la zona " + zona.getNombreZona());
         }
 
         Ruta ruta = new Ruta();
-        ruta.setNombreRuta(dto.getNombreRuta());
+        ruta.setNombreRuta(nombreRuta);
         ruta.setTipoRuta(dto.getTipoRuta());
         ruta.setZona(zona);
         ruta.setActiva(true);
@@ -256,11 +272,14 @@ public class RutaService {
         dto.setTipoRuta(ruta.getTipoRuta());
         dto.setActiva(ruta.getActiva());
 
-        // Datos de zona (sin toda la entidad)
+        // Datos de zona
         if (ruta.getZona() != null) {
             dto.setZonaId(ruta.getZona().getId());
             dto.setNombreZona(ruta.getZona().getNombreZona());
         }
+
+        // Calcular total de estudiantes
+        dto.setTotalEstudiantes(rutaRepository.contarEstudiantesPorRuta(ruta.getId()));
 
         return dto;
     }

@@ -26,12 +26,11 @@ public class ColegioJornadaController {
     // ==========================================
 
     @PostMapping
-    public ResponseEntity<ColegioJornadaResponseDTO> asignar(@Valid @RequestBody AsignarJornadaDTO dto) {
+    public ResponseEntity<?> asignar(@Valid @RequestBody AsignarJornadaDTO dto) {
         try {
-            ColegioJornadaResponseDTO colegioJornada = colegioJornadaService.asignar(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(colegioJornada);
+            return ResponseEntity.status(HttpStatus.CREATED).body(colegioJornadaService.asignar(dto));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -52,6 +51,7 @@ public class ColegioJornadaController {
     }
 
     @GetMapping("/colegio/{colegioId}/activas")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENCARGADO', 'MONITOR')")
     public ResponseEntity<List<ColegioJornadaResponseDTO>> listarJornadasActivasDeColegio(@PathVariable Long colegioId) {
         List<ColegioJornadaResponseDTO> jornadas = colegioJornadaService.listarJornadasActivasDeColegio(colegioId);
         return ResponseEntity.ok(jornadas);
@@ -149,12 +149,12 @@ public class ColegioJornadaController {
     // ==========================================
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
         try {
             colegioJornadaService.eliminar(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

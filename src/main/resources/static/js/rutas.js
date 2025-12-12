@@ -8,44 +8,87 @@ const currentUser = Auth.getUser();
 let rutasOriginales = [];
 let rutasFiltradas = [];
 let zonas = [];
-let modalInstance = null;
+let colegios = [];
+let jornadas = [];
 
-// Inicializar al cargar la página
+// Modales
+let modalCrear = null;
+let modalEditar = null;
+
+// Datos para generar nombre
+let colegioSeleccionado = null;
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+
 document.addEventListener('DOMContentLoaded', () => {
     loadNavbarUser();
-    configurarMenuSegunRol();
+    updateMenuByRole();
     inicializar();
 });
 
-// Inicializar componentes
 async function inicializar() {
-    // Inicializar modal
-    const modalElement = document.getElementById('modalRuta');
-    modalInstance = new bootstrap.Modal(modalElement);
+    // Verificar acceso - MONITOR no tiene acceso a rutas
+    if (currentUser.rol === 'MONITOR') {
+        mostrarAlertaError('Acceso Denegado', 'No tienes permisos para acceder a este módulo.');
+        setTimeout(() => window.location.href = 'dashboard.html', 2000);
+        return;
+    }
+
+    // Inicializar modales
+    const modalCrearElement = document.getElementById('modalCrear');
+    const modalEditarElement = document.getElementById('modalEditar');
+
+    if (modalCrearElement) {
+        modalCrear = new bootstrap.Modal(modalCrearElement);
+    }
+    if (modalEditarElement) {
+        modalEditar = new bootstrap.Modal(modalEditarElement);
+    }
 
     // Cargar datos
     await cargarZonas();
     await cargarRutas();
 }
 
-// Configurar menú según rol
-function configurarMenuSegunRol() {
-    const rol = currentUser.rol;
+// ==========================================
+// FUNCIONES DE ALERTA (SweetAlert2)
+// ==========================================
 
-    if (rol === 'ADMINISTRADOR') {
-        document.getElementById('menuUsuarios').style.display = 'block';
-        document.getElementById('menuColegios').style.display = 'block';
-        document.getElementById('menuReportes').style.display = 'block';
-    } else if (rol === 'ENCARGADO') {
-        document.getElementById('menuColegios').style.display = 'block';
-        document.getElementById('menuReportes').style.display = 'block';
-    } else if (rol === 'MONITOR') {
-        // MONITOR no tiene acceso a rutas
-        window.location.href = 'dashboard.html';
-    }
+function mostrarAlertaError(titulo, mensaje) {
+    Swal.fire({
+        icon: 'error',
+        title: titulo,
+        text: mensaje,
+        confirmButtonColor: '#667eea'
+    });
 }
 
-// Cargar zonas
+function mostrarAlertaExito(titulo, mensaje) {
+    Swal.fire({
+        icon: 'success',
+        title: titulo,
+        text: mensaje,
+        confirmButtonColor: '#667eea',
+        timer: 2000,
+        timerProgressBar: true
+    });
+}
+
+function mostrarAlertaAdvertencia(titulo, mensaje) {
+    Swal.fire({
+        icon: 'warning',
+        title: titulo,
+        text: mensaje,
+        confirmButtonColor: '#667eea'
+    });
+}
+
+// ==========================================
+// CARGAR DATOS
+// ==========================================
+
 async function cargarZonas() {
     try {
         const response = await fetch(`${API_URL}/zonas/activas`, {
@@ -58,25 +101,166 @@ async function cargarZonas() {
         }
     } catch (error) {
         console.error('Error al cargar zonas:', error);
+        mostrarAlertaError('Error', 'No se pudieron cargar las zonas.');
     }
 }
 
-// Llenar select de zonas
 function llenarSelectZonas() {
-    const selectZona = document.getElementById('zonaId');
+    const selectZonaCrear = document.getElementById('crearZonaId');
     const selectFiltroZona = document.getElementById('filtroZona');
 
-    selectZona.innerHTML = '<option value="">Seleccione...</option>';
-    selectFiltroZona.innerHTML = '<option value="">Todas</option>';
+    if (selectZonaCrear) {
+        selectZonaCrear.innerHTML = '<option value="">Seleccione zona...</option>';
+        zonas.forEach(zona => {
+            selectZonaCrear.innerHTML += `<option value="${zona.id}">${zona.nombreZona}</option>`;
+        });
+    }
 
-    zonas.forEach(zona => {
-        const option = `<option value="${zona.id}">${zona.nombreZona}</option>`;
-        selectZona.innerHTML += option;
-        selectFiltroZona.innerHTML += option;
-    });
+    if (selectFiltroZona) {
+        selectFiltroZona.innerHTML = '<option value="">Todas</option>';
+        zonas.forEach(zona => {
+            selectFiltroZona.innerHTML += `<option value="${zona.id}">${zona.nombreZona}</option>`;
+        });
+    }
 }
 
-// Cargar rutas
+async function cargarColegiosPorZona() {
+    const zonaId = document.getElementById('crearZonaId').value;
+    const selectColegio = document.getElementById('crearColegioId');
+    const selectJornada = document.getElementById('crearColegioJornadaId');
+
+    // Resetear selects dependientes
+    selectColegio.innerHTML = '<option value="">Cargando colegios...</option>';
+    selectColegio.disabled = true;
+    selectJornada.innerHTML = '<option value="">Primero seleccione colegio...</option>';
+    selectJornada.disabled = true;
+
+    // Resetear datos
+    colegioSeleccionado = null;
+    actualizarVistaPrevia();
+
+    if (!zonaId) {
+        selectColegio.innerHTML = '<option value="">Primero seleccione zona...</option>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/colegios/zona/${zonaId}`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (response.ok) {
+            colegios = await response.json();
+
+            if (colegios.length === 0) {
+                selectColegio.innerHTML = '<option value="">No hay colegios en esta zona</option>';
+            } else {
+                selectColegio.innerHTML = '<option value="">Seleccione colegio...</option>';
+                colegios.forEach(colegio => {
+                    if (colegio.activo) {
+                        selectColegio.innerHTML += `<option value="${colegio.id}">${colegio.nombreColegio}</option>`;
+                    }
+                });
+                selectColegio.disabled = false;
+            }
+        }
+    } catch (error) {
+        console.error('Error al cargar colegios:', error);
+        selectColegio.innerHTML = '<option value="">Error al cargar colegios</option>';
+    }
+}
+
+async function cargarJornadasPorColegio() {
+    const colegioId = document.getElementById('crearColegioId').value;
+    const selectJornada = document.getElementById('crearColegioJornadaId');
+
+    // Resetear select de jornada
+    selectJornada.innerHTML = '<option value="">Cargando jornadas...</option>';
+    selectJornada.disabled = true;
+
+    // Guardar colegio seleccionado
+    colegioSeleccionado = colegios.find(c => c.id == colegioId) || null;
+    actualizarVistaPrevia();
+
+    if (!colegioId) {
+        selectJornada.innerHTML = '<option value="">Primero seleccione colegio...</option>';
+        colegioSeleccionado = null;
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
+            headers: Auth.getHeaders()
+        });
+
+        if (response.ok) {
+            jornadas = await response.json();
+
+            if (jornadas.length === 0) {
+                selectJornada.innerHTML = '<option value="">No hay jornadas para este colegio</option>';
+            } else {
+                selectJornada.innerHTML = '<option value="">Seleccione jornada...</option>';
+                jornadas.forEach(cj => {
+                    const nombreJornada = obtenerNombreJornada(cj);
+                    selectJornada.innerHTML += `<option value="${cj.id}" data-nombre="${nombreJornada}">${nombreJornada}</option>`;
+                });
+                selectJornada.disabled = false;
+            }
+        }
+    } catch (error) {
+        console.error('Error al cargar jornadas:', error);
+        selectJornada.innerHTML = '<option value="">Error al cargar jornadas</option>';
+    }
+}
+
+// Obtener nombre de jornada desde el objeto ColegioJornada
+function obtenerNombreJornada(colegioJornada) {
+    if (colegioJornada.jornada) {
+        // Si tiene el objeto jornada completo
+        const tipo = colegioJornada.jornada.nombreJornada;
+        if (JORNADA_LABELS && JORNADA_LABELS[tipo]) {
+            return JORNADA_LABELS[tipo];
+        }
+        return tipo || 'Jornada';
+    }
+    // Si solo tiene el nombre directo
+    if (colegioJornada.nombreJornada) {
+        return JORNADA_LABELS[colegioJornada.nombreJornada] || colegioJornada.nombreJornada;
+    }
+    return 'Jornada';
+}
+
+// ==========================================
+// VISTA PREVIA DEL NOMBRE
+// ==========================================
+
+function actualizarVistaPrevia() {
+    const previewDiv = document.getElementById('previewNombre');
+    const nombreSpan = document.getElementById('nombreGenerado');
+
+    if (!previewDiv || !nombreSpan) return;
+
+    const selectJornada = document.getElementById('crearColegioJornadaId');
+    const tipoRuta = document.getElementById('crearTipoRuta').value;
+
+    // Obtener jornada seleccionada
+    const jornadaOption = selectJornada.options[selectJornada.selectedIndex];
+    const nombreJornada = jornadaOption?.dataset?.nombre || null;
+
+    if (colegioSeleccionado && nombreJornada && tipoRuta) {
+        const nombreGenerado = `${colegioSeleccionado.nombreColegio} - ${nombreJornada} ${tipoRuta}`;
+        nombreSpan.textContent = nombreGenerado;
+        previewDiv.style.display = 'block';
+    } else {
+        nombreSpan.textContent = '-';
+        previewDiv.style.display = 'none';
+    }
+}
+
+// ==========================================
+// CARGAR RUTAS
+// ==========================================
+
 async function cargarRutas() {
     showTableLoading('tableBody', 7);
 
@@ -90,7 +274,7 @@ async function cargarRutas() {
             rutasFiltradas = [...rutasOriginales];
             mostrarRutas(rutasFiltradas);
         } else if (response.status === 401) {
-            showToast('Sesión expirada. Por favor inicie sesión nuevamente.', 'warning');
+            mostrarAlertaAdvertencia('Sesión Expirada', 'Por favor inicie sesión nuevamente.');
             Auth.logout();
         } else {
             showTableError('tableBody', 7);
@@ -101,7 +285,10 @@ async function cargarRutas() {
     }
 }
 
-// Mostrar rutas en la tabla
+// ==========================================
+// MOSTRAR RUTAS EN TABLA
+// ==========================================
+
 function mostrarRutas(rutas) {
     const tbody = document.getElementById('tableBody');
 
@@ -112,11 +299,11 @@ function mostrarRutas(rutas) {
 
     tbody.innerHTML = rutas.map(ruta => `
         <tr>
-            <td>${ruta.id}</td>
+            <td><span class="badge bg-secondary">${ruta.id}</span></td>
             <td><strong>${ruta.nombreRuta}</strong></td>
             <td>
-                <span class="badge ${TIPO_RECORRIDO_BADGE_CLASS[ruta.tipoRuta]}">
-                    ${TIPO_RECORRIDO_LABELS[ruta.tipoRuta]}
+                <span class="badge ${TIPO_RECORRIDO_BADGE_CLASS[ruta.tipoRuta] || 'bg-secondary'}">
+                    ${TIPO_RECORRIDO_LABELS[ruta.tipoRuta] || ruta.tipoRuta}
                 </span>
             </td>
             <td>${ruta.nombreZona || '-'}</td>
@@ -155,17 +342,33 @@ function mostrarRutas(rutas) {
     `).join('');
 }
 
-// Mostrar modal para crear
+// ==========================================
+// MODAL CREAR
+// ==========================================
+
 function mostrarModalCrear() {
-    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle-fill me-2"></i>Crear Ruta';
-    document.getElementById('formRuta').reset();
-    document.getElementById('rutaId').value = '';
-    document.getElementById('modoEdicion').value = 'false';
-    document.getElementById('divZona').style.display = 'block';
-    modalInstance.show();
+    // Resetear formulario
+    document.getElementById('formCrear').reset();
+
+    // Resetear selects
+    document.getElementById('crearColegioId').innerHTML = '<option value="">Primero seleccione zona...</option>';
+    document.getElementById('crearColegioId').disabled = true;
+    document.getElementById('crearColegioJornadaId').innerHTML = '<option value="">Primero seleccione colegio...</option>';
+    document.getElementById('crearColegioJornadaId').disabled = true;
+
+    // Ocultar vista previa
+    document.getElementById('previewNombre').style.display = 'none';
+
+    // Resetear datos
+    colegioSeleccionado = null;
+
+    modalCrear.show();
 }
 
-// Editar ruta
+// ==========================================
+// EDITAR RUTA
+// ==========================================
+
 async function editarRuta(id) {
     try {
         const response = await fetch(`${API_URL}/rutas/${id}`, {
@@ -175,71 +378,155 @@ async function editarRuta(id) {
         if (response.ok) {
             const ruta = await response.json();
 
-            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-fill me-2"></i>Editar Ruta';
-            document.getElementById('rutaId').value = ruta.id;
-            document.getElementById('modoEdicion').value = 'true';
-            document.getElementById('nombreRuta').value = ruta.nombreRuta;
-            document.getElementById('tipoRuta').value = ruta.tipoRuta;
-            document.getElementById('zonaId').value = ruta.zonaId;
+            document.getElementById('editarRutaId').value = ruta.id;
+            document.getElementById('editarNombreRuta').value = ruta.nombreRuta;
+            document.getElementById('editarTipoRuta').value = ruta.tipoRuta;
+            document.getElementById('editarZonaNombre').value = ruta.nombreZona || 'Sin zona';
 
-            // Ocultar zona en edición (no se puede cambiar)
-            document.getElementById('divZona').style.display = 'none';
-
-            modalInstance.show();
+            modalEditar.show();
+        } else {
+            mostrarAlertaError('Error', 'No se pudo cargar la información de la ruta.');
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al cargar la ruta', 'error');
+        mostrarAlertaError('Error', 'Error al cargar la ruta.');
     }
 }
 
-// Guardar ruta
-async function guardarRuta() {
-    const form = document.getElementById('formRuta');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
+// ==========================================
+// VALIDACIONES
+// ==========================================
+
+function validarFormularioCrear() {
+    const zonaId = document.getElementById('crearZonaId').value;
+    const colegioId = document.getElementById('crearColegioId').value;
+    const colegioJornadaId = document.getElementById('crearColegioJornadaId').value;
+    const tipoRuta = document.getElementById('crearTipoRuta').value;
+
+    if (!zonaId) {
+        mostrarAlertaError('Campo Requerido', 'Debe seleccionar una zona.');
+        return false;
     }
 
-    const modoEdicion = document.getElementById('modoEdicion').value === 'true';
-    const rutaId = document.getElementById('rutaId').value;
+    if (!colegioId) {
+        mostrarAlertaError('Campo Requerido', 'Debe seleccionar un colegio.');
+        return false;
+    }
 
-    // Construir DTO
+    if (!colegioJornadaId) {
+        mostrarAlertaError('Campo Requerido', 'Debe seleccionar una jornada.');
+        return false;
+    }
+
+    if (!tipoRuta) {
+        mostrarAlertaError('Campo Requerido', 'Debe seleccionar el tipo de recorrido.');
+        return false;
+    }
+
+    return true;
+}
+
+function validarFormularioEditar() {
+    const nombreRuta = document.getElementById('editarNombreRuta').value.trim();
+    const tipoRuta = document.getElementById('editarTipoRuta').value;
+
+    if (!nombreRuta || nombreRuta.length < 3) {
+        mostrarAlertaError('Campo Requerido', 'El nombre de la ruta debe tener al menos 3 caracteres.');
+        return false;
+    }
+
+    if (nombreRuta.length > 200) {
+        mostrarAlertaError('Nombre Muy Largo', 'El nombre no puede exceder 200 caracteres.');
+        return false;
+    }
+
+    if (!tipoRuta) {
+        mostrarAlertaError('Campo Requerido', 'Debe seleccionar el tipo de recorrido.');
+        return false;
+    }
+
+    return true;
+}
+
+// ==========================================
+// GUARDAR RUTA (CREAR)
+// ==========================================
+
+async function guardarRuta() {
+    if (!validarFormularioCrear()) return;
+
     const dto = {
-        nombreRuta: document.getElementById('nombreRuta').value.trim(),
-        tipoRuta: document.getElementById('tipoRuta').value
+        colegioJornadaId: parseInt(document.getElementById('crearColegioJornadaId').value),
+        tipoRuta: document.getElementById('crearTipoRuta').value
     };
 
-    // Agregar zonaId solo en creación
-    if (!modoEdicion) {
-        dto.zonaId = parseInt(document.getElementById('zonaId').value);
-    }
-
     try {
-        const url = modoEdicion ? `${API_URL}/rutas/${rutaId}` : `${API_URL}/rutas`;
-        const method = modoEdicion ? 'PUT' : 'POST';
-
-        const response = await fetch(url, {
-            method: method,
+        const response = await fetch(`${API_URL}/rutas`, {
+            method: 'POST',
             headers: Auth.getHeaders(),
             body: JSON.stringify(dto)
         });
 
         if (response.ok) {
-            showToast(modoEdicion ? 'Ruta actualizada exitosamente' : 'Ruta creada exitosamente', 'success');
-            modalInstance.hide();
+            mostrarAlertaExito('¡Ruta Creada!', 'La ruta se creó correctamente.');
+            modalCrear.hide();
             cargarRutas();
         } else {
-            const error = await response.text();
-            showToast('Error: ' + error, 'error');
+            const errorText = await response.text();
+            if (errorText.toLowerCase().includes('ya existe')) {
+                mostrarAlertaError('Ruta Duplicada', 'Ya existe esta ruta. Verifique el colegio, jornada y tipo de recorrido.');
+            } else {
+                mostrarAlertaError('Error', errorText || 'No se pudo crear la ruta.');
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al guardar la ruta', 'error');
+        mostrarAlertaError('Error', 'Error de conexión al crear la ruta.');
     }
 }
 
-// Ver detalle de ruta
+// ==========================================
+// ACTUALIZAR RUTA (EDITAR)
+// ==========================================
+
+async function actualizarRuta() {
+    if (!validarFormularioEditar()) return;
+
+    const rutaId = document.getElementById('editarRutaId').value;
+    const dto = {
+        nombreRuta: document.getElementById('editarNombreRuta').value.trim(),
+        tipoRuta: document.getElementById('editarTipoRuta').value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/rutas/${rutaId}`, {
+            method: 'PUT',
+            headers: Auth.getHeaders(),
+            body: JSON.stringify(dto)
+        });
+
+        if (response.ok) {
+            mostrarAlertaExito('¡Ruta Actualizada!', 'La ruta se actualizó correctamente.');
+            modalEditar.hide();
+            cargarRutas();
+        } else {
+            const errorText = await response.text();
+            if (errorText.toLowerCase().includes('ya existe')) {
+                mostrarAlertaError('Ruta Duplicada', 'Ya existe una ruta con ese nombre en esta zona.');
+            } else {
+                mostrarAlertaError('Error', errorText || 'No se pudo actualizar la ruta.');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlertaError('Error', 'Error de conexión al actualizar la ruta.');
+    }
+}
+
+// ==========================================
+// VER DETALLE
+// ==========================================
+
 async function verDetalle(id) {
     try {
         const response = await fetch(`${API_URL}/rutas/${id}/estadisticas`, {
@@ -248,95 +535,68 @@ async function verDetalle(id) {
 
         if (response.ok) {
             const ruta = await response.json();
-            mostrarModalDetalle(ruta);
+
+            Swal.fire({
+                title: `<i class="bi bi-map-fill me-2"></i>${ruta.nombreRuta}`,
+                html: `
+                    <div class="text-start">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="text-muted small d-block">Tipo de Recorrido</label>
+                                <span class="badge ${TIPO_RECORRIDO_BADGE_CLASS[ruta.tipoRuta] || 'bg-secondary'}" style="font-size: 14px;">
+                                    ${TIPO_RECORRIDO_LABELS[ruta.tipoRuta] || ruta.tipoRuta}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small d-block">Estado</label>
+                                <span class="badge ${ruta.activa ? 'bg-success' : 'bg-danger'}" style="font-size: 14px;">
+                                    ${ruta.activa ? 'Activa' : 'Inactiva'}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small d-block">Zona</label>
+                                <p class="fw-bold mb-0">${ruta.nombreZona || '-'}</p>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small d-block">Total Estudiantes</label>
+                                <span class="badge bg-info" style="font-size: 18px;">${ruta.totalEstudiantes || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                confirmButtonColor: '#667eea',
+                confirmButtonText: 'Cerrar',
+                width: 500
+            });
+        } else {
+            mostrarAlertaError('Error', 'No se pudo cargar el detalle de la ruta.');
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al cargar el detalle', 'error');
+        mostrarAlertaError('Error', 'Error al cargar el detalle.');
     }
 }
 
-// Mostrar modal de detalle
-function mostrarModalDetalle(ruta) {
-    // Crear modal si no existe
-    let modal = document.getElementById('modalDetalle');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.id = 'modalDetalle';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        <h5 class="modal-title"><i class="bi bi-info-circle-fill me-2"></i>Detalle de Ruta</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" id="modalDetalleContent"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
+// ==========================================
+// CAMBIAR ESTADO (ACTIVAR/DESACTIVAR)
+// ==========================================
 
-    // Llenar contenido
-    document.getElementById('modalDetalleContent').innerHTML = `
-        <div class="row g-3">
-            <div class="col-12">
-                <h6 class="border-bottom pb-2" style="color: #667eea;">
-                    <i class="bi bi-map-fill me-2"></i>Información de la Ruta
-                </h6>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Nombre</label>
-                <p class="fw-bold mb-0">${ruta.nombreRuta}</p>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Tipo de Recorrido</label>
-                <p class="mb-0">
-                    <span class="badge ${TIPO_RECORRIDO_BADGE_CLASS[ruta.tipoRuta]}">
-                        ${TIPO_RECORRIDO_LABELS[ruta.tipoRuta]}
-                    </span>
-                </p>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Zona</label>
-                <p class="mb-0">${ruta.nombreZona}</p>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Estado</label>
-                <p class="mb-0">
-                    <span class="badge ${ruta.activa ? 'bg-success' : 'bg-danger'}">
-                        ${ruta.activa ? 'Activa' : 'Inactiva'}
-                    </span>
-                </p>
-            </div>
-            <div class="col-12 mt-3">
-                <h6 class="border-bottom pb-2" style="color: #667eea;">
-                    <i class="bi bi-bar-chart-fill me-2"></i>Estadísticas
-                </h6>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Total de Estudiantes</label>
-                <p class="fw-bold mb-0">
-                    <span class="badge bg-info" style="font-size: 16px;">${ruta.totalEstudiantes || 0}</span>
-                </p>
-            </div>
-        </div>
-    `;
-
-    // Mostrar modal
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-}
-
-// Cambiar estado (activar/desactivar)
 async function cambiarEstado(id, activar) {
-    if (!confirm(`¿Está seguro de ${activar ? 'activar' : 'desactivar'} esta ruta?`)) {
-        return;
-    }
+    const ruta = rutasOriginales.find(r => r.id === id);
+    const nombreRuta = ruta ? ruta.nombreRuta : 'esta ruta';
+
+    const result = await Swal.fire({
+        title: activar ? '¿Activar Ruta?' : '¿Desactivar Ruta?',
+        html: `¿Está seguro de ${activar ? 'activar' : 'desactivar'} la ruta <strong>"${nombreRuta}"</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: activar ? '#28a745' : '#6c757d',
+        cancelButtonColor: '#dc3545',
+        confirmButtonText: activar ? '<i class="bi bi-toggle-on me-1"></i>Sí, Activar' : '<i class="bi bi-toggle-off me-1"></i>Sí, Desactivar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
         const endpoint = activar ? 'activar' : 'desactivar';
@@ -346,22 +606,47 @@ async function cambiarEstado(id, activar) {
         });
 
         if (response.ok) {
-            showToast(`Ruta ${activar ? 'activada' : 'desactivada'} exitosamente`, 'success');
+            mostrarAlertaExito(
+                activar ? '¡Ruta Activada!' : '¡Ruta Desactivada!',
+                `La ruta "${nombreRuta}" ha sido ${activar ? 'activada' : 'desactivada'} correctamente.`
+            );
             cargarRutas();
         } else {
-            showToast('Error al cambiar el estado de la ruta', 'error');
+            const errorText = await response.text();
+            mostrarAlertaError('Error', errorText || `No se pudo ${activar ? 'activar' : 'desactivar'} la ruta.`);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al cambiar el estado de la ruta', 'error');
+        mostrarAlertaError('Error', `Error de conexión al ${activar ? 'activar' : 'desactivar'} la ruta.`);
     }
 }
 
-// Eliminar ruta
+// ==========================================
+// ELIMINAR RUTA
+// ==========================================
+
 async function eliminarRuta(id) {
-    if (!confirm('¿Está seguro de eliminar esta ruta? Esta acción no se puede deshacer.')) {
-        return;
+    const ruta = rutasOriginales.find(r => r.id === id);
+    const nombreRuta = ruta ? ruta.nombreRuta : 'esta ruta';
+    const totalEstudiantes = ruta ? (ruta.totalEstudiantes || 0) : 0;
+
+    let advertenciaEstudiantes = '';
+    if (totalEstudiantes > 0) {
+        advertenciaEstudiantes = `<br><br><span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Esta ruta tiene <strong>${totalEstudiantes} estudiante(s)</strong> asignado(s).</span>`;
     }
+
+    const result = await Swal.fire({
+        title: '¿Eliminar Ruta?',
+        html: `¿Está seguro de eliminar la ruta <strong>"${nombreRuta}"</strong>?${advertenciaEstudiantes}<br><br><small class="text-muted">Esta acción no se puede deshacer.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash-fill me-1"></i>Sí, Eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
         const response = await fetch(`${API_URL}/rutas/${id}`, {
@@ -370,18 +655,27 @@ async function eliminarRuta(id) {
         });
 
         if (response.ok) {
-            showToast('Ruta eliminada exitosamente', 'success');
+            mostrarAlertaExito('¡Ruta Eliminada!', `La ruta "${nombreRuta}" ha sido eliminada correctamente.`);
             cargarRutas();
         } else {
-            showToast('Error al eliminar la ruta', 'error');
+            const errorText = await response.text();
+
+            if (errorText.toLowerCase().includes('estudiantes') || errorText.toLowerCase().includes('asignados')) {
+                mostrarAlertaError('No se puede eliminar', 'La ruta tiene estudiantes asignados. Debe reasignarlos antes de eliminar.');
+            } else {
+                mostrarAlertaError('Error', errorText || 'No se pudo eliminar la ruta.');
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error al eliminar la ruta', 'error');
+        mostrarAlertaError('Error', 'Error de conexión al eliminar la ruta.');
     }
 }
 
-// Filtrar rutas
+// ==========================================
+// FILTROS Y BÚSQUEDA
+// ==========================================
+
 function filtrarRutas() {
     const zona = document.getElementById('filtroZona').value;
     const tipo = document.getElementById('filtroTipo').value;
@@ -395,9 +689,8 @@ function filtrarRutas() {
     buscarRutas();
 }
 
-// Buscar rutas
 function buscarRutas() {
-    const busqueda = document.getElementById('busqueda').value.toLowerCase();
+    const busqueda = document.getElementById('busqueda').value.toLowerCase().trim();
 
     if (!busqueda) {
         mostrarRutas(rutasFiltradas);
@@ -406,13 +699,16 @@ function buscarRutas() {
 
     const resultados = rutasFiltradas.filter(ruta =>
         ruta.nombreRuta.toLowerCase().includes(busqueda) ||
-        ruta.nombreZona.toLowerCase().includes(busqueda)
+        (ruta.nombreZona && ruta.nombreZona.toLowerCase().includes(busqueda))
     );
 
     mostrarRutas(resultados);
 }
 
-// Función global para logout
+// ==========================================
+// LOGOUT
+// ==========================================
+
 function logout() {
     Auth.logout();
 }

@@ -1,5 +1,5 @@
 // Lógica de Gestión de Estudiantes
-
+let zonas = [];
 // Verificar autenticación y permisos
 Auth.requireAuth();
 Auth.requireRoles(['ADMINISTRADOR', 'ENCARGADO', 'MONITOR']);
@@ -7,57 +7,39 @@ Auth.requireRoles(['ADMINISTRADOR', 'ENCARGADO', 'MONITOR']);
 // Variables globales
 let estudiantesOriginales = [];
 let estudiantesFiltrados = [];
-let zonas = [];      // ✅ Agregar zonas
 let colegios = [];
 let jornadas = [];
 let rutas = [];
-let monitorData = null;
+let monitorData = null; // ✅ Datos del monitor (zona, jornada)
 let modalInstance;
 const currentUser = Auth.getUser();
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
     loadNavbarUser();
-    configurarMenuSegunRol();
+    updateMenuByRole();
     modalInstance = new bootstrap.Modal(document.getElementById('modalEstudiante'));
     cargarDatosIniciales();
 });
 
-// Configurar menú según rol
-function configurarMenuSegunRol() {
-    const rol = currentUser.rol;
-
-    if (rol === 'ADMINISTRADOR') {
-        document.getElementById('menuUsuarios').style.display = 'block';
-        document.getElementById('menuRutas').style.display = 'block';
-        document.getElementById('menuColegios').style.display = 'block';
-        document.getElementById('menuReportes').style.display = 'block';
-    } else if (rol === 'ENCARGADO') {
-        document.getElementById('menuRutas').style.display = 'block';
-        document.getElementById('menuColegios').style.display = 'block';
-        document.getElementById('menuReportes').style.display = 'block';
-    } else if (rol === 'MONITOR') {
-        // MONITOR: Solo ve estudiantes y asistencias (sin botón crear)
-        const btnCrear = document.getElementById('btnCrear');
-        if (btnCrear) btnCrear.style.display = 'none';
-    }
-}
 
 // Cargar datos iniciales
 async function cargarDatosIniciales() {
-    // Si es MONITOR, primero obtener sus datos (zona, jornada)
+    // ✅ Si es MONITOR, primero obtener sus datos (zona, jornada)
     if (currentUser.rol === 'MONITOR') {
         monitorData = await obtenerDatosMonitor();
     }
 
+    llenarSelectsEtniaDiscapacidadEps();
+
     await Promise.all([
+        cargarZonas(),
         cargarEstudiantes(),
-        cargarZonas(),      // ✅ Cargar zonas para el formulario
         cargarColegios(),
-        cargarRutas()
+
     ]);
 
-    // Después de cargar estudiantes, llenar filtros dinámicamente
+    // ✅ Después de cargar estudiantes, llenar filtros dinámicamente
     llenarFiltrosSegunEstudiantes();
 }
 
@@ -68,7 +50,7 @@ async function cargarEstudiantes() {
     try {
         let url = `${API_URL}/estudiantes`;
 
-        // ✅ Si es MONITOR, usar su zona y jornada
+        // Si es MONITOR, usar su zona y jornada
         if (currentUser.rol === 'MONITOR' && monitorData && monitorData.zonaId && monitorData.jornadaId) {
             url = `${API_URL}/estudiantes/monitor/zona/${monitorData.zonaId}/jornada/${monitorData.jornadaId}`;
         }
@@ -82,7 +64,7 @@ async function cargarEstudiantes() {
             estudiantesFiltrados = [...estudiantesOriginales];
             mostrarEstudiantes(estudiantesFiltrados);
         } else if (response.status === 401) {
-            alert('Sesión expirada. Por favor inicie sesión nuevamente.');
+            mostrarAlertaAdvertencia('Sesión expirada. Por favor inicie sesión nuevamente.');
             Auth.logout();
         } else {
             showTableError('tableBody', 8);
@@ -119,13 +101,15 @@ async function cargarColegios() {
 
         if (response.ok) {
             colegios = await response.json();
+            llenarSelectColegiosFormulario();
         }
     } catch (error) {
         console.error('Error al cargar colegios:', error);
     }
 }
 
-// ✅ Cargar zonas para el formulario
+
+// Cargar zonas
 async function cargarZonas() {
     try {
         const response = await fetch(`${API_URL}/zonas`, {
@@ -141,55 +125,102 @@ async function cargarZonas() {
     }
 }
 
-// ✅ Llenar select de zonas en el formulario
+// Llenar selects de zonas
 function llenarSelectZonas() {
-    const selectZona = document.getElementById('zonaId');
-    if (!selectZona) return;
+    const selectFiltroZona = document.getElementById('filtroZona');
+    const selectZonaForm = document.getElementById('zonaId');
 
-    selectZona.innerHTML = '<option value="">Seleccione zona...</option>';
-    zonas.forEach(zona => {
-        if (zona.activa) {
-            selectZona.innerHTML += `<option value="${zona.id}">${zona.nombreZona}</option>`;
-        }
+    // Para el filtro
+    if (selectFiltroZona) {
+        selectFiltroZona.innerHTML = '<option value="">Todas las zonas</option>';
+        zonas.forEach(z => {
+            selectFiltroZona.innerHTML += `<option value="${z.id}">${z.nombreZona}</option>`;
+        });
+    }
+
+    // Para el formulario
+    if (selectZonaForm) {
+        selectZonaForm.innerHTML = '<option value="">Seleccione zona...</option>';
+        zonas.forEach(z => {
+            selectZonaForm.innerHTML += `<option value="${z.id}">${z.nombreZona}</option>`;
+        });
+    }
+}
+
+// Llenar selects de etnia, discapacidad y EPS
+function llenarSelectsEtniaDiscapacidadEps() {
+    const selectEtnia = document.getElementById('etnia');
+    const selectDiscapacidad = document.getElementById('discapacidad');
+    const selectEps = document.getElementById('eps');
+
+    if (selectEtnia) {
+        selectEtnia.innerHTML = '<option value="">Seleccione...</option>';
+        ETNIAS.forEach(e => {
+            selectEtnia.innerHTML += `<option value="${e}">${e}</option>`;
+        });
+    }
+
+    if (selectDiscapacidad) {
+        selectDiscapacidad.innerHTML = '<option value="">Seleccione...</option>';
+        DISCAPACIDADES.forEach(d => {
+            selectDiscapacidad.innerHTML += `<option value="${d}">${d}</option>`;
+        });
+    }
+
+    if (selectEps) {
+        selectEps.innerHTML = '<option value="">Seleccione...</option>';
+        EPS_OPCIONES.forEach(e => {
+            selectEps.innerHTML += `<option value="${e}">${e}</option>`;
+        });
+    }
+}
+
+// Cargar colegios por zona (para el FILTRO)
+function cargarColegiosFiltro() {
+    const zonaId = document.getElementById('filtroZona').value;
+    const selectColegio = document.getElementById('filtroColegio');
+
+    if (!zonaId) {
+        llenarFiltrosSegunEstudiantes();
+        return;
+    }
+
+    // Filtrar colegios que pertenecen a esa zona
+    const colegiosFiltrados = colegios.filter(c => c.zonaId == zonaId);
+
+    selectColegio.innerHTML = '<option value="">Todos los colegios</option>';
+    colegiosFiltrados.forEach(c => {
+        selectColegio.innerHTML += `<option value="${c.id}">${c.nombreColegio}</option>`;
     });
 }
 
-// ✅ Cargar colegios filtrados por zona seleccionada
+// Cargar colegios por zona (para el FORMULARIO)
 async function cargarColegiosPorZona() {
     const zonaId = document.getElementById('zonaId').value;
     const selectColegio = document.getElementById('colegioId');
     const selectJornada = document.getElementById('jornadaId');
 
-    // Resetear selects dependientes
-    selectColegio.innerHTML = '<option value="">Seleccione colegio...</option>';
-    selectJornada.innerHTML = '<option value="">Primero seleccione colegio</option>';
-
-    if (!zonaId) return;
-
-    try {
-        const response = await fetch(`${API_URL}/colegios/zona/${zonaId}`, {
-            headers: Auth.getHeaders()
-        });
-
-        if (response.ok) {
-            const colegiosZona = await response.json();
-            colegiosZona.forEach(colegio => {
-                if (colegio.activo) {
-                    selectColegio.innerHTML += `<option value="${colegio.id}">${colegio.nombreColegio}</option>`;
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error al cargar colegios por zona:', error);
+    if (!zonaId) {
+        selectColegio.innerHTML = '<option value="">Primero seleccione zona</option>';
+        selectJornada.innerHTML = '<option value="">Primero seleccione colegio</option>';
+        return;
     }
+
+    // Filtrar colegios de la zona seleccionada
+    const colegiosZona = colegios.filter(c => c.zonaId == zonaId);
+
+    selectColegio.innerHTML = '<option value="">Seleccione colegio...</option>';
+    colegiosZona.forEach(c => {
+        selectColegio.innerHTML += `<option value="${c.id}">${c.nombreColegio}</option>`;
+    });
+
+    selectJornada.innerHTML = '<option value="">Primero seleccione colegio</option>';
 }
 
-// ✅ Cargar jornadas del colegio seleccionado
+// Cargar jornadas por colegio (para el FORMULARIO)
 async function cargarJornadasPorColegio() {
     const colegioId = document.getElementById('colegioId').value;
     const selectJornada = document.getElementById('jornadaId');
-
-    selectJornada.innerHTML = '<option value="">Seleccione jornada...</option>';
 
     if (!colegioId) {
         selectJornada.innerHTML = '<option value="">Primero seleccione colegio</option>';
@@ -203,35 +234,26 @@ async function cargarJornadasPorColegio() {
 
         if (response.ok) {
             const jornadasColegio = await response.json();
-            jornadasColegio.forEach(cj => {
-                selectJornada.innerHTML += `<option value="${cj.jornadaId}">${cj.nombreJornada || JORNADA_LABELS[cj.tipoJornada] || cj.tipoJornada}</option>`;
+            selectJornada.innerHTML = '<option value="">Seleccione jornada...</option>';
+            jornadasColegio.forEach(j => {
+                selectJornada.innerHTML += `<option value="${j.jornadaId}">${j.nombreJornada || JORNADA_LABELS[j.tipoJornada] || j.tipoJornada}</option>`;
             });
         }
     } catch (error) {
         console.error('Error al cargar jornadas:', error);
-        selectJornada.innerHTML = '<option value="">Error al cargar jornadas</option>';
+        selectJornada.innerHTML = '<option value="">Error al cargar</option>';
     }
 }
 
-// Función legacy para compatibilidad
-async function cargarJornadas() {
-    await cargarJornadasPorColegio();
-}
+// ✅ Llenar select de colegios solo para el FORMULARIO de crear/editar
+function llenarSelectColegiosFormulario() {
+    const selectColegio = document.getElementById('colegioId');
+    if (!selectColegio) return;
 
-// Cargar rutas
-async function cargarRutas() {
-    try {
-        const response = await fetch(`${API_URL}/rutas`, {
-            headers: Auth.getHeaders()
-        });
-
-        if (response.ok) {
-            rutas = await response.json();
-            llenarSelectRutas();
-        }
-    } catch (error) {
-        console.error('Error al cargar rutas:', error);
-    }
+    selectColegio.innerHTML = '<option value="">Seleccione...</option>';
+    colegios.forEach(colegio => {
+        selectColegio.innerHTML += `<option value="${colegio.id}">${colegio.nombreColegio}</option>`;
+    });
 }
 
 // ✅ Llenar filtros basándose en los estudiantes disponibles
@@ -298,17 +320,6 @@ function actualizarJornadasPorColegio() {
     });
 }
 
-// Llenar select de rutas
-function llenarSelectRutas() {
-    const selectRuta = document.getElementById('rutaId');
-    if (!selectRuta) return;
-
-    selectRuta.innerHTML = '<option value="">Ninguna</option>';
-
-    rutas.forEach(ruta => {
-        selectRuta.innerHTML += `<option value="${ruta.id}">${ruta.nombre}</option>`;
-    });
-}
 
 // Cargar jornadas del colegio seleccionado (para el formulario de crear/editar)
 async function cargarJornadas() {
@@ -396,6 +407,121 @@ function puedeEliminar() {
     return currentUser.rol === 'ADMINISTRADOR';
 }
 
+// =============================================
+// VALIDACIONES
+// =============================================
+
+// Validar edad del estudiante (entre 5 y 18 años)
+function validarEdad(fechaNacimiento) {
+    if (!fechaNacimiento) {
+        return { valido: false, mensaje: 'La fecha de nacimiento es obligatoria' };
+    }
+
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+
+    if (edad < 5) {
+        return { valido: false, mensaje: `El estudiante tiene ${edad} años. Debe tener al menos 5 años para inscribirse.` };
+    }
+
+    if (edad >= 18) {
+        return { valido: false, mensaje: `El estudiante tiene ${edad} años. Debe ser menor de 18 años.` };
+    }
+
+    return { valido: true, edad: edad };
+}
+
+// Validar número de identificación (solo números)
+function validarNumeroId(numId) {
+    if (!numId || !numId.trim()) {
+        return { valido: false, mensaje: 'El número de identificación es obligatorio' };
+    }
+
+    const soloNumeros = /^\d+$/;
+
+    if (!soloNumeros.test(numId.trim())) {
+        return { valido: false, mensaje: 'El número de identificación solo debe contener números' };
+    }
+
+    if (numId.trim().length < 5) {
+        return { valido: false, mensaje: 'El número de identificación debe tener al menos 5 dígitos' };
+    }
+
+    if (numId.trim().length > 15) {
+        return { valido: false, mensaje: 'El número de identificación no puede tener más de 15 dígitos' };
+    }
+
+    return { valido: true };
+}
+
+// Validar formato de teléfono
+function validarTelefono(telefono) {
+    if (!telefono || !telefono.trim()) {
+        return { valido: false, mensaje: 'El teléfono del acudiente es obligatorio' };
+    }
+
+    const soloNumeros = telefono.replace(/\D/g, '');
+
+    if (soloNumeros.length < 7) {
+        return { valido: false, mensaje: 'El teléfono debe tener al menos 7 dígitos' };
+    }
+
+    if (soloNumeros.length > 15) {
+        return { valido: false, mensaje: 'El teléfono no puede tener más de 15 dígitos' };
+    }
+
+    return { valido: true };
+}
+
+// Validar formato de email
+function validarEmail(email) {
+    if (!email || !email.trim()) {
+        return { valido: true }; // Email no es obligatorio
+    }
+
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!regexEmail.test(email.trim())) {
+        return { valido: false, mensaje: 'El formato del correo electrónico no es válido. Ejemplo: correo@dominio.com' };
+    }
+
+    return { valido: true };
+}
+
+// Validar solo letras (para nombres)
+function validarSoloLetras(texto, nombreCampo) {
+    if (!texto || !texto.trim()) {
+        return { valido: false, mensaje: `El campo "${nombreCampo}" es obligatorio` };
+    }
+
+    const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+
+    if (!soloLetras.test(texto.trim())) {
+        return { valido: false, mensaje: `El campo "${nombreCampo}" solo debe contener letras` };
+    }
+
+    if (texto.trim().length < 2) {
+        return { valido: false, mensaje: `El campo "${nombreCampo}" debe tener al menos 2 caracteres` };
+    }
+
+    return { valido: true };
+}
+
+// Validar selección de dropdown
+function validarSeleccion(valor, nombreCampo) {
+    if (!valor || valor === '') {
+        return { valido: false, mensaje: `Debe seleccionar ${nombreCampo}` };
+    }
+    return { valido: true };
+}
+
+
 // ✅ Aplicar filtros (llamado por el botón Filtrar)
 function aplicarFiltros() {
     const colegio = document.getElementById('filtroColegio').value;
@@ -468,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Mostrar modal para crear
 function mostrarModalCrear() {
     if (!puedeEditar()) {
-        alert('No tiene permisos para crear estudiantes');
+        mostrarAlertaError('No tiene permisos para crear estudiantes');
         return;
     }
 
@@ -477,11 +603,7 @@ function mostrarModalCrear() {
     document.getElementById('estudianteId').value = '';
     document.getElementById('modoEdicion').value = 'false';
 
-    // Ocultar campo de estado en modo crear
-    document.getElementById('estadoContainer').style.display = 'none';
-
-    // Resetear selects en cascada
-    document.getElementById('zonaId').value = '';
+    // Resetear selects dependientes
     document.getElementById('colegioId').innerHTML = '<option value="">Primero seleccione zona</option>';
     document.getElementById('jornadaId').innerHTML = '<option value="">Primero seleccione colegio</option>';
 
@@ -491,7 +613,7 @@ function mostrarModalCrear() {
 // Editar estudiante
 async function editarEstudiante(id) {
     if (!puedeEditar()) {
-        alert('No tiene permisos para editar estudiantes');
+        mostrarAlertaError('No tiene permisos para editar estudiantes');
         return;
     }
 
@@ -507,7 +629,7 @@ async function editarEstudiante(id) {
             document.getElementById('estudianteId').value = estudiante.id;
             document.getElementById('modoEdicion').value = 'true';
 
-            // Llenar datos del estudiante
+            // Llenar formulario
             document.getElementById('tipoId').value = estudiante.tipoId || '';
             document.getElementById('numId').value = estudiante.numId;
             document.getElementById('primerNombre').value = estudiante.primerNombre;
@@ -528,89 +650,222 @@ async function editarEstudiante(id) {
             document.getElementById('direccionAcudiente').value = estudiante.direccionAcudiente || '';
             document.getElementById('emailAcudiente').value = estudiante.emailAcudiente || '';
 
-            // ✅ Mostrar campo de estado en modo edición
-            document.getElementById('estadoContainer').style.display = 'block';
-            document.getElementById('estadoInscripcion').value = estudiante.estadoInscripcion || 'ACTIVA';
-
-            // ✅ Cargar datos de inscripción en cascada
-            // Primero necesitamos obtener la zona del colegio
-            if (estudiante.colegioId) {
-                // Buscar la zona del colegio
-                const colegioResponse = await fetch(`${API_URL}/colegios/${estudiante.colegioId}`, {
-                    headers: Auth.getHeaders()
-                });
-
-                if (colegioResponse.ok) {
-                    const colegio = await colegioResponse.json();
-
-                    // Establecer zona
-                    document.getElementById('zonaId').value = colegio.zonaId || '';
-
-                    // Cargar colegios de esa zona
-                    await cargarColegiosPorZona();
-
-                    // Establecer colegio
-                    document.getElementById('colegioId').value = estudiante.colegioId;
-
-                    // Cargar jornadas del colegio
-                    await cargarJornadasPorColegio();
-
-                    // Establecer jornada
-                    document.getElementById('jornadaId').value = estudiante.jornadaId || '';
-                }
+            // Datos de inscripción - cargar zona primero
+            if (estudiante.zonaId) {
+                document.getElementById('zonaId').value = estudiante.zonaId;
+                await cargarColegiosPorZona();
             }
-
+            document.getElementById('colegioId').value = estudiante.colegioId;
+            await cargarJornadasPorColegio();
+            document.getElementById('jornadaId').value = estudiante.jornadaId;
             document.getElementById('observacionesInscripcion').value = estudiante.observacionesInscripcion || '';
 
             modalInstance.show();
         } else {
-            alert('Error al cargar el estudiante');
+            mostrarAlertaError('Error al cargar el estudiante');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al cargar el estudiante');
+        mostrarAlertaError('Error de conexión al cargar el estudiante');
     }
 }
 
-// Guardar estudiante
+// =============================================
+// ALERTAS BONITAS
+// =============================================
+
+function mostrarAlertaError(mensaje) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: mensaje,
+        confirmButtonColor: '#667eea'
+    });
+}
+
+function mostrarAlertaExito(mensaje) {
+    Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: mensaje,
+        confirmButtonColor: '#667eea'
+    });
+}
+
+function mostrarAlertaAdvertencia(mensaje) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: mensaje,
+        confirmButtonColor: '#667eea'
+    });
+}
+
+// =============================================
+// GUARDAR ESTUDIANTE
+// =============================================
+
 async function guardarEstudiante() {
-    const form = document.getElementById('formEstudiante');
-    if (!form.checkValidity()) {
-        form.reportValidity();
+
+    // =============================================
+    // VALIDAR DATOS DEL ESTUDIANTE
+    // =============================================
+
+    // Tipo de ID
+    const tipoId = document.getElementById('tipoId').value;
+    if (!tipoId) {
+        mostrarAlertaError('Debe seleccionar un tipo de identificación');
+        document.getElementById('tipoId').focus();
         return;
     }
+
+    // Número de ID
+    const numId = document.getElementById('numId').value;
+    const valNumId = validarNumeroId(numId);
+    if (!valNumId.valido) {
+        mostrarAlertaError(valNumId.mensaje);
+        document.getElementById('numId').focus();
+        return;
+    }
+
+    // Fecha de nacimiento y edad
+    const fechaNacimiento = document.getElementById('fechaNacimiento').value;
+    const valEdad = validarEdad(fechaNacimiento);
+    if (!valEdad.valido) {
+        mostrarAlertaError(valEdad.mensaje);
+        document.getElementById('fechaNacimiento').focus();
+        return;
+    }
+
+    // Primer nombre
+    const primerNombre = document.getElementById('primerNombre').value;
+    const valPrimerNombre = validarSoloLetras(primerNombre, 'Primer Nombre');
+    if (!valPrimerNombre.valido) {
+        mostrarAlertaError(valPrimerNombre.mensaje);
+        document.getElementById('primerNombre').focus();
+        return;
+    }
+
+    // Segundo nombre (opcional, pero si tiene debe ser válido)
+    const segundoNombre = document.getElementById('segundoNombre').value;
+    if (segundoNombre && segundoNombre.trim()) {
+        const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+        if (!soloLetras.test(segundoNombre.trim())) {
+            mostrarAlertaError('El segundo nombre solo debe contener letras');
+            document.getElementById('segundoNombre').focus();
+            return;
+        }
+    }
+
+    // Primer apellido
+    const primerApellido = document.getElementById('primerApellido').value;
+    const valPrimerApellido = validarSoloLetras(primerApellido, 'Primer Apellido');
+    if (!valPrimerApellido.valido) {
+        mostrarAlertaError(valPrimerApellido.mensaje);
+        document.getElementById('primerApellido').focus();
+        return;
+    }
+
+    // Segundo apellido (opcional, pero si tiene debe ser válido)
+    const segundoApellido = document.getElementById('segundoApellido').value;
+    if (segundoApellido && segundoApellido.trim()) {
+        const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+        if (!soloLetras.test(segundoApellido.trim())) {
+            mostrarAlertaError('El segundo apellido solo debe contener letras');
+            document.getElementById('segundoApellido').focus();
+            return;
+        }
+    }
+
+    // =============================================
+    // VALIDAR DATOS DEL ACUDIENTE
+    // =============================================
+
+    // Nombre del acudiente
+    const nombreAcudiente = document.getElementById('nombreAcudiente').value;
+    const valNombreAcudiente = validarSoloLetras(nombreAcudiente, 'Nombre del Acudiente');
+    if (!valNombreAcudiente.valido) {
+        mostrarAlertaError(valNombreAcudiente.mensaje);
+        document.getElementById('nombreAcudiente').focus();
+        return;
+    }
+
+    // Teléfono del acudiente
+    const telefonoAcudiente = document.getElementById('telefonoAcudiente').value;
+    const valTelefono = validarTelefono(telefonoAcudiente);
+    if (!valTelefono.valido) {
+        mostrarAlertaError(valTelefono.mensaje);
+        document.getElementById('telefonoAcudiente').focus();
+        return;
+    }
+
+    // Email del acudiente (opcional)
+    const emailAcudiente = document.getElementById('emailAcudiente').value;
+    const valEmail = validarEmail(emailAcudiente);
+    if (!valEmail.valido) {
+        mostrarAlertaError(valEmail.mensaje);
+        document.getElementById('emailAcudiente').focus();
+        return;
+    }
+
+    // =============================================
+    // VALIDAR DATOS DE INSCRIPCIÓN
+    // =============================================
+
+    // Zona
+    const zonaId = document.getElementById('zonaId').value;
+    if (!zonaId) {
+        mostrarAlertaError('Debe seleccionar una zona');
+        document.getElementById('zonaId').focus();
+        return;
+    }
+
+    // Colegio
+    const colegioId = document.getElementById('colegioId').value;
+    if (!colegioId) {
+        mostrarAlertaError('Debe seleccionar un colegio');
+        document.getElementById('colegioId').focus();
+        return;
+    }
+
+    // Jornada
+    const jornadaId = document.getElementById('jornadaId').value;
+    if (!jornadaId) {
+        mostrarAlertaError('Debe seleccionar una jornada');
+        document.getElementById('jornadaId').focus();
+        return;
+    }
+
+    // =============================================
+    // CONSTRUIR DTO Y ENVIAR
+    // =============================================
 
     const modoEdicion = document.getElementById('modoEdicion').value === 'true';
     const estudianteId = document.getElementById('estudianteId').value;
 
-    // Construir DTO
     const dto = {
-        tipoId: document.getElementById('tipoId').value || null,
-        numId: document.getElementById('numId').value.trim(),
-        primerNombre: document.getElementById('primerNombre').value.trim(),
-        segundoNombre: document.getElementById('segundoNombre').value.trim() || null,
-        primerApellido: document.getElementById('primerApellido').value.trim(),
-        segundoApellido: document.getElementById('segundoApellido').value.trim() || null,
-        fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
+        tipoId: tipoId,
+        numId: numId.trim(),
+        primerNombre: primerNombre.trim(),
+        segundoNombre: segundoNombre ? segundoNombre.trim() : null,
+        primerApellido: primerApellido.trim(),
+        segundoApellido: segundoApellido ? segundoApellido.trim() : null,
+        fechaNacimiento: fechaNacimiento,
         sexo: document.getElementById('sexo').value || null,
         direccion: document.getElementById('direccion').value.trim() || null,
         curso: document.getElementById('curso').value.trim() || null,
-        eps: document.getElementById('eps').value.trim() || null,
-        discapacidad: document.getElementById('discapacidad').value.trim() || null,
-        etnia: document.getElementById('etnia').value.trim() || null,
-        nombreAcudiente: document.getElementById('nombreAcudiente').value.trim(),
-        telefonoAcudiente: document.getElementById('telefonoAcudiente').value.trim(),
+        eps: document.getElementById('eps').value || null,
+        discapacidad: document.getElementById('discapacidad').value || null,
+        etnia: document.getElementById('etnia').value || null,
+        nombreAcudiente: nombreAcudiente.trim(),
+        telefonoAcudiente: telefonoAcudiente.trim(),
         direccionAcudiente: document.getElementById('direccionAcudiente').value.trim() || null,
-        emailAcudiente: document.getElementById('emailAcudiente').value.trim() || null,
-        colegioId: parseInt(document.getElementById('colegioId').value),
-        jornadaId: parseInt(document.getElementById('jornadaId').value),
+        emailAcudiente: emailAcudiente ? emailAcudiente.trim() : null,
+        colegioId: parseInt(colegioId),
+        jornadaId: parseInt(jornadaId),
+        rutaId: null,
         observacionesInscripcion: document.getElementById('observacionesInscripcion').value.trim() || null
     };
-
-    // ✅ Agregar estado solo en modo edición
-    if (modoEdicion) {
-        dto.estadoInscripcion = document.getElementById('estadoInscripcion').value;
-    }
 
     try {
         const url = modoEdicion ? `${API_URL}/estudiantes/${estudianteId}` : `${API_URL}/estudiantes`;
@@ -623,16 +878,30 @@ async function guardarEstudiante() {
         });
 
         if (response.ok) {
-            alert(modoEdicion ? 'Estudiante actualizado exitosamente' : 'Estudiante creado exitosamente');
+            await Swal.fire({
+                icon: 'success',
+                title: modoEdicion ? '¡Actualizado!' : '¡Creado!',
+                text: modoEdicion ? 'Estudiante actualizado exitosamente' : 'Estudiante creado exitosamente',
+                confirmButtonColor: '#667eea'
+            });
             modalInstance.hide();
             cargarEstudiantes();
         } else {
-            const error = await response.text();
-            alert('Error: ' + error);
+            const errorText = await response.text();
+
+            if (errorText.toLowerCase().includes('ya existe') || errorText.toLowerCase().includes('duplicado') || errorText.toLowerCase().includes('numid')) {
+                mostrarAlertaAdvertencia('El número de identificación ya está registrado en el sistema');
+            } else if (response.status === 409) {
+                mostrarAlertaAdvertencia('El estudiante ya existe en el sistema');
+            } else if (response.status === 400) {
+                mostrarAlertaError('Error en los datos enviados: ' + errorText);
+            } else {
+                mostrarAlertaError('Error: ' + errorText);
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al guardar el estudiante');
+        mostrarAlertaError('Error de conexión. Verifique que el servidor esté activo.');
     }
 }
 
@@ -646,10 +915,12 @@ async function verDetalleEstudiante(id) {
         if (response.ok) {
             const estudiante = await response.json();
             mostrarModalDetalle(estudiante);
+        } else {
+            mostrarAlertaError('Error al cargar el detalle del estudiante');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al cargar el detalle');
+        mostrarAlertaError('Error de conexión al cargar el detalle');
     }
 }
 
@@ -818,13 +1089,22 @@ function mostrarModalDetalle(e) {
 // Eliminar estudiante
 async function eliminarEstudiante(id) {
     if (!puedeEliminar()) {
-        alert('No tiene permisos para eliminar estudiantes');
+        mostrarAlertaError('No tiene permisos para eliminar estudiantes');
         return;
     }
 
-    if (!confirmAction('¿Está seguro de eliminar este estudiante? Esta acción no se puede deshacer.')) {
-        return;
-    }
+    const resultado = await Swal.fire({
+        icon: 'warning',
+        title: '¿Está seguro?',
+        text: 'Esta acción eliminará el estudiante y no se puede deshacer',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!resultado.isConfirmed) return;
 
     try {
         const response = await fetch(`${API_URL}/estudiantes/${id}`, {
@@ -833,14 +1113,14 @@ async function eliminarEstudiante(id) {
         });
 
         if (response.ok) {
-            alert('Estudiante eliminado exitosamente');
+            mostrarAlertaExito('Estudiante eliminado exitosamente');
             cargarEstudiantes();
         } else {
-            alert('Error al eliminar el estudiante');
+            mostrarAlertaError('Error al eliminar el estudiante');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al eliminar el estudiante');
+        mostrarAlertaError('Error de conexión al eliminar el estudiante');
     }
 }
 
@@ -848,3 +1128,4 @@ async function eliminarEstudiante(id) {
 function logout() {
     Auth.logout();
 }
+
