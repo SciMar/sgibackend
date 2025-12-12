@@ -159,8 +159,7 @@ function updateMenuByRole() {
         if (menuRutas) menuRutas.style.display = 'block';
         if (menuColegios) menuColegios.style.display = 'block';
         if (menuAsistencias) menuAsistencias.style.display = 'block';
-        if (menuNotificaciones) menuNotificaciones.style.display = 'block';
-        if (menuReportes) menuReportes.style.display = 'block';
+
     }
     else if (rol === 'MONITOR') {
         if (menuEstudiantes) menuEstudiantes.style.display = 'block';

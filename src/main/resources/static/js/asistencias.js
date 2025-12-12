@@ -37,7 +37,7 @@ function configurarMenuPorRol() {
     if (rol === 'ADMINISTRADOR') {
         ['menuUsuarios','menuEstudiantes','menuRutas','menuColegios','menuAsistencias','menuNotificaciones','menuReportes'].forEach(show);
     } else if (rol === 'ENCARGADO') {
-        ['menuEstudiantes','menuRutas','menuColegios','menuAsistencias','menuNotificaciones','menuReportes'].forEach(show);
+        ['menuEstudiantes','menuRutas','menuColegios','menuAsistencias'].forEach(show);
     } else if (rol === 'MONITOR') {
         ['menuEstudiantes','menuAsistencias'].forEach(show);
     }

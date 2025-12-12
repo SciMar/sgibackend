@@ -46,8 +46,6 @@ function configurarMenuPorRol() {
         document.getElementById('menuRutas').style.display = 'block';
         document.getElementById('menuColegios').style.display = 'block';
         document.getElementById('menuAsistencias').style.display = 'block';
-        document.getElementById('menuNotificaciones').style.display = 'block';
-        document.getElementById('menuReportes').style.display = 'block';
         mostrarAccionesRapidas(rol);
 
     } else if (rol === 'MONITOR') {

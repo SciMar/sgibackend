@@ -325,6 +325,14 @@ function renderizarTabla() {
                                     }
                                 </a>
                             </li>
+                            ${usuario.id !== currentUser.id ? `
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" onclick="eliminarUsuario(${usuario.id})">
+                                    <i class="bi bi-trash-fill me-2"></i>Eliminar
+                                </a>
+                            </li>
+                            ` : ''}
                         </ul>
                     </div>
                 </td>
@@ -719,7 +727,7 @@ async function resetearContrasena(id) {
 
     try {
         const response = await fetch(`${API_URL}/usuarios/${id}/resetear-contrasena`, {
-            method: 'PUT',
+            method: 'POST',
             headers: Auth.getHeaders()
         });
 
@@ -755,8 +763,8 @@ async function toggleEstado(id, estadoActual) {
     if (!resultado.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}/toggle-estado`, {
-            method: 'PUT',
+        const response = await fetch(`${API_URL}/usuarios/${id}/${accion}`, {
+            method: 'PATCH',
             headers: Auth.getHeaders()
         });
 
@@ -769,6 +777,7 @@ async function toggleEstado(id, estadoActual) {
         mostrarAlertaError('Error al cambiar estado');
     }
 }
+
 
 // ==========================================
 // UTILIDADES
@@ -799,4 +808,47 @@ function mostrarAlerta(mensaje, tipo = 'info') {
 
 function logout() {
     Auth.logout();
+}
+
+// ==========================================
+// ELIMINAR USUARIO
+// ==========================================
+async function eliminarUsuario(id) {
+    const usuario = usuariosData.find(u => u.id === id);
+    if (!usuario) return;
+
+    // No permitir eliminarse a sí mismo
+    if (id === currentUser.id) {
+        mostrarAlertaError('No puede eliminar su propio usuario');
+        return;
+    }
+
+    const resultado = await Swal.fire({
+        icon: 'warning',
+        title: '¿Eliminar usuario?',
+        html: `Esta acción eliminará permanentemente a <strong>${usuario.primerNombre} ${usuario.primerApellido}</strong><br><br>
+               <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Esta acción no se puede deshacer</span>`,
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!resultado.isConfirmed) return;
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+            method: 'DELETE',
+            headers: Auth.getHeaders()
+        });
+
+        if (!response.ok) throw new Error('Error al eliminar usuario');
+
+        mostrarAlertaExito('Usuario eliminado correctamente');
+        await cargarDatosIniciales();
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlertaError('Error al eliminar usuario');
+    }
 }

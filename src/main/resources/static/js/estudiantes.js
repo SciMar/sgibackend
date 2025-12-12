@@ -130,7 +130,20 @@ function llenarSelectZonas() {
     const selectFiltroZona = document.getElementById('filtroZona');
     const selectZonaForm = document.getElementById('zonaId');
 
-    // Para el filtro
+    // ✅ Si es MONITOR, solo mostrar su zona y deshabilitar
+    if (currentUser.rol === 'MONITOR' && monitorData) {
+        if (selectFiltroZona) {
+            selectFiltroZona.innerHTML = `<option value="${monitorData.zonaId}">${monitorData.nombreZona}</option>`;
+            selectFiltroZona.disabled = true;
+        }
+        if (selectZonaForm) {
+            selectZonaForm.innerHTML = `<option value="${monitorData.zonaId}">${monitorData.nombreZona}</option>`;
+            selectZonaForm.disabled = true;
+        }
+        return;
+    }
+
+    // Para Admin/Encargado - comportamiento normal
     if (selectFiltroZona) {
         selectFiltroZona.innerHTML = '<option value="">Todas las zonas</option>';
         zonas.forEach(z => {
@@ -138,7 +151,6 @@ function llenarSelectZonas() {
         });
     }
 
-    // Para el formulario
     if (selectZonaForm) {
         selectZonaForm.innerHTML = '<option value="">Seleccione zona...</option>';
         zonas.forEach(z => {
@@ -928,158 +940,159 @@ async function verDetalleEstudiante(id) {
 function mostrarModalDetalle(e) {
     const nombreCompleto = `${e.primerNombre} ${e.segundoNombre || ''} ${e.primerApellido} ${e.segundoApellido || ''}`.trim();
 
-    // Crear modal si no existe
-    let modal = document.getElementById('modalDetalle');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.id = 'modalDetalle';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Detalle del Estudiante</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" id="modalDetalleContent"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
+    // Eliminar modal anterior si existe
+    let modalExistente = document.getElementById('modalDetalle');
+    if (modalExistente) {
+        modalExistente.remove();
     }
 
-    // Llenar contenido
-    document.getElementById('modalDetalleContent').innerHTML = `
-        <div class="row g-3">
-            <!-- Datos del Estudiante -->
-            <div class="col-12">
-                <h6 class="border-bottom pb-2" style="color: #667eea;">
-                    <i class="bi bi-person-fill me-2"></i>Datos del Estudiante
-                </h6>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Nombre Completo</label>
-                <p class="fw-bold mb-0">${nombreCompleto}</p>
-            </div>
-            <div class="col-md-3">
-                <label class="text-muted small">Tipo ID</label>
-                <p class="mb-0"><span class="badge bg-secondary">${TIPO_ID_LABELS[e.tipoId] || e.tipoId}</span></p>
-            </div>
-            <div class="col-md-3">
-                <label class="text-muted small">Número ID</label>
-                <p class="fw-bold mb-0">${e.numId}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Fecha de Nacimiento</label>
-                <p class="mb-0">${e.fechaNacimiento ? formatDateOnly(e.fechaNacimiento) : '-'}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Sexo</label>
-                <p class="mb-0">${SEXO_LABELS[e.sexo] || e.sexo || '-'}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Curso</label>
-                <p class="mb-0">${e.curso || '-'}</p>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Dirección</label>
-                <p class="mb-0">${e.direccion || '-'}</p>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">EPS</label>
-                <p class="mb-0">${e.eps || '-'}</p>
-            </div>
-            ${e.discapacidad ? `
-            <div class="col-md-6">
-                <label class="text-muted small">Discapacidad</label>
-                <p class="mb-0">${e.discapacidad}</p>
-            </div>
-            ` : ''}
-            ${e.etnia ? `
-            <div class="col-md-6">
-                <label class="text-muted small">Etnia</label>
-                <p class="mb-0">${e.etnia}</p>
-            </div>
-            ` : ''}
+    // Crear modal nuevo
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'modalDetalle';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Detalle del Estudiante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Datos del Estudiante -->
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2" style="color: #667eea;">
+                                <i class="bi bi-person-fill me-2"></i>Datos del Estudiante
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Nombre Completo</label>
+                            <p class="fw-bold mb-0">${nombreCompleto}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Tipo ID</label>
+                            <p class="mb-0"><span class="badge bg-secondary">${TIPO_ID_LABELS[e.tipoId] || e.tipoId}</span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Número ID</label>
+                            <p class="fw-bold mb-0">${e.numId}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Fecha de Nacimiento</label>
+                            <p class="mb-0">${e.fechaNacimiento ? formatDateOnly(e.fechaNacimiento) : '-'}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Sexo</label>
+                            <p class="mb-0">${SEXO_LABELS[e.sexo] || e.sexo || '-'}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Curso</label>
+                            <p class="mb-0">${e.curso || '-'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Dirección</label>
+                            <p class="mb-0">${e.direccion || '-'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">EPS</label>
+                            <p class="mb-0">${e.eps || '-'}</p>
+                        </div>
+                        ${e.discapacidad ? `
+                        <div class="col-md-6">
+                            <label class="text-muted small">Discapacidad</label>
+                            <p class="mb-0">${e.discapacidad}</p>
+                        </div>
+                        ` : ''}
+                        ${e.etnia ? `
+                        <div class="col-md-6">
+                            <label class="text-muted small">Etnia</label>
+                            <p class="mb-0">${e.etnia}</p>
+                        </div>
+                        ` : ''}
 
-            <!-- Datos del Acudiente -->
-            <div class="col-12 mt-3">
-                <h6 class="border-bottom pb-2" style="color: #667eea;">
-                    <i class="bi bi-person-circle me-2"></i>Datos del Acudiente
-                </h6>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Nombre Completo</label>
-                <p class="fw-bold mb-0">${e.nombreAcudiente}</p>
-            </div>
-            <div class="col-md-6">
-                <label class="text-muted small">Teléfono</label>
-                <p class="fw-bold mb-0">
-                    <i class="bi bi-telephone-fill text-success me-2"></i>${e.telefonoAcudiente}
-                </p>
-            </div>
-            ${e.direccionAcudiente ? `
-            <div class="col-md-6">
-                <label class="text-muted small">Dirección</label>
-                <p class="mb-0">${e.direccionAcudiente}</p>
-            </div>
-            ` : ''}
-            ${e.emailAcudiente ? `
-            <div class="col-md-6">
-                <label class="text-muted small">Email</label>
-                <p class="mb-0"><i class="bi bi-envelope-fill text-primary me-2"></i>${e.emailAcudiente}</p>
-            </div>
-            ` : ''}
+                        <!-- Datos del Acudiente -->
+                        <div class="col-12 mt-3">
+                            <h6 class="border-bottom pb-2" style="color: #667eea;">
+                                <i class="bi bi-person-circle me-2"></i>Datos del Acudiente
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Nombre Completo</label>
+                            <p class="fw-bold mb-0">${e.nombreAcudiente}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Teléfono</label>
+                            <p class="fw-bold mb-0">
+                                <i class="bi bi-telephone-fill text-success me-2"></i>${e.telefonoAcudiente}
+                            </p>
+                        </div>
+                        ${e.direccionAcudiente ? `
+                        <div class="col-md-6">
+                            <label class="text-muted small">Dirección</label>
+                            <p class="mb-0">${e.direccionAcudiente}</p>
+                        </div>
+                        ` : ''}
+                        ${e.emailAcudiente ? `
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <p class="mb-0"><i class="bi bi-envelope-fill text-primary me-2"></i>${e.emailAcudiente}</p>
+                        </div>
+                        ` : ''}
 
-            <!-- Datos de Inscripción -->
-            <div class="col-12 mt-3">
-                <h6 class="border-bottom pb-2" style="color: #667eea;">
-                    <i class="bi bi-building me-2"></i>Datos de Inscripción
-                </h6>
+                        <!-- Datos de Inscripción -->
+                        <div class="col-12 mt-3">
+                            <h6 class="border-bottom pb-2" style="color: #667eea;">
+                                <i class="bi bi-building me-2"></i>Datos de Inscripción
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Colegio</label>
+                            <p class="mb-0">${e.nombreColegio || '-'}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Jornada</label>
+                            <p class="mb-0">${e.nombreJornada || '-'}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Ruta</label>
+                            <p class="mb-0">${e.nombreRuta || 'Sin ruta asignada'}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Fecha de Inscripción</label>
+                            <p class="mb-0">${e.fechaInscripcion ? formatDateOnly(e.fechaInscripcion) : '-'}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Estado</label>
+                            <p class="mb-0">
+                                <span class="badge ${ESTADO_INSCRIPCION_BADGE_CLASS[e.estadoInscripcion]}">
+                                    ${ESTADO_INSCRIPCION_LABELS[e.estadoInscripcion] || e.estadoInscripcion}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Estado Activo</label>
+                            <p class="mb-0">
+                                <span class="badge ${e.activo ? 'bg-success' : 'bg-danger'}">
+                                    ${e.activo ? 'Sí' : 'No'}
+                                </span>
+                            </p>
+                        </div>
+                        ${e.observacionesInscripcion ? `
+                        <div class="col-12">
+                            <label class="text-muted small">Observaciones</label>
+                            <p class="mb-0">${e.observacionesInscripcion}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Colegio</label>
-                <p class="mb-0">${e.nombreColegio || '-'}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Jornada</label>
-                <p class="mb-0">${e.nombreJornada || '-'}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Ruta</label>
-                <p class="mb-0">${e.nombreRuta || 'Sin ruta asignada'}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Fecha de Inscripción</label>
-                <p class="mb-0">${e.fechaInscripcion ? formatDateOnly(e.fechaInscripcion) : '-'}</p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Estado</label>
-                <p class="mb-0">
-                    <span class="badge ${ESTADO_INSCRIPCION_BADGE_CLASS[e.estadoInscripcion]}">
-                        ${ESTADO_INSCRIPCION_LABELS[e.estadoInscripcion] || e.estadoInscripcion}
-                    </span>
-                </p>
-            </div>
-            <div class="col-md-4">
-                <label class="text-muted small">Estado Activo</label>
-                <p class="mb-0">
-                    <span class="badge ${e.activo ? 'bg-success' : 'bg-danger'}">
-                        ${e.activo ? 'Sí' : 'No'}
-                    </span>
-                </p>
-            </div>
-            ${e.observacionesInscripcion ? `
-            <div class="col-12">
-                <label class="text-muted small">Observaciones</label>
-                <p class="mb-0">${e.observacionesInscripcion}</p>
-            </div>
-            ` : ''}
         </div>
     `;
+
+    document.body.appendChild(modal);
 
     // Mostrar modal
     const bsModal = new bootstrap.Modal(modal);
