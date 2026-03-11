@@ -745,26 +745,21 @@ async function cambiarEstado(id, activar) {
 
 async function eliminarColegio(id) {
     const colegio = colegiosOriginales.find(c => c.id === id);
-    const nombreColegio = colegio ? colegio.nombreColegio : 'este colegio';
-    const totalEstudiantes = colegio ? (colegio.totalEstudiantes || 0) : 0;
+    if (!colegio) return;
 
-    let advertencia = '';
-    if (totalEstudiantes > 0) {
-        advertencia = `<br><br><span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Este colegio tiene <strong>${totalEstudiantes} estudiante(s)</strong> registrado(s).</span>`;
-    }
-
-    const result = await Swal.fire({
-        title: '¿Eliminar Colegio?',
-        html: `¿Está seguro de eliminar el colegio <strong>"${nombreColegio}"</strong>?${advertencia}<br><br><small class="text-muted">Esta acción no se puede deshacer.</small>`,
+    const resultado = await Swal.fire({
         icon: 'warning',
+        title: '¿Eliminar colegio?',
+        html: `Esta acción eliminará permanentemente <strong>${colegio.nombreColegio}</strong><br><br>
+               <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Esta acción no se puede deshacer</span>`,
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="bi bi-trash-fill me-1"></i>Sí, Eliminar',
+        confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     });
 
-    if (!result.isConfirmed) return;
+    if (!resultado.isConfirmed) return;
 
     try {
         const response = await fetch(`${API_URL}/colegios/${id}`, {
@@ -772,20 +767,20 @@ async function eliminarColegio(id) {
             headers: Auth.getHeaders()
         });
 
-        if (response.ok) {
-            mostrarAlertaExito('¡Colegio Eliminado!', `El colegio "${nombreColegio}" ha sido eliminado correctamente.`);
-            cargarColegios();
-        } else {
-            const errorText = await response.text();
-            if (errorText.toLowerCase().includes('estudiantes')) {
-                mostrarAlertaError('No se puede eliminar', 'El colegio tiene estudiantes registrados. Debe reasignarlos primero.');
-            } else {
-                mostrarAlertaError('Error', errorText || 'No se pudo eliminar el colegio.');
+        if (!response.ok) {
+            // Verificar si es error de relaciones
+            if (response.status === 400 || response.status === 409) {
+                mostrarAlertaAdvertencia('Este colegio tiene jornadas o estudiantes asociados. Solo puede ser desactivado, no eliminado.');
+                return;
             }
+            throw new Error('Error al eliminar colegio');
         }
+
+        mostrarAlertaExito('Colegio eliminado correctamente');
+        await cargarColegios();
     } catch (error) {
         console.error('Error:', error);
-        mostrarAlertaError('Error', 'Error de conexión al eliminar el colegio.');
+        mostrarAlertaError('No se pudo eliminar el colegio. Verifique que no tenga datos asociados.');
     }
 }
 
