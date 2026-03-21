@@ -48,11 +48,11 @@ async function cargarEstudiantes() {
     showTableLoading('tableBody', 8);
 
     try {
-        let url = `${API_URL}/estudiantes`;
+        let url = `${API_URL}/api/estudiantes`;
 
         // Si es MONITOR, usar su zona y jornada
         if (currentUser.rol === 'MONITOR' && monitorData && monitorData.zonaId && monitorData.jornadaId) {
-            url = `${API_URL}/estudiantes/monitor/zona/${monitorData.zonaId}/jornada/${monitorData.jornadaId}`;
+            url = `${API_URL}/api/estudiantes/monitor/zona/${monitorData.zonaId}/jornada/${monitorData.jornadaId}`;
         }
 
         const response = await fetch(url, {
@@ -78,7 +78,7 @@ async function cargarEstudiantes() {
 // Obtener datos del monitor (zona y jornada)
 async function obtenerDatosMonitor() {
     try {
-        const response = await fetch(`${API_URL}/monitores/usuario/${currentUser.id}`, {
+        const response = await fetch(`${API_URL}/api/monitores/usuario/${currentUser.id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -95,7 +95,7 @@ async function obtenerDatosMonitor() {
 // Cargar colegios (para el formulario de crear/editar)
 async function cargarColegios() {
     try {
-        const response = await fetch(`${API_URL}/colegios`, {
+        const response = await fetch(`${API_URL}/api/colegios`, {
             headers: Auth.getHeaders()
         });
 
@@ -112,7 +112,7 @@ async function cargarColegios() {
 // Cargar zonas
 async function cargarZonas() {
     try {
-        const response = await fetch(`${API_URL}/zonas`, {
+        const response = await fetch(`${API_URL}/api/zonas`, {
             headers: Auth.getHeaders()
         });
 
@@ -240,7 +240,7 @@ async function cargarJornadasPorColegio() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioId}/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -344,7 +344,7 @@ async function cargarJornadas() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioId}/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -630,7 +630,7 @@ async function editarEstudiante(id) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/estudiantes/${id}`, {
+        const response = await fetch(`${API_URL}/api/estudiantes/${id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -880,7 +880,7 @@ async function guardarEstudiante() {
     };
 
     try {
-        const url = modoEdicion ? `${API_URL}/estudiantes/${estudianteId}` : `${API_URL}/estudiantes`;
+        const url = modoEdicion ? `${API_URL}/api/estudiantes/${estudianteId}` : `${API_URL}/estudiantes`;
         const method = modoEdicion ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -920,7 +920,7 @@ async function guardarEstudiante() {
 // Ver detalle del estudiante
 async function verDetalleEstudiante(id) {
     try {
-        const response = await fetch(`${API_URL}/estudiantes/${id}`, {
+        const response = await fetch(`${API_URL}/api/estudiantes/${id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -1120,7 +1120,7 @@ async function eliminarEstudiante(id) {
     if (!resultado.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/estudiantes/${id}`, {
+        const response = await fetch(`${API_URL}/api/estudiantes/${id}`, {
             method: 'DELETE',
             headers: Auth.getHeaders()
         });

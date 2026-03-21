@@ -77,7 +77,7 @@ function mostrarLoading(mensaje) {
 
 async function cargarColegios() {
     try {
-        const response = await fetch(`${API_URL}/colegios`, {
+        const response = await fetch(`${API_URL}/api/colegios`, {
             headers: Auth.getHeaders()
         });
 
@@ -103,7 +103,7 @@ async function cargarColegios() {
 
 async function cargarMonitores() {
     try {
-        const response = await fetch(`${API_URL}/monitores`, {
+        const response = await fetch(`${API_URL}/api/monitores`, {
             headers: Auth.getHeaders()
         });
 
@@ -123,7 +123,7 @@ async function cargarMonitores() {
 
 async function cargarEstudiantes() {
     try {
-        const response = await fetch(`${API_URL}/estudiantes`, {
+        const response = await fetch(`${API_URL}/api/estudiantes`, {
             headers: Auth.getHeaders()
         });
 
@@ -182,7 +182,7 @@ async function descargarReporte(tipo, formato) {
     mostrarLoading(`Generando reporte de ${tipo}...`);
 
     try {
-        const response = await fetch(`${API_URL}/reportes/${tipo}/${formato}`, {
+        const response = await fetch(`${API_URL}/api/reportes/${tipo}/${formato}`, {
             headers: Auth.getHeaders()
         });
 
@@ -227,7 +227,7 @@ async function descargarReporteAsistencias(formato) {
     mostrarLoading('Generando reporte de asistencias...');
 
     try {
-        const response = await fetch(`${API_URL}/reportes/asistencias/${formato}${queryString}`, {
+        const response = await fetch(`${API_URL}/api/reportes/asistencias/${formato}${queryString}`, {
             headers: Auth.getHeaders()
         });
 
@@ -271,7 +271,7 @@ async function descargarEstadisticasGenerales() {
     mostrarLoading('Generando estadísticas generales...');
 
     try {
-        const response = await fetch(`${API_URL}/reportes/estadisticas/general${queryString}`, {
+        const response = await fetch(`${API_URL}/api/reportes/estadisticas/general${queryString}`, {
             headers: Auth.getHeaders()
         });
 
@@ -305,7 +305,7 @@ async function descargarEstadisticasColegio() {
     mostrarLoading('Generando estadísticas del colegio...');
 
     try {
-        const response = await fetch(`${API_URL}/reportes/estadisticas/colegio/${colegioId}${queryString}`, {
+        const response = await fetch(`${API_URL}/api/reportes/estadisticas/colegio/${colegioId}${queryString}`, {
             headers: Auth.getHeaders()
         });
 

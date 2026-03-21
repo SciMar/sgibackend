@@ -86,7 +86,7 @@ function mostrarAlertaAdvertencia(titulo, mensaje) {
 
 async function cargarZonas() {
     try {
-        const response = await fetch(`${API_URL}/zonas/activas`, {
+        const response = await fetch(`${API_URL}/api/zonas/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -122,7 +122,7 @@ async function cargarColegios() {
     showTableLoading('tableBody', 7);
 
     try {
-        const response = await fetch(`${API_URL}/colegios`, {
+        const response = await fetch(`${API_URL}/api/colegios`, {
             headers: Auth.getHeaders()
         });
 
@@ -250,7 +250,7 @@ async function cargarJornadasParaCrear() {
     divJornadas.style.display = 'block';
 
     try {
-        const response = await fetch(`${API_URL}/jornadas/zona/${zonaId}/activas`, {
+        const response = await fetch(`${API_URL}/apijornadas/zona/${zonaId}/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -335,7 +335,7 @@ async function guardarColegio() {
 
     try {
         // 1. Crear el colegio
-        const response = await fetch(`${API_URL}/colegios`, {
+        const response = await fetch(`${API_URL}/api/colegios`, {
             method: 'POST',
             headers: Auth.getHeaders(),
             body: JSON.stringify(dto)
@@ -347,7 +347,7 @@ async function guardarColegio() {
             // 2. Asignar jornadas si hay seleccionadas
             if (jornadasSeleccionadas.length > 0) {
                 try {
-                    await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioCreado.id}/asignar-varias`, {
+                    await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioCreado.id}/asignar-varias`, {
                         method: 'POST',
                         headers: Auth.getHeaders(),
                         body: JSON.stringify(jornadasSeleccionadas)
@@ -381,7 +381,7 @@ async function guardarColegio() {
 
 async function editarColegio(id) {
     try {
-        const response = await fetch(`${API_URL}/colegios/${id}`, {
+        const response = await fetch(`${API_URL}/api/colegios/${id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -417,7 +417,7 @@ async function actualizarColegio() {
     };
 
     try {
-        const response = await fetch(`${API_URL}/colegios/${colegioId}`, {
+        const response = await fetch(`${API_URL}/api/colegios/${colegioId}`, {
             method: 'PUT',
             headers: Auth.getHeaders(),
             body: JSON.stringify(dto)
@@ -447,7 +447,7 @@ async function actualizarColegio() {
 
 async function verDetalle(id) {
     try {
-        const response = await fetch(`${API_URL}/colegios/${id}/estadisticas`, {
+        const response = await fetch(`${API_URL}/api/colegios/${id}/estadisticas`, {
             headers: Auth.getHeaders()
         });
 
@@ -524,7 +524,7 @@ async function cargarJornadasDisponibles(zonaId) {
 
     try {
         // Cargar todas las jornadas de la zona
-        const response = await fetch(`${API_URL}/jornadas/zona/${zonaId}/activas`, {
+        const response = await fetch(`${API_URL}/api/jornadas/zona/${zonaId}/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -550,7 +550,7 @@ async function cargarJornadasAsignadas(colegioId) {
     container.innerHTML = '<p class="text-muted text-center">Cargando...</p>';
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioId}`, {
             headers: Auth.getHeaders()
         });
 
@@ -615,7 +615,7 @@ async function agregarJornada() {
     };
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas`, {
             method: 'POST',
             headers: Auth.getHeaders(),
             body: JSON.stringify(dto)
@@ -643,7 +643,7 @@ async function agregarJornada() {
 async function toggleJornada(colegioJornadaId, activar) {
     try {
         const endpoint = activar ? 'activar' : 'desactivar';
-        const response = await fetch(`${API_URL}/colegio-jornadas/${colegioJornadaId}/${endpoint}`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/${colegioJornadaId}/${endpoint}`, {
             method: 'PATCH',
             headers: Auth.getHeaders()
         });
@@ -675,7 +675,7 @@ async function quitarJornada(colegioJornadaId) {
     if (!result.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/${colegioJornadaId}`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/${colegioJornadaId}`, {
             method: 'DELETE',
             headers: Auth.getHeaders()
         });
@@ -718,7 +718,7 @@ async function cambiarEstado(id, activar) {
 
     try {
         const endpoint = activar ? 'activar' : 'desactivar';
-        const response = await fetch(`${API_URL}/colegios/${id}/${endpoint}`, {
+        const response = await fetch(`${API_URL}/api/colegios/${id}/${endpoint}`, {
             method: 'PATCH',
             headers: Auth.getHeaders()
         });
@@ -762,7 +762,7 @@ async function eliminarColegio(id) {
     if (!resultado.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/colegios/${id}`, {
+        const response = await fetch(`${API_URL}/api/colegios/${id}`, {
             method: 'DELETE',
             headers: Auth.getHeaders()
         });

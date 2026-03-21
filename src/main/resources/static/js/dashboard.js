@@ -122,7 +122,7 @@ async function cargarEstadisticas() {
 
 // ✅ Estadísticas para ADMINISTRADOR
 async function cargarEstadisticasAdmin(container) {
-    const response = await fetch(`${API_URL}/usuarios`, {
+    const response = await fetch(`${API_URL}/api/usuarios`, {
         headers: Auth.getHeaders()
     });
 
@@ -142,10 +142,10 @@ async function cargarEstadisticasEncargado(container) {
     try {
         // Cargar estudiantes, colegios y rutas en paralelo
         const [estudiantesRes, colegiosRes, rutasRes, zonasRes] = await Promise.all([
-            fetch(`${API_URL}/estudiantes`, { headers: Auth.getHeaders() }),
-            fetch(`${API_URL}/colegios`, { headers: Auth.getHeaders() }),
-            fetch(`${API_URL}/rutas`, { headers: Auth.getHeaders() }),
-            fetch(`${API_URL}/zonas`, { headers: Auth.getHeaders() })
+            fetch(`${API_URL}/api/estudiantes`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/api/colegios`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/api/rutas`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/api/zonas`, { headers: Auth.getHeaders() })
         ]);
 
         const estudiantes = estudiantesRes.ok ? await estudiantesRes.json() : [];
@@ -237,7 +237,7 @@ async function cargarEstadisticasEncargado(container) {
 async function cargarEstadisticasMonitor(container) {
     try {
         // Obtener datos del monitor
-        const monitorRes = await fetch(`${API_URL}/monitores/usuario/${currentUser.id}`, {
+        const monitorRes = await fetch(`${API_URL}/api/monitores/usuario/${currentUser.id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -419,7 +419,7 @@ let modalClimaInstance = null;
 // Cargar clima actual
 async function cargarClima() {
     try {
-        const response = await fetch(`${API_URL}/clima/actual`, {
+        const response = await fetch(`${API_URL}/api/clima/actual`, {
             headers: Auth.getHeaders()
         });
 
@@ -469,7 +469,7 @@ async function mostrarDetalleClima() {
     modalClimaInstance.show();
 
     try {
-        const response = await fetch(`${API_URL}/clima/recomendacion`, {
+        const response = await fetch(`${API_URL}/api/clima/recomendacion`, {
             headers: Auth.getHeaders()
         });
 

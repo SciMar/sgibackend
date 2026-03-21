@@ -140,7 +140,7 @@ function configurarMenuPorRol() {
 // ==========================================
 async function cargarDatosMonitor() {
     try {
-        const response = await fetch(`${API_URL}/monitores/usuario/${currentUser.id}`, {
+        const response = await fetch(`${API_URL}/api/monitores/usuario/${currentUser.id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -162,7 +162,7 @@ async function cargarDatosMonitor() {
 // ==========================================
 async function cargarZonas() {
     try {
-        const response = await fetch(`${API_URL}/zonas`, { headers: Auth.getHeaders() });
+        const response = await fetch(`${API_URL}/api/zonas`, { headers: Auth.getHeaders() });
         if (!response.ok) throw new Error('Error al cargar zonas');
 
         const zonas = await response.json();
@@ -213,7 +213,7 @@ async function cargarColegiosPorZona() {
     if (!zonaId) return;
 
     try {
-        const response = await fetch(`${API_URL}/colegios/zona/${zonaId}`, {
+        const response = await fetch(`${API_URL}/api/colegios/zona/${zonaId}`, {
             headers: Auth.getHeaders()
         });
 
@@ -247,7 +247,7 @@ async function cargarJornadasPorColegio() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioId}/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -292,7 +292,7 @@ async function cargarEstudiantes() {
         const loadingToast = showToast('info', 'Buscando estudiantes...', 'Por favor espera.', { autoClose: true, duration: 30000 });
 
         // Cargar estudiantes filtrados
-        const response = await fetch(`${API_URL}/estudiantes`, { headers: Auth.getHeaders() });
+        const response = await fetch(`${API_URL}/api/estudiantes`, { headers: Auth.getHeaders() });
         if (!response.ok) throw new Error('Error al cargar estudiantes');
 
         const todosEstudiantes = await response.json();
@@ -328,7 +328,7 @@ async function cargarEstudiantes() {
 // ==========================================
 async function verificarAsistenciasExistentes(fecha, tipoRecorrido) {
     try {
-        const response = await fetch(`${API_URL}/asistencias/fecha/${fecha}`, { headers: Auth.getHeaders() });
+        const response = await fetch(`${API_URL}/api/asistencias/fecha/${fecha}`, { headers: Auth.getHeaders() });
 
         if (!response.ok) {
             mostrarEstudiantesParaRegistro();
@@ -373,7 +373,7 @@ async function mostrarEstudiantesPendientes() {
     const tipoRecorrido = byId('tipoRecorrido')?.value;
 
     try {
-        const response = await fetch(`${API_URL}/asistencias/fecha/${fecha}`, { headers: Auth.getHeaders() });
+        const response = await fetch(`${API_URL}/api/asistencias/fecha/${fecha}`, { headers: Auth.getHeaders() });
         if (response.ok) {
             const asistenciasExistentes = await response.json();
             const estudiantesConAsistencia = asistenciasExistentes
@@ -585,7 +585,7 @@ async function guardarAsistencias() {
         );
 
         // Usar el monitorId correcto (de la tabla Monitor, no del Usuario)
-        const response = await fetch(`${API_URL}/asistencias/registrar-masivo?monitorId=${monitorData.id}`, {
+        const response = await fetch(`${API_URL}/api/asistencias/registrar-masivo?monitorId=${monitorData.id}`, {
             method: 'POST',
             headers: { ...Auth.getHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(dtos)

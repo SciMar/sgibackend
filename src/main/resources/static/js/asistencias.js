@@ -48,7 +48,7 @@ function configurarMenuPorRol() {
 // ==========================================
 async function cargarDatosMonitor() {
     try {
-        const response = await fetch(`${API_URL}/monitores/usuario/${currentUser.id}`, {
+        const response = await fetch(`${API_URL}/api/monitores/usuario/${currentUser.id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -130,7 +130,7 @@ async function cargarEstadisticasMonitor() {
         const hoy = new Date().toISOString().split('T')[0];
 
         // Cargar asistencias de hoy
-        const response = await fetch(`${API_URL}/asistencias/hoy`, {
+        const response = await fetch(`${API_URL}/api/asistencias/hoy`, {
             headers: Auth.getHeaders()
         });
 
@@ -180,7 +180,7 @@ async function cargarEstadisticasMonitor() {
 // ==========================================
 async function cargarZonasFiltro() {
     try {
-        const response = await fetch(`${API_URL}/zonas`, {
+        const response = await fetch(`${API_URL}/api/zonas`, {
             headers: Auth.getHeaders()
         });
 
@@ -204,7 +204,7 @@ async function cargarZonasFiltro() {
 // ==========================================
 async function cargarColegiosFiltro() {
     try {
-        const response = await fetch(`${API_URL}/colegios`, {
+        const response = await fetch(`${API_URL}/api/colegios`, {
             headers: Auth.getHeaders()
         });
 
@@ -246,7 +246,7 @@ async function cargarEstadisticasHoy() {
     try {
         mostrarCargando();
 
-        const response = await fetch(`${API_URL}/asistencias/estadisticas/hoy`, {
+        const response = await fetch(`${API_URL}/api/asistencias/estadisticas/hoy`, {
             headers: Auth.getHeaders()
         });
 
@@ -271,7 +271,7 @@ async function cargarEstadisticasHoy() {
 // ==========================================
 async function cargarAsistenciasHoy() {
     try {
-        const response = await fetch(`${API_URL}/asistencias/hoy`, {
+        const response = await fetch(`${API_URL}/api/asistencias/hoy`, {
             headers: Auth.getHeaders()
         });
 
@@ -312,7 +312,7 @@ async function aplicarFiltros() {
     try {
         mostrarCargando();
 
-        const response = await fetch(`${API_URL}/asistencias/rango-fechas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
+        const response = await fetch(`${API_URL}/api/asistencias/rango-fechas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
             headers: Auth.getHeaders()
         });
 
@@ -515,8 +515,8 @@ async function actualizarGraficoTendencia(asistencias) {
 
     try {
         const [colegiosRes, zonasRes] = await Promise.all([
-            fetch(`${API_URL}/colegios`, { headers: Auth.getHeaders() }),
-            fetch(`${API_URL}/zonas`, { headers: Auth.getHeaders() })
+            fetch(`${API_URL}/api/colegios`, { headers: Auth.getHeaders() }),
+            fetch(`${API_URL}/api/zonas`, { headers: Auth.getHeaders() })
         ]);
 
         if (colegiosRes.ok && zonasRes.ok) {
