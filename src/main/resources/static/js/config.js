@@ -1,5 +1,6 @@
 // Configuración global de la aplicación
-const API_URL = 'https://sistemadegestion-cp.up.railway.app';
+const API_BASE_URL = 'https://sistemadegestion-cp.up.railway.app';
+const API_URL = API_BASE_URL;
 
 // Etiquetas de roles
 const ROL_LABELS = {
