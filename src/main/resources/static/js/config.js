@@ -1,5 +1,5 @@
 // Configuración global de la aplicación
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://sgibackend-production.up.railway.app';
 
 // Etiquetas de roles
 const ROL_LABELS = {
