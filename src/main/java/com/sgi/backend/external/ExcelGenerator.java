@@ -166,8 +166,7 @@ public class ExcelGenerator {
 
             // Auto-ajustar columnas
             for (int i = 0; i < headers.size(); i++) {
-                sheet.autoSizeColumn(i);
-                sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1000);
+                sheet.setColumnWidth(i, 5000);
             }
 
             // Convertir a bytes
