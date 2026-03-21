@@ -2,7 +2,7 @@
 // CONFIGURACIÓN
 // ==========================================
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://sgibackend-production.up.railway.app';
 let currentUser = null;
 let authToken = null;
 
