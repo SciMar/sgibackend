@@ -1,7 +1,7 @@
 // L// Lógica de Cambiar Contraseña - Primer Ingreso
 
     // Configuración de la API
-    const API_URL = 'http://localhost:8080/api';
+    const API_URL = '${API_BASE_URL}';
 
     // Obtener datos del usuario usando Auth
     const token = Auth.getToken();

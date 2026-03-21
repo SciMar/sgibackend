@@ -177,7 +177,7 @@ El servidor estará disponible en `http://localhost:8080`
 Editar `frontend/js/config.js`:
 
 ```javascript
-const API_URL = 'http://localhost:8080/api';
+const API_URL = '${API_BASE_URL}';
 ```
 
 ### 6. Ejecutar Frontend
