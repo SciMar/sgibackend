@@ -3,7 +3,7 @@
 // ==========================================
 
 // Cambia esta URL por la de tu backend
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://sgibackend-production.up.railway.app';
 
 // ==========================================
 // OBTENER HEADERS CON AUTENTICACIÓN
