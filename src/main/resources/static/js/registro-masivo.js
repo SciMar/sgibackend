@@ -140,7 +140,7 @@ function configurarMenuPorRol() {
 // ==========================================
 async function cargarDatosMonitor() {
     try {
-        const response = await fetch(`${API_URL}/api/monitores/usuario/${currentUser.id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/monitores/usuario/${currentUser.id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -162,7 +162,7 @@ async function cargarDatosMonitor() {
 // ==========================================
 async function cargarZonas() {
     try {
-        const response = await fetch(`${API_URL}/api/zonas`, { headers: Auth.getHeaders() });
+        const response = await fetch(`${API_BASE_URL}/api/zonas`, { headers: Auth.getHeaders() });
         if (!response.ok) throw new Error('Error al cargar zonas');
 
         const zonas = await response.json();
@@ -213,7 +213,7 @@ async function cargarColegiosPorZona() {
     if (!zonaId) return;
 
     try {
-        const response = await fetch(`${API_URL}/api/colegios/zona/${zonaId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/colegios/zona/${zonaId}`, {
             headers: Auth.getHeaders()
         });
 
@@ -247,7 +247,7 @@ async function cargarJornadasPorColegio() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioId}/activas`, {
+        const response = await fetch(`${API_BASE_URL}/api/colegio-jornadas/colegio/${colegioId}/activas`, {
             headers: Auth.getHeaders()
         });
 

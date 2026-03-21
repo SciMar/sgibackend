@@ -84,7 +84,7 @@ async function fetchAPI(endpoint, options = {}) {
         }
     };
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...defaultOptions,
         ...options,
         headers: {

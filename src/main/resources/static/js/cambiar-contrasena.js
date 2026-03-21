@@ -166,7 +166,7 @@
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
 
         try {
-            const response = await fetch(`${API_URL}/api/usuarios/${userData.id}/cambiar-contrasena-primer-ingreso`, {
+            const response = await fetch(`${API_BASE_URL}/api/usuarios/${userData.id}/cambiar-contrasena-primer-ingreso`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

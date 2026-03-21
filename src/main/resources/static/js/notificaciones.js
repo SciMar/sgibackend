@@ -280,7 +280,7 @@ async function enviarNotificacion() {
     });
 
     try {
-        const response = await fetch(`${API_URL}/api/notificaciones/enviar-masivo`, {
+        const response = await fetch(`${API_BASE_URL}/api/notificaciones/enviar-masivo`, {
             method: 'POST',
             headers: Auth.getHeaders(),
             body: JSON.stringify({
