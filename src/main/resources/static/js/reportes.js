@@ -227,7 +227,7 @@ async function descargarReporteAsistencias(formato) {
     mostrarLoading('Generando reporte de asistencias...');
 
     try {
-        const response = await fetch(`${API_URL}/api/reportes/asistencias/${formato}${queryString}`, {
+        const response = await fetch(`${API_BASE_URL}/api/reportes/asistencias/${formato}${queryString}`, {
             headers: Auth.getHeaders()
         });
 
