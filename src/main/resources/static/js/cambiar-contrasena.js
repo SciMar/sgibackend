@@ -1,7 +1,4 @@
-// L// Lógica de Cambiar Contraseña - Primer Ingreso
-
-    // Configuración de la API
-    const API_URL = '${API_BASE_URL}';
+// Lógica de Cambiar Contraseña - Primer Ingreso
 
     // Obtener datos del usuario usando Auth
     const token = Auth.getToken();
