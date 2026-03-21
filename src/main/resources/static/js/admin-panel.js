@@ -2,7 +2,7 @@
 // CONFIGURACIÓN
 // ==========================================
 
-const API_URL = 'https://sgibackend-production.up.railway.app';
+const API_URL = 'https://sistemadegestion-cp.up.railway.app';
 let currentUser = null;
 let authToken = null;
 
