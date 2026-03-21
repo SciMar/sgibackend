@@ -260,7 +260,7 @@ async function cargarEstadisticasMonitor(container) {
 
         // Cargar estudiantes de la zona/jornada del monitor
         const estudiantesRes = await fetch(
-            `${API_URL}/estudiantes/monitor/zona/${monitor.zonaId}/jornada/${monitor.jornadaId}`,
+            `${API_URL}/api/estudiantes/monitor/zona/${monitor.zonaId}/jornada/${monitor.jornadaId}`,
             { headers: Auth.getHeaders() }
         );
 

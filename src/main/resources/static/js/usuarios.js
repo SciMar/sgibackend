@@ -154,7 +154,7 @@ async function cargarDatosIniciales() {
 // ==========================================
 async function cargarUsuarios() {
     try {
-        const response = await fetch(`${API_URL}/usuarios`, {
+        const response = await fetch(`${API_URL}/api/usuarios`, {
             headers: Auth.getHeaders()
         });
 
@@ -174,7 +174,7 @@ async function cargarUsuarios() {
 // ==========================================
 async function cargarZonas() {
     try {
-        const response = await fetch(`${API_URL}/zonas`, {
+        const response = await fetch(`${API_URL}/api/zonas`, {
             headers: Auth.getHeaders()
         });
 
@@ -191,7 +191,7 @@ async function cargarZonas() {
 // ==========================================
 async function cargarMonitores() {
     try {
-        const response = await fetch(`${API_URL}/monitores`, {
+        const response = await fetch(`${API_URL}/api/monitores`, {
             headers: Auth.getHeaders()
         });
 
@@ -216,7 +216,7 @@ async function cargarJornadasPorZona() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/jornadas/zona/${zonaId}`, {
+        const response = await fetch(`${API_URL}/api/jornadas/zona/${zonaId}`, {
             headers: Auth.getHeaders()
         });
 
@@ -514,7 +514,7 @@ async function guardarUsuario() {
     }
 
     try {
-        const url = esEdicion ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`;
+        const url = esEdicion ? `${API_URL}/api/usuarios/${id}` : `${API_URL}/api/usuarios`;
         const method = esEdicion ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -571,7 +571,7 @@ async function crearRegistroMonitor(usuarioId) {
         if (!zonaDefault) return;
 
         // Obtener jornadas de esa zona
-        const response = await fetch(`${API_URL}/jornadas/zona/${zonaDefault.id}`, {
+        const response = await fetch(`${API_URL}/api/jornadas/zona/${zonaDefault.id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -582,7 +582,7 @@ async function crearRegistroMonitor(usuarioId) {
         if (!jornadaDefault) return;
 
         // Crear el monitor
-        await fetch(`${API_URL}/monitores`, {
+        await fetch(`${API_URL}/api/monitores`, {
             method: 'POST',
             headers: {
                 ...Auth.getHeaders(),
@@ -663,7 +663,7 @@ async function guardarAsignacion() {
         let response;
         if (monitorExistente) {
             // Actualizar monitor existente
-            response = await fetch(`${API_URL}/monitores/${monitorExistente.id}`, {
+            response = await fetch(`${API_URL}/api/monitores/${monitorExistente.id}`, {
                 method: 'PUT',
                 headers: {
                     ...Auth.getHeaders(),
@@ -677,7 +677,7 @@ async function guardarAsignacion() {
             });
         } else {
             // Crear nuevo monitor
-            response = await fetch(`${API_URL}/monitores`, {
+            response = await fetch(`${API_URL}/api/monitores`, {
                 method: 'POST',
                 headers: {
                     ...Auth.getHeaders(),
@@ -726,7 +726,7 @@ async function resetearContrasena(id) {
     if (!resultado.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}/resetear-contrasena`, {
+        const response = await fetch(`${API_URL}/api/usuarios/${id}/resetear-contrasena`, {
             method: 'POST',
             headers: Auth.getHeaders()
         });
@@ -763,7 +763,7 @@ async function toggleEstado(id, estadoActual) {
     if (!resultado.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}/${accion}`, {
+        const response = await fetch(`${API_URL}/api/usuarios/${id}/${accion}`, {
             method: 'PATCH',
             headers: Auth.getHeaders()
         });
@@ -838,7 +838,7 @@ async function eliminarUsuario(id) {
     if (!resultado.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+        const response = await fetch(`${API_URL}/api/usuarios/${id}`, {
             method: 'DELETE',
             headers: Auth.getHeaders()
         });

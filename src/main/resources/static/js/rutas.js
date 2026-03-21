@@ -91,7 +91,7 @@ function mostrarAlertaAdvertencia(titulo, mensaje) {
 
 async function cargarZonas() {
     try {
-        const response = await fetch(`${API_URL}/zonas/activas`, {
+        const response = await fetch(`${API_URL}/api/zonas/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -145,7 +145,7 @@ async function cargarColegiosPorZona() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/colegios/zona/${zonaId}`, {
+        const response = await fetch(`${API_URL}/api/colegios/zona/${zonaId}`, {
             headers: Auth.getHeaders()
         });
 
@@ -189,7 +189,7 @@ async function cargarJornadasPorColegio() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/colegio-jornadas/colegio/${colegioId}/activas`, {
+        const response = await fetch(`${API_URL}/api/colegio-jornadas/colegio/${colegioId}/activas`, {
             headers: Auth.getHeaders()
         });
 
@@ -265,7 +265,7 @@ async function cargarRutas() {
     showTableLoading('tableBody', 7);
 
     try {
-        const response = await fetch(`${API_URL}/rutas`, {
+        const response = await fetch(`${API_URL}/api/rutas`, {
             headers: Auth.getHeaders()
         });
 
@@ -371,7 +371,7 @@ function mostrarModalCrear() {
 
 async function editarRuta(id) {
     try {
-        const response = await fetch(`${API_URL}/rutas/${id}`, {
+        const response = await fetch(`${API_URL}/api/rutas/${id}`, {
             headers: Auth.getHeaders()
         });
 
@@ -461,7 +461,7 @@ async function guardarRuta() {
     };
 
     try {
-        const response = await fetch(`${API_URL}/rutas`, {
+        const response = await fetch(`${API_URL}/api/rutas`, {
             method: 'POST',
             headers: Auth.getHeaders(),
             body: JSON.stringify(dto)
@@ -499,7 +499,7 @@ async function actualizarRuta() {
     };
 
     try {
-        const response = await fetch(`${API_URL}/rutas/${rutaId}`, {
+        const response = await fetch(`${API_URL}/api/rutas/${rutaId}`, {
             method: 'PUT',
             headers: Auth.getHeaders(),
             body: JSON.stringify(dto)
@@ -529,7 +529,7 @@ async function actualizarRuta() {
 
 async function verDetalle(id) {
     try {
-        const response = await fetch(`${API_URL}/rutas/${id}/estadisticas`, {
+        const response = await fetch(`${API_URL}/api/rutas/${id}/estadisticas`, {
             headers: Auth.getHeaders()
         });
 
@@ -600,7 +600,7 @@ async function cambiarEstado(id, activar) {
 
     try {
         const endpoint = activar ? 'activar' : 'desactivar';
-        const response = await fetch(`${API_URL}/rutas/${id}/${endpoint}`, {
+        const response = await fetch(`${API_URL}/api/rutas/${id}/${endpoint}`, {
             method: 'PATCH',
             headers: Auth.getHeaders()
         });
@@ -649,7 +649,7 @@ async function eliminarRuta(id) {
     if (!result.isConfirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/rutas/${id}`, {
+        const response = await fetch(`${API_URL}/api/rutas/${id}`, {
             method: 'DELETE',
             headers: Auth.getHeaders()
         });

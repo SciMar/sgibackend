@@ -250,7 +250,7 @@ async function cargarJornadasParaCrear() {
     divJornadas.style.display = 'block';
 
     try {
-        const response = await fetch(`${API_URL}/apijornadas/zona/${zonaId}/activas`, {
+        const response = await fetch(`${API_URL}/api/jornadas/zona/${zonaId}/activas`, {
             headers: Auth.getHeaders()
         });
 

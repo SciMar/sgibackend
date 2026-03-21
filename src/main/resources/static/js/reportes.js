@@ -344,7 +344,7 @@ async function descargarEstadisticasEstudiante() {
     mostrarLoading('Generando estadísticas del estudiante...');
 
     try {
-        const response = await fetch(`${API_URL}/reportes/estadisticas/estudiante/${estudianteId}${queryString}`, {
+        const response = await fetch(`${API_URL}/api/reportes/estadisticas/estudiante/${estudianteId}${queryString}`, {
             headers: Auth.getHeaders()
         });
 
