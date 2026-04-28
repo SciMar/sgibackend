@@ -1,62 +1,84 @@
 # 🚌 Sistema Ciempiés
 
-Sistema de Gestión Integral de Transporte Escolar
+**Sistema de Gestión Integral de Transporte Escolar**
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Java](https://img.shields.io/badge/Java-17+-orange.svg)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)]()
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen.svg)]()
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)]()
 
 ---
 
 ## 📋 Descripción
 
-**Sistema Ciempiés** es una plataforma web completa para la gestión del transporte escolar. Permite administrar estudiantes, rutas, colegios, monitores, asistencias y generar reportes detallados en PDF y Excel.
+**Sistema Ciempiés** es una plataforma web full-stack para la gestión del programa de transporte escolar **"Ciempiés - Caminos Seguros"** de la Secretaría Distrital de Movilidad de Bogotá. Permite administrar estudiantes, rutas, colegios, monitores y asistencias, generar reportes estadísticos detallados y enviar notificaciones masivas al equipo operativo.
 
-El sistema está diseñado para facilitar el control y seguimiento del transporte escolar, garantizando la seguridad de los estudiantes y optimizando la gestión operativa.
+El sistema fue diseñado para reemplazar el registro manual de asistencias en papel por un flujo digital eficiente, garantizando la trazabilidad del servicio y la seguridad de los estudiantes.
 
 ---
 
 ## ✨ Características Principales
 
-- 👥 **Gestión de Usuarios** - Administración de usuarios con roles (Administrador, Encargado, Monitor)
-- 🎓 **Gestión de Estudiantes** - Registro completo con datos personales, acudientes y asignación de rutas
-- 🚌 **Gestión de Rutas** - Creación automática de rutas por colegio, jornada y tipo (Ida/Regreso)
-- 🏫 **Gestión de Colegios** - Administración de colegios con jornadas y zonas
-- 📍 **Gestión de Zonas** - Organización geográfica del servicio
-- ✅ **Control de Asistencias** - Registro de asistencias con estados (Presente/Ausente)
-- 📊 **Reportes y Estadísticas** - Generación de reportes en PDF y Excel con gráficos
-- 📧 **Notificaciones** - Envío de correos masivos con plantillas profesionales
-- 🔐 **Autenticación JWT** - Sistema seguro de autenticación con tokens
+- 👥 **Gestión de Usuarios** — Administración con roles (Administrador, Encargado, Monitor)
+- 🎓 **Gestión de Estudiantes** — Registro completo con datos personales, acudientes y asignación de rutas
+- 🚌 **Gestión de Rutas** — Creación de rutas por colegio, jornada y tipo (Ida/Regreso)
+- 🏫 **Gestión de Colegios y Zonas** — Organización geográfica del servicio
+- ✅ **Registro de Asistencias por Lote** — Marca múltiples estudiantes simultáneamente, reduciendo el tiempo de toma de asistencia en ~90%
+- 📊 **Reportes Tabulares y Estadísticos** — Generación en PDF y Excel con gráficos (patrón **Adapter GoF**)
+- 🌦️ **Integración con OpenWeatherMap** — Alertas meteorológicas automáticas para rutas escolares
+- 📧 **Notificaciones Masivas** — Envío de correos con plantillas profesionales
+- 🔐 **Autenticación JWT** — Sistema seguro con control de acceso por roles
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
 ### Backend
+
 | Tecnología | Versión | Descripción |
 |------------|---------|-------------|
-| Java | 17+ | Lenguaje de programación |
-| Spring Boot | 3.x | Framework principal |
+| Java | 21 | Lenguaje de programación |
+| Spring Boot | 3.2.x | Framework principal |
 | Spring Security | 6.x | Autenticación y autorización |
 | Spring Data JPA | 3.x | Persistencia de datos |
 | MySQL | 8.x | Base de datos relacional |
-| JWT | 0.11.5 | Tokens de autenticación |
+| H2 Database | — | Base de datos en memoria (desarrollo y testing) |
+| JWT (jjwt) | 0.11.5 | Tokens de autenticación |
+| BCrypt | — | Encriptación de contraseñas |
 | iText | 5.5.13 | Generación de PDFs |
 | Apache POI | 5.2.3 | Generación de Excel |
-| JFreeChart | 1.5.4 | Gráficos estadísticos |
-| JavaMail | 2.x | Envío de correos |
+| JFreeChart | 1.5.4 | Gráficos estadísticos en reportes |
+| JavaMail | 2.x | Envío de correos masivos |
 
 ### Frontend
+
 | Tecnología | Versión | Descripción |
 |------------|---------|-------------|
-| HTML5 | - | Estructura |
-| CSS3 | - | Estilos personalizados |
+| HTML5 | — | Estructura |
+| CSS3 | — | Estilos personalizados |
 | JavaScript | ES6+ | Lógica del cliente |
 | Bootstrap | 5.3 | Framework CSS |
+| Chart.js | 4.4 | Visualización de datos en dashboard |
+| DataTables | 1.13 | Tablas interactivas |
 | Bootstrap Icons | 1.11 | Iconografía |
 | SweetAlert2 | 11 | Alertas y modales |
+
+### Testing
+
+| Herramienta | Uso |
+|-------------|-----|
+| **JUnit 5** | Framework de pruebas unitarias |
+| **Mockito** | Mocking de dependencias |
+| **Apache JMeter** | Pruebas de carga y rendimiento (10–100 usuarios concurrentes) |
+
+### Integraciones Externas
+
+- **OpenWeatherMap API** — Consulta de clima en tiempo real para Bogotá y generación de alertas meteorológicas
+
+### Patrones de Diseño
+
+- **Adapter (GoF)** — Implementado para unificar la generación de reportes en múltiples formatos (PDF con iText y Excel con Apache POI), permitiendo extender a nuevos formatos sin modificar la lógica de negocio.
 
 ---
 
@@ -66,44 +88,37 @@ El sistema está diseñado para facilitar el control y seguimiento del transport
 sistema-ciempies/
 ├── backend/
 │   ├── src/main/java/com/sgi/backend/
-│   │   ├── config/          # Configuraciones (Security, CORS, etc.)
+│   │   ├── config/          # Configuraciones (Security, CORS)
 │   │   ├── controller/      # Controladores REST
 │   │   ├── dto/             # Data Transfer Objects
 │   │   ├── model/           # Entidades JPA
 │   │   ├── repository/      # Repositorios Spring Data
 │   │   ├── service/         # Lógica de negocio
 │   │   ├── adapter/         # Patrón Adapter para reportes
-│   │   └── external/        # Generadores externos (PDF, Excel)
-│   └── src/main/resources/
-│       ├── application.properties
-│       └── static/images/   # Logo e imágenes
+│   │   ├── external/        # Generadores externos (PDF, Excel)
+│   │   └── security/        # JWT, UserDetails
+│   ├── src/main/resources/
+│   │   ├── application.properties
+│   │   └── static/images/
+│   └── src/test/            # Pruebas unitarias (JUnit 5 + Mockito)
 │
 └── frontend/
     ├── css/
-    │   └── styles.css       # Estilos globales
     ├── js/
-    │   ├── config.js        # Configuración y constantes
-    │   ├── auth.js          # Autenticación y manejo de sesión
-    │   ├── utils.js         # Funciones utilitarias
-    │   ├── dashboard.js     # Lógica del dashboard
-    │   ├── usuarios.js      # Módulo de usuarios
-    │   ├── estudiantes.js   # Módulo de estudiantes
-    │   ├── rutas.js         # Módulo de rutas
-    │   ├── colegios.js      # Módulo de colegios
-    │   ├── asistencias.js   # Módulo de asistencias
-    │   ├── reportes.js      # Módulo de reportes
-    │   └── notificaciones.js # Módulo de notificaciones
-    ├── images/
-    │   └── logo.jpeg        # Logo del sistema
+    │   ├── api.js           # Cliente API REST
+    │   ├── auth.js          # Autenticación
+    │   ├── dashboard.js
+    │   ├── estudiantes.js
+    │   ├── asistencias.js
+    │   ├── registrar-lote.js
+    │   └── reportes.js
     ├── index.html           # Login
-    ├── dashboard.html       # Panel principal
-    ├── usuarios.html        # Gestión de usuarios
-    ├── estudiantes.html     # Gestión de estudiantes
-    ├── rutas.html           # Gestión de rutas
-    ├── colegios.html        # Gestión de colegios
-    ├── asistencias.html     # Control de asistencias
-    ├── reportes.html        # Centro de reportes
-    └── notificaciones.html  # Notificaciones masivas
+    ├── dashboard.html
+    ├── estudiantes.html
+    ├── asistencias.html
+    ├── registrar-asistencia.html
+    ├── reportes.html
+    └── notificaciones.html
 ```
 
 ---
@@ -112,21 +127,18 @@ sistema-ciempies/
 
 ### Prerrequisitos
 
-- Java JDK 17 o superior
+- Java JDK 21 o superior
 - Maven 3.8+
 - MySQL 8.x
-- Node.js (opcional, para servidor de desarrollo frontend)
 
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/sistema-ciempies.git
-cd sistema-ciempies
+git clone https://github.com/SciMar/sgibackend.git
+cd sgibackend
 ```
 
 ### 2. Configurar Base de Datos
-
-Crear la base de datos en MySQL:
 
 ```sql
 CREATE DATABASE sistema_ciempies;
@@ -135,7 +147,7 @@ GRANT ALL PRIVILEGES ON sistema_ciempies.* TO 'ciempies_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-### 3. Configurar Backend
+### 3. Configurar Variables de Entorno
 
 Editar `backend/src/main/resources/application.properties`:
 
@@ -160,6 +172,9 @@ spring.mail.username=tu_correo@gmail.com
 spring.mail.password=tu_app_password
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
+
+# OpenWeatherMap
+openweather.api.key=tu_api_key
 ```
 
 ### 4. Ejecutar Backend
@@ -170,19 +185,9 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-El servidor estará disponible en `http://localhost:8080`
+Servidor disponible en `http://localhost:8080`
 
-### 5. Configurar Frontend
-
-Editar `frontend/js/config.js`:
-
-```javascript
-const API_URL = '${API_BASE_URL}';
-```
-
-### 6. Ejecutar Frontend
-
-Puedes usar cualquier servidor web estático:
+### 5. Ejecutar Frontend
 
 ```bash
 # Con Python
@@ -193,7 +198,32 @@ python -m http.server 5500
 npx live-server frontend
 ```
 
-El frontend estará disponible en `http://localhost:5500`
+Frontend disponible en `http://localhost:5500`
+
+---
+
+## 🧪 Testing
+
+### Pruebas Unitarias (JUnit 5 + Mockito)
+
+```bash
+cd backend
+mvn test
+
+# Con reporte de cobertura
+mvn test jacoco:report
+```
+
+### Pruebas de Carga (Apache JMeter)
+
+Escenarios cubiertos:
+
+- Login concurrente de usuarios
+- Consultas masivas de estudiantes
+- Registro simultáneo de asistencias
+- Generación de reportes bajo carga
+
+**Configuración:** 10–100 usuarios concurrentes, ramp-up de 10 segundos, 10 iteraciones por usuario.
 
 ---
 
@@ -210,19 +240,21 @@ El frontend estará disponible en `http://localhost:5500`
 | Reportes | ✅ | ✅ | ⚠️ |
 | Notificaciones | ✅ | ❌ | ❌ |
 
-✅ Acceso completo | 👁️ Solo lectura | ⚠️ Acceso limitado | ❌ Sin acceso
+✅ Acceso completo &nbsp;|&nbsp; 👁️ Solo lectura &nbsp;|&nbsp; ⚠️ Acceso limitado &nbsp;|&nbsp; ❌ Sin acceso
 
 ---
 
 ## 📊 API Endpoints
 
 ### Autenticación
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | `/api/auth/login` | Iniciar sesión |
 | POST | `/api/auth/registro` | Registrar usuario |
 
 ### Usuarios
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/usuarios` | Listar todos |
@@ -232,6 +264,7 @@ El frontend estará disponible en `http://localhost:5500`
 | DELETE | `/api/usuarios/{id}` | Eliminar |
 
 ### Estudiantes
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/estudiantes` | Listar todos |
@@ -240,60 +273,43 @@ El frontend estará disponible en `http://localhost:5500`
 | POST | `/api/estudiantes` | Crear estudiante |
 | PUT | `/api/estudiantes/{id}` | Actualizar |
 
-### Rutas
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/rutas` | Listar todas |
-| GET | `/api/rutas/zona/{id}` | Por zona |
-| POST | `/api/rutas` | Crear ruta |
-| PUT | `/api/rutas/{id}` | Actualizar |
-
-### Colegios
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/colegios` | Listar todos |
-| GET | `/api/colegios/zona/{id}` | Por zona |
-| POST | `/api/colegios` | Crear colegio |
-| PUT | `/api/colegios/{id}` | Actualizar |
-
 ### Asistencias
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/asistencias/hoy` | Asistencias de hoy |
 | GET | `/api/asistencias/fecha/{fecha}` | Por fecha |
 | POST | `/api/asistencias` | Registrar asistencia |
-| POST | `/api/asistencias/registrar-masivo` | Registro masivo |
+| POST | `/api/asistencias/registrar-masivo` | **Registro por lote** |
 
 ### Reportes
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | `/api/reportes/usuarios/{formato}` | Reporte usuarios |
-| GET | `/api/reportes/estudiantes/{formato}` | Reporte estudiantes |
-| GET | `/api/reportes/asistencias/{formato}` | Reporte asistencias |
-| GET | `/api/reportes/estadisticas/general` | Estadísticas PDF |
+| GET | `/api/reportes/usuarios/{formato}` | Reporte de usuarios (PDF/Excel) |
+| GET | `/api/reportes/estudiantes/{formato}` | Reporte de estudiantes |
+| GET | `/api/reportes/asistencias/{formato}` | Reporte de asistencias |
+| GET | `/api/reportes/estadisticas/general` | Estadísticas con gráficos (PDF) |
+
+### Clima
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/clima/actual` | Clima actual de Bogotá |
+| GET | `/api/clima/alertas` | Verificar alertas meteorológicas |
 
 ### Notificaciones
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/notificaciones/enviar-masivo` | Correo masivo |
-
----
-
-## 📧 Plantilla de Correos
-
-El sistema incluye correos HTML profesionales con:
-
-- ✅ Logo corporativo
-- ✅ Header con gradiente
-- ✅ Firma corporativa
-- ✅ Redes sociales
-- ✅ Diseño responsive
+| POST | `/api/notificaciones/enviar-masivo` | Envío masivo de correos |
 
 ---
 
 ## 📈 Reportes Disponibles
 
-### Reportes Rápidos (PDF/Excel)
+### Reportes Tabulares (PDF/Excel)
+
 - Usuarios del sistema
 - Estudiantes
 - Monitores
@@ -301,14 +317,24 @@ El sistema incluye correos HTML profesionales con:
 - Colegios
 - Zonas
 - Jornadas
-
-### Reportes con Filtros
-- Asistencias por fecha, colegio, monitor o estudiante
+- Asistencias (con filtros avanzados)
 
 ### Reportes Estadísticos (PDF con gráficos)
-- Estadísticas generales
+
+- Estadísticas generales del sistema
 - Estadísticas por colegio
-- Estadísticas por estudiante
+- Estadísticas por estudiante (rango de fechas)
+- Gráficos de pastel y barras con colores semafóricos (Verde >80%, Amarillo >60%, Rojo <60%)
+
+---
+
+## 🔒 Seguridad
+
+- Autenticación basada en **JWT** con expiración configurable
+- Contraseñas encriptadas con **BCrypt**
+- Protección **CORS** configurada
+- Validación de roles en cada endpoint con `@PreAuthorize`
+- Tokens almacenados en LocalStorage del cliente
 
 ---
 
@@ -325,26 +351,17 @@ El sistema incluye correos HTML profesionales con:
 
 ---
 
-## 🔒 Seguridad
+## 👥 Equipo
 
-- Autenticación basada en JWT
-- Contraseñas encriptadas con BCrypt
-- Protección CORS configurada
-- Validación de roles en cada endpoint
-- Tokens con expiración configurable
+Proyecto desarrollado con metodología **Scrum** por estudiantes del programa **SENA ADSO** (Análisis y Desarrollo de Sistemas de Información).
 
----
+| Nombre | Rol |
+|--------|-----|
+| Marcela Ramírez | Scrum Master / Backend Developer |
+| Carolina López | Product Owner / Backend Developer |
+| Santiago Ríos | Backend Developer |
 
-## 🧪 Testing
-
-```bash
-# Ejecutar tests del backend
-cd backend
-mvn test
-
-# Ejecutar tests con cobertura
-mvn test jacoco:report
-```
+**Instructor:** Pedro Germain Gutierrez Vergara
 
 ---
 
@@ -354,27 +371,14 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 
 ---
 
-## 👥 Autores
-
-- **Marcela** - *Desarrollo Full Stack* - SENA ADSO
-
----
-
 ## 📞 Soporte
 
-Si tienes preguntas o necesitas ayuda:
+¿Preguntas o sugerencias?
 
 - 📧 Email: ciempiesmovilidad@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/tu-usuario/sistema-ciempies/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/SciMar/sgibackend/issues)
 
 ---
 
-<p align="center">
-  <img src="frontend/images/logo.jpeg" alt="Logo Ciempiés" width="100">
-  <br>
-  <b>Sistema Ciempiés</b>
-  <br>
-  Sistema de Gestión de Transporte Escolar
-  <br>
-  © 2024 - Todos los derechos reservados
-</p>
+**Sistema Ciempiés** &nbsp;·&nbsp; Sistema de Gestión Integral de Transporte Escolar
+© 2025 — Todos los derechos reservados
