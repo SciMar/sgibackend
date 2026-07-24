@@ -1,5 +1,5 @@
 // Configuración global de la aplicación
-const API_BASE_URL = 'https://sistemadegestion-cp.up.railway.app';
+const API_BASE_URL = 'https://sistema-ciempies.onrender.com';
 const API_URL = API_BASE_URL;
 
 // Etiquetas de roles

@@ -3,7 +3,7 @@
 // ==========================================
 
 // Cambia esta URL por la de tu backend
-const API_BASE_URL = 'https://sistemadegestion-cp.up.railway.app';
+const API_BASE_URL = 'sistema-ciempies.onrender.com';
 
 // ==========================================
 // OBTENER HEADERS CON AUTENTICACIÓN
